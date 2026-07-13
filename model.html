@@ -1,0 +1,737 @@
+=<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>模型展示页面</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            min-height: 100vh;
+            color: #fff;
+            overflow: hidden;
+        }
+        
+        header {
+            text-align: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid rgba(74, 105, 189, 0.3);
+        }
+        
+        header h1 {
+            font-size: 2em;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+        
+        header p {
+            color: #b8c5d6;
+            font-size: 0.95em;
+        }
+        
+        .main-content {
+            display: flex;
+            height: calc(100vh - 85px);
+        }
+        
+        .arc-container {
+            width: 200px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            background: rgba(0, 0, 0, 0.1);
+        }
+        
+        .arc-wrapper {
+            position: relative;
+            width: 180px;
+            height: 200px;
+        }
+        
+        .arc-bg {
+            display: none;
+        }
+        
+        .arc-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .arc-path {
+            fill: none;
+            stroke: url(#arcGradient);
+            stroke-width: 6;
+            stroke-linecap: round;
+        }
+        
+        .arc-glow {
+            fill: none;
+            stroke: rgba(74, 105, 189, 0.15);
+            stroke-width: 20;
+            stroke-linecap: round;
+            filter: blur(10px);
+        }
+        
+        .model-node {
+            position: absolute;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4a69bd 0%, #2d3436 100%);
+            border: 3px solid #6a89cc;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            opacity: 0;
+            transform: scale(0.6);
+        }
+        
+        .model-node.active {
+            width: 36px;
+            height: 36px;
+            border-color: #fff;
+            box-shadow: 0 0 25px rgba(74, 105, 189, 0.9), 0 0 50px rgba(74, 105, 189, 0.5);
+        }
+        
+        .model-node.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+        
+        .model-node.visible.left {
+            transform: scale(0.85) translateX(-5px);
+        }
+        
+        .model-node.visible.right {
+            transform: scale(0.85) translateX(5px);
+        }
+        
+        .model-node:hover {
+            transform: scale(1.15);
+            box-shadow: 0 0 20px rgba(74, 105, 189, 0.7);
+        }
+        
+        .model-node::after {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #fff;
+            border-radius: 50%;
+            opacity: 0.9;
+        }
+        
+        .model-node.active::after {
+            width: 14px;
+            height: 14px;
+            box-shadow: 0 0 10px #fff;
+        }
+        
+        .label-line {
+            position: absolute;
+            background: linear-gradient(90deg, rgba(74, 105, 189, 0.6) 0%, rgba(74, 105, 189, 0) 100%);
+            height: 2px;
+            transform-origin: left center;
+        }
+        
+        .model-label {
+            position: absolute;
+            font-size: 13px;
+            font-weight: 600;
+            color: #8a9bc5;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            opacity: 0;
+            transform: translateX(-10px);
+        }
+        
+        .model-label.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .model-label.active {
+            color: #4a69bd;
+            font-weight: bold;
+        }
+        
+        .model-label:hover {
+            color: #fff;
+        }
+        
+        .fade-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: linear-gradient(to bottom, 
+                rgba(15, 12, 41, 0.8) 0%, 
+                transparent 20%, 
+                transparent 80%, 
+                rgba(15, 12, 41, 0.8) 100%);
+            z-index: 5;
+        }
+        
+        .display-area {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .model-display {
+            width: 550px;
+            height: 550px;
+            background: linear-gradient(145deg, rgba(45, 52, 54, 0.85) 0%, rgba(30, 39, 46, 0.95) 100%);
+            border-radius: 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(74, 105, 189, 0.3);
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            position: absolute;
+        }
+        
+        .model-display.hidden {
+            transform: translateY(100%) scale(0.8);
+            opacity: 0;
+        }
+        
+        .model-display.center {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }
+        
+        .model-display.top {
+            transform: translateY(-20%) scale(0.9);
+            opacity: 0.6;
+        }
+        
+        .model-display.bottom {
+            transform: translateY(20%) scale(0.9);
+            opacity: 0.6;
+        }
+        
+        .model-display.fade-out-up {
+            animation: fadeOutUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        
+        .model-display.fade-out-down {
+            animation: fadeOutDown 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        
+        .model-display.fade-in-up {
+            animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        
+        .model-display.fade-in-down {
+            animation: fadeInDown 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        
+        @keyframes fadeOutUp {
+            from { transform: translateY(0) scale(1); opacity: 1; }
+            to { transform: translateY(-120%) scale(0.8); opacity: 0; }
+        }
+        
+        @keyframes fadeOutDown {
+            from { transform: translateY(0) scale(1); opacity: 1; }
+            to { transform: translateY(120%) scale(0.8); opacity: 0; }
+        }
+        
+        @keyframes fadeInUp {
+            from { transform: translateY(120%) scale(0.8); opacity: 0; }
+            to { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        
+        @keyframes fadeInDown {
+            from { transform: translateY(-120%) scale(0.8); opacity: 0; }
+            to { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        
+        .model-visual {
+            width: 300px;
+            height: 300px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #4a69bd 0%, #2d3436 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 6em;
+            color: rgba(255, 255, 255, 0.35);
+            border: 3px dashed rgba(74, 105, 189, 0.5);
+            margin-bottom: 30px;
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+        }
+        
+        .model-display:hover .model-visual {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(74, 105, 189, 0.4);
+        }
+        
+        .model-display h2 {
+            font-size: 2em;
+            color: #4a69bd;
+            margin-bottom: 15px;
+        }
+        
+        .model-display p {
+            color: #a8b8d0;
+            font-size: 1.1em;
+            text-align: center;
+            padding: 0 50px;
+            line-height: 1.7;
+        }
+        
+        .nav-links {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+        
+        .nav-links a {
+            padding: 12px 28px;
+            background: linear-gradient(135deg, rgba(74, 105, 189, 0.8) 0%, rgba(45, 52, 54, 0.9) 100%);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 25px;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(74, 105, 189, 0.5);
+        }
+        
+        .nav-links a:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(74, 105, 189, 0.4);
+        }
+        
+        .scroll-hint {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #636e72;
+            font-size: 11px;
+            animation: pulse 2s infinite;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 0.8; }
+        }
+        
+        footer {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>模型展示中心</h1>
+        <p>使用左侧转盘切换模型 | 支持点击和滑动</p>
+    </header>
+    
+    <div class="main-content">
+        <div class="arc-container" id="arcContainer">
+            <div class="arc-wrapper">
+                <div class="arc-bg"></div>
+                <svg class="arc-svg" viewBox="0 0 180 200">
+                    <defs>
+                        <linearGradient id="arcGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" style="stop-color:rgba(74,105,189,0.2)" />
+                            <stop offset="50%" style="stop-color:rgba(74,105,189,0.6)" />
+                            <stop offset="100%" style="stop-color:rgba(74,105,189,0.2)" />
+                        </linearGradient>
+                    </defs>
+                    <path class="arc-glow" d="M 0 190 A 90 90 0 0 0 0 10" />
+                    <path class="arc-path" d="M 0 190 A 90 90 0 0 0 0 10" />
+                </svg>
+                
+                <div class="fade-overlay"></div>
+                
+                <div class="model-node" data-model="0" id="node0"></div>
+                <div class="model-node" data-model="1" id="node1"></div>
+                <div class="model-node" data-model="2" id="node2"></div>
+                <div class="model-node" data-model="3" id="node3"></div>
+                <div class="model-node" data-model="4" id="node4"></div>
+                
+                <div class="label-line" id="line0"></div>
+                <div class="label-line" id="line1"></div>
+                <div class="label-line" id="line2"></div>
+                <div class="label-line" id="line3"></div>
+                <div class="label-line" id="line4"></div>
+                
+                <div class="model-label" id="label0">模型一</div>
+                <div class="model-label" id="label1">模型二</div>
+                <div class="model-label" id="label2">模型三</div>
+                <div class="model-label" id="label3">模型四</div>
+                <div class="model-label" id="label4">模型五</div>
+            </div>
+            <div class="scroll-hint">↑ 滑动切换 ↓</div>
+        </div>
+        
+        <div class="display-area" id="displayArea">
+            <div class="model-display center" id="display0">
+                <div class="model-visual">M1</div>
+                <h2>模型一</h2>
+                <p>这是第一个模型的详细展示区域。该模型具有独特的特性和功能，可以帮助用户完成特定任务。</p>
+            </div>
+            <div class="model-display hidden" id="display1">
+                <div class="model-visual">M2</div>
+                <h2>模型二</h2>
+                <p>这是第二个模型的详细展示区域。该模型采用先进的算法和技术，提供高效的解决方案。</p>
+            </div>
+            <div class="model-display hidden" id="display2">
+                <div class="model-visual">M3</div>
+                <h2>模型三</h2>
+                <p>这是第三个模型的详细展示区域。该模型专注于数据分析和可视化，提供直观的洞察。</p>
+            </div>
+            <div class="model-display hidden" id="display3">
+                <div class="model-visual">M4</div>
+                <h2>模型四</h2>
+                <p>这是第四个模型的详细展示区域。该模型集成了多种机器学习技术，具有强大的预测能力。</p>
+            </div>
+            <div class="model-display hidden" id="display4">
+                <div class="model-visual">M5</div>
+                <h2>模型五</h2>
+                <p>这是第五个模型的详细展示区域。该模型采用深度学习架构，在复杂任务中表现出色。</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="nav-links">
+        <a href="index.html">返回首页</a>
+        <a href="second.html">第二个页面</a>
+    </div>
+    
+    <footer>
+        <p>&copy; 2024 模型展示页面</p>
+    </footer>
+
+    <script>
+        const models = 5;
+        const arcRadius = 90;
+        const arcCenterX = 0;
+        const arcCenterY = 100;
+        const totalAngle = Math.PI;
+        const maxRotationAngle = Math.PI / 3;
+        const nodeAngleStep = totalAngle / (models - 1);
+        
+        let currentModel = 0;
+        let isAnimating = false;
+        let currentAngle = 0;
+        let targetAngle = 0;
+        let baseAngle = 0;
+        let mouseAngle = 0;
+        let animationFrame = null;
+        let containerRect = null;
+        let wrapperRect = null;
+        
+        function lerp(start, end, factor) {
+            return start + (end - start) * factor;
+        }
+        
+        function getNodeAngle(index) {
+            return -Math.PI / 2 + nodeAngleStep * index;
+        }
+        
+        function initArcs() {
+            const nodes = document.querySelectorAll('.model-node');
+            
+            nodes.forEach((node, index) => {
+                const angle = getNodeAngle(index) - getNodeAngle(currentModel);
+                updateNodePosition(node, angle);
+            });
+            
+            updateLinesAndLabels();
+            updateArcPath();
+            updateVisibility();
+            
+            wrapperRect = document.querySelector('.arc-wrapper').getBoundingClientRect();
+        }
+        
+        function updateNodePosition(node, angle) {
+            const x = arcCenterX + arcRadius * Math.cos(angle);
+            const y = arcCenterY + arcRadius * Math.sin(angle);
+            node.style.left = (x - 14) + 'px';
+            node.style.top = (y - 14) + 'px';
+            node.dataset.angle = angle;
+        }
+        
+        function updateLinesAndLabels() {
+            const nodes = document.querySelectorAll('.model-node');
+            const lines = document.querySelectorAll('.label-line');
+            const labels = document.querySelectorAll('.model-label');
+            
+            nodes.forEach((node, index) => {
+                const angle = parseFloat(node.dataset.angle);
+                const x = arcCenterX + arcRadius * Math.cos(angle);
+                const y = arcCenterY + arcRadius * Math.sin(angle);
+                
+                const lineLength = 45;
+                const lineEndX = x + lineLength * Math.cos(angle - Math.PI/2);
+                const lineEndY = y + lineLength * Math.sin(angle - Math.PI/2);
+                
+                lines[index].style.left = x + 'px';
+                lines[index].style.top = y + 'px';
+                lines[index].style.width = lineLength + 'px';
+                lines[index].style.transform = `rotate(${angle}rad)`;
+                
+                const labelOffset = 10;
+                const labelX = lineEndX + labelOffset * Math.cos(angle - Math.PI/2);
+                const labelY = lineEndY + labelOffset * Math.sin(angle - Math.PI/2);
+                labels[index].style.left = labelX + 'px';
+                labels[index].style.top = (labelY - 9) + 'px';
+            });
+        }
+        
+        function updateArcPath() {
+            const arcPath = document.querySelector('.arc-path');
+            const arcGlow = document.querySelector('.arc-glow');
+            
+            if (!arcPath || !arcGlow) return;
+            
+            const totalRotation = currentAngle - getNodeAngle(currentModel);
+            const sAngle = -Math.PI / 2 + totalRotation;
+            const eAngle = Math.PI / 2 + totalRotation;
+            
+            const sx = arcCenterX + arcRadius * Math.cos(sAngle);
+            const sy = arcCenterY + arcRadius * Math.sin(sAngle);
+            const ex = arcCenterX + arcRadius * Math.cos(eAngle);
+            const ey = arcCenterY + arcRadius * Math.sin(eAngle);
+            
+            const d = `M ${sx} ${sy} A ${arcRadius} ${arcRadius} 0 1 0 ${ex} ${ey}`;
+            arcPath.setAttribute('d', d);
+            arcGlow.setAttribute('d', d);
+        }
+        
+        function updateRotation() {
+            targetAngle = baseAngle + mouseAngle;
+            currentAngle = lerp(currentAngle, targetAngle, 0.25);
+            
+            const nodes = document.querySelectorAll('.model-node');
+            nodes.forEach((node, index) => {
+                const nodeBaseAngle = getNodeAngle(index) - getNodeAngle(currentModel);
+                const adjustedAngle = nodeBaseAngle + currentAngle;
+                updateNodePosition(node, adjustedAngle);
+            });
+            
+            updateLinesAndLabels();
+            updateArcPath();
+            updateVisibility();
+            
+            if (Math.abs(currentAngle - targetAngle) > 0.0005) {
+                animationFrame = requestAnimationFrame(updateRotation);
+            } else {
+                animationFrame = null;
+            }
+        }
+        
+        function updateVisibility() {
+            const nodes = document.querySelectorAll('.model-node');
+            const lines = document.querySelectorAll('.label-line');
+            const labelTexts = document.querySelectorAll('.model-label');
+            const visibleCount = 3;
+            
+            const nodeAngles = Array.from(nodes).map((node, index) => {
+                return {
+                    index: index,
+                    angle: parseFloat(node.dataset.angle),
+                    absAngle: Math.abs(parseFloat(node.dataset.angle))
+                };
+            });
+            
+            nodeAngles.sort((a, b) => a.absAngle - b.absAngle);
+            const visibleIndices = new Set(nodeAngles.slice(0, visibleCount).map(item => item.index));
+            
+            nodes.forEach((node, index) => {
+                if (visibleIndices.has(index)) {
+                    node.classList.add('visible');
+                    lines[index].classList.add('visible');
+                    labelTexts[index].classList.add('visible');
+                    
+                    if (index === currentModel) {
+                        node.classList.add('active');
+                        labelTexts[index].classList.add('active');
+                    } else {
+                        node.classList.remove('active');
+                        labelTexts[index].classList.remove('active');
+                    }
+                } else {
+                    node.classList.remove('visible', 'active');
+                    lines[index].classList.remove('visible');
+                    labelTexts[index].classList.remove('visible', 'active');
+                }
+            });
+        }
+        
+        function switchModel(targetIndex, direction = 0) {
+            if (isAnimating || targetIndex === currentModel) return;
+            
+            isAnimating = true;
+            
+            const displays = document.querySelectorAll('.model-display');
+            const oldIndex = currentModel;
+            
+            const newCurrentAngle = getNodeAngle(targetIndex) - getNodeAngle(oldIndex) + currentAngle;
+            
+            currentModel = targetIndex;
+            currentAngle = newCurrentAngle;
+            baseAngle = -mouseAngle;
+            
+            if (animationFrame) {
+                cancelAnimationFrame(animationFrame);
+            }
+            updateRotation();
+            
+            displays.forEach((display, idx) => {
+                if (idx === oldIndex) {
+                    display.classList.remove('center');
+                    display.classList.add(direction > 0 ? 'fade-out-up' : 'fade-out-down');
+                } else if (idx === currentModel) {
+                    display.classList.remove('hidden');
+                    display.classList.add(direction > 0 ? 'fade-in-down' : 'fade-in-up');
+                } else {
+                    display.className = 'model-display hidden';
+                }
+            });
+            
+            setTimeout(() => {
+                displays.forEach((display, idx) => {
+                    if (idx === currentModel) {
+                        display.className = 'model-display center';
+                    } else {
+                        display.className = 'model-display hidden';
+                    }
+                });
+                isAnimating = false;
+            }, 600);
+        }
+        
+        function handleNodeClick(e) {
+            const targetIndex = parseInt(e.target.dataset.model);
+            if (isNaN(targetIndex)) return;
+            
+            const direction = targetIndex > currentModel ? 1 : -1;
+            switchModel(targetIndex, direction);
+        }
+        
+        function handleLabelClick(e) {
+            const index = parseInt(e.target.id.replace('label', ''));
+            const direction = index > currentModel ? 1 : -1;
+            switchModel(index, direction);
+        }
+        
+        function handleMouseMove(e) {
+            if (!containerRect) {
+                containerRect = document.getElementById('arcContainer').getBoundingClientRect();
+            }
+            if (!wrapperRect) {
+                wrapperRect = document.querySelector('.arc-wrapper').getBoundingClientRect();
+            }
+            
+            const mouseY = e.clientY;
+            const wrapperTop = wrapperRect.top;
+            const wrapperBottom = wrapperRect.bottom;
+            const wrapperCenterY = (wrapperTop + wrapperBottom) / 2;
+            const wrapperHalfHeight = (wrapperBottom - wrapperTop) / 2;
+            
+            const ratio = (mouseY - wrapperCenterY) / wrapperHalfHeight;
+            const clampedRatio = Math.max(-1, Math.min(1, ratio));
+            
+            mouseAngle = -clampedRatio * maxRotationAngle;
+            
+            if (!animationFrame) {
+                updateRotation();
+            }
+        }
+        
+        function handleMouseLeave() {
+            mouseAngle = 0;
+            if (!animationFrame) {
+                updateRotation();
+            }
+        }
+        
+        function handleTouchMove(e) {
+            if (!containerRect) {
+                containerRect = document.getElementById('arcContainer').getBoundingClientRect();
+            }
+            if (!wrapperRect) {
+                wrapperRect = document.querySelector('.arc-wrapper').getBoundingClientRect();
+            }
+            
+            const touchY = e.touches[0].clientY;
+            const wrapperTop = wrapperRect.top;
+            const wrapperBottom = wrapperRect.bottom;
+            const wrapperCenterY = (wrapperTop + wrapperBottom) / 2;
+            const wrapperHalfHeight = (wrapperBottom - wrapperTop) / 2;
+            
+            const ratio = (touchY - wrapperCenterY) / wrapperHalfHeight;
+            const clampedRatio = Math.max(-1, Math.min(1, ratio));
+            
+            mouseAngle = -clampedRatio * maxRotationAngle;
+            
+            if (!animationFrame) {
+                updateRotation();
+            }
+        }
+        
+        function handleTouchEnd() {
+            mouseAngle = 0;
+            if (!animationFrame) {
+                updateRotation();
+            }
+        }
+        
+        function initEventListeners() {
+            document.querySelectorAll('.model-node').forEach(node => {
+                node.addEventListener('click', handleNodeClick);
+            });
+            
+            document.querySelectorAll('.model-label').forEach(label => {
+                label.addEventListener('click', handleLabelClick);
+            });
+            
+            document.getElementById('arcContainer').addEventListener('mousemove', handleMouseMove);
+            document.getElementById('arcContainer').addEventListener('mouseleave', handleMouseLeave);
+            document.getElementById('arcContainer').addEventListener('touchmove', handleTouchMove);
+            document.getElementById('arcContainer').addEventListener('touchend', handleTouchEnd);
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            initArcs();
+            initEventListeners();
+            
+            document.querySelector('.model-node[data-model="0"]').classList.add('active');
+            document.querySelector('.model-label[id="label0"]').classList.add('active');
+        });
+    </script>
+</body>
+</html>
