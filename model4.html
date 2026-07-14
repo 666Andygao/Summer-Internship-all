@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>模型四 - 详细展示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            min-height: 100vh;
+            color: #fff;
+            overflow: hidden;
+        }
+        
+        .page-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .model-display-section {
+            height: calc(100vh * 2 / 3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            background: rgba(0, 0, 0, 0.1);
+            perspective: 1200px;
+        }
+        
+        .model-carousel {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .carousel-item {
+            position: absolute;
+            width: 60%;
+            height: 80%;
+            background: linear-gradient(145deg, rgba(45, 52, 54, 0.85) 0%, rgba(30, 39, 46, 0.95) 100%);
+            border-radius: 25px;
+            border: 1px solid rgba(74, 105, 189, 0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            overflow: hidden;
+        }
+        
+        .carousel-item.active {
+            transform: translateX(0) translateZ(0) scale(1);
+            opacity: 1;
+            z-index: 3;
+            border-color: rgba(74, 105, 189, 0.8);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 60px rgba(74, 105, 189, 0.4);
+        }
+        
+        .carousel-item.left {
+            transform: translateX(-35%) translateZ(-100px) scale(0.75);
+            opacity: 0.4;
+            z-index: 2;
+            filter: blur(2px);
+        }
+        
+        .carousel-item.right {
+            transform: translateX(35%) translateZ(-100px) scale(0.75);
+            opacity: 0.4;
+            z-index: 2;
+            filter: blur(2px);
+        }
+        
+        .carousel-item:hover {
+            opacity: 0.6;
+        }
+        
+        .carousel-item.active:hover {
+            opacity: 1;
+        }
+        
+        .carousel-item-visual {
+            width: 80%;
+            height: 80%;
+            background: linear-gradient(135deg, #4a69bd 0%, #2d3436 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8em;
+            color: rgba(255, 255, 255, 0.35);
+            border: 3px dashed rgba(74, 105, 189, 0.5);
+        }
+        
+        .indicators {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            z-index: 4;
+        }
+        
+        .indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .indicator.active {
+            background: #4a69bd;
+            transform: scale(1.3);
+            box-shadow: 0 0 10px rgba(74, 105, 189, 0.8);
+        }
+        
+        .text-section {
+            height: calc(100vh * 1 / 3);
+            background: rgba(0, 0, 0, 0.3);
+            border-top: 1px solid rgba(74, 105, 189, 0.3);
+            padding: 30px 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .text-content h2 {
+            font-size: 2.2em;
+            color: #4a69bd;
+            margin-bottom: 15px;
+        }
+        
+        .text-content p {
+            color: #a8b8d0;
+            font-size: 1.1em;
+            line-height: 1.8;
+            margin-bottom: 10px;
+        }
+        
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 10px 25px;
+            background: linear-gradient(135deg, rgba(74, 105, 189, 0.8) 0%, rgba(45, 52, 54, 0.9) 100%);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 20px;
+            font-size: 0.9em;
+            border: 1px solid rgba(74, 105, 189, 0.5);
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+        
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(74, 105, 189, 0.4);
+        }
+        
+        .arrow-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            height: 50px;
+            background: rgba(74, 105, 189, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 5;
+        }
+        
+        .arrow-nav:hover {
+            background: rgba(74, 105, 189, 1);
+            transform: translateY(-50%) scale(1.1);
+            box-shadow: 0 0 20px rgba(74, 105, 189, 0.8);
+        }
+        
+        .arrow-nav.prev {
+            left: 30px;
+        }
+        
+        .arrow-nav.next {
+            right: 30px;
+        }
+        
+        .arrow {
+            border: solid #fff;
+            border-width: 0 2px 2px 0;
+            display: inline-block;
+            padding: 4px;
+        }
+        
+        .left-arrow {
+            transform: rotate(135deg);
+        }
+        
+        .right-arrow {
+            transform: rotate(-45deg);
+        }
+    </style>
+</head>
+<body>
+    <a href="model.html" class="back-button">← 返回模型列表</a>
+    
+    <div class="page-container">
+        <div class="model-display-section">
+            <div class="model-carousel" id="modelCarousel">
+                <div class="arrow-nav prev" onclick="previousModel()">
+                    <i class="arrow left-arrow"></i>
+                </div>
+                <div class="arrow-nav next" onclick="nextModel()">
+                    <i class="arrow right-arrow"></i>
+                </div>
+                
+                <div class="carousel-item active" data-index="0">
+                    <div class="carousel-item-visual">4A</div>
+                </div>
+                <div class="carousel-item left" data-index="1">
+                    <div class="carousel-item-visual">4B</div>
+                </div>
+                <div class="carousel-item right" data-index="2">
+                    <div class="carousel-item-visual">4C</div>
+                </div>
+                
+                <div class="indicators">
+                    <div class="indicator active" data-index="0" onclick="goToModel(0)"></div>
+                    <div class="indicator" data-index="1" onclick="goToModel(1)"></div>
+                    <div class="indicator" data-index="2" onclick="goToModel(2)"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-section">
+            <div class="text-content" id="textContent">
+                <h2 id="modelTitle">模型四 - A版本</h2>
+                <p id="modelDescription">这是模型四的第一个子模型，集成了多种机器学习技术。该版本支持分类、回归、聚类等经典机器学习算法，具备强大的预测能力和模式识别功能，适合各类预测分析场景。</p>
+                <p>提供自动化特征工程和超参数调优，降低模型开发门槛，加速从数据到洞察的转化过程。</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const modelsData = [
+            {
+                title: "模型四 - A版本",
+                description: "这是模型四的第一个子模型，集成了多种机器学习技术。该版本支持分类、回归、聚类等经典机器学习算法，具备强大的预测能力和模式识别功能，适合各类预测分析场景。",
+                extra: "提供自动化特征工程和超参数调优，降低模型开发门槛，加速从数据到洞察的转化过程。"
+            },
+            {
+                title: "模型四 - B版本",
+                description: "这是模型四的第二个子模型，在A版本基础上增加了集成学习能力。通过随机森林、梯度提升和堆叠泛化等技术，有效提升预测精度和模型鲁棒性，减少过拟合风险。",
+                extra: "支持模型可解释性分析，通过SHAP值和特征重要性排名，帮助用户理解模型决策逻辑。"
+            },
+            {
+                title: "模型四 - C版本",
+                description: "这是模型四的第三个子模型，引入了强化学习和在线学习机制。模型能够根据实时反馈持续优化自身参数，在动态变化的环境中保持高性能，适合需要持续适应的应用场景。",
+                extra: "内置A/B测试框架和模型版本管理，支持安全的模型迭代和灰度发布策略。"
+            }
+        ];
+        
+        let currentIndex = 0;
+        let isAnimating = false;
+        
+        function updateCarousel() {
+            const items = document.querySelectorAll('.carousel-item');
+            const indicators = document.querySelectorAll('.indicator');
+            
+            items.forEach((item, index) => {
+                if (index === currentIndex) {
+                    item.className = 'carousel-item active';
+                } else if (index === (currentIndex - 1 + 3) % 3) {
+                    item.className = 'carousel-item left';
+                } else if (index === (currentIndex + 1) % 3) {
+                    item.className = 'carousel-item right';
+                } else {
+                    item.className = 'carousel-item left';
+                }
+            });
+            
+            indicators.forEach((indicator, index) => {
+                if (index === currentIndex) {
+                    indicator.className = 'indicator active';
+                } else {
+                    indicator.className = 'indicator';
+                }
+            });
+            
+            const data = modelsData[currentIndex];
+            document.getElementById('modelTitle').textContent = data.title;
+            document.getElementById('modelDescription').textContent = data.description;
+            document.querySelector('#textContent p:last-child').textContent = data.extra;
+        }
+        
+        function nextModel() {
+            if (isAnimating) return;
+            isAnimating = true;
+            currentIndex = (currentIndex + 1) % 3;
+            updateCarousel();
+            setTimeout(() => { isAnimating = false; }, 600);
+        }
+        
+        function previousModel() {
+            if (isAnimating) return;
+            isAnimating = true;
+            currentIndex = (currentIndex - 1 + 3) % 3;
+            updateCarousel();
+            setTimeout(() => { isAnimating = false; }, 600);
+        }
+        
+        function goToModel(index) {
+            if (isAnimating || index === currentIndex) return;
+            isAnimating = true;
+            currentIndex = index;
+            updateCarousel();
+            setTimeout(() => { isAnimating = false; }, 600);
+        }
+        
+        document.querySelectorAll('.carousel-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const index = parseInt(item.dataset.index);
+                if (index !== currentIndex) {
+                    goToModel(index);
+                }
+            });
+        });
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') previousModel();
+            if (e.key === 'ArrowRight') nextModel();
+        });
+    </script>
+</body>
+</html>

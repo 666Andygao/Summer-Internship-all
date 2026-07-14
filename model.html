@@ -1,4 +1,4 @@
-=<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -148,6 +148,12 @@
             background: linear-gradient(90deg, rgba(74, 105, 189, 0.6) 0%, rgba(74, 105, 189, 0) 100%);
             height: 2px;
             transform-origin: left center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .label-line.visible {
+            opacity: 1;
         }
         
         .model-label {
@@ -211,8 +217,17 @@
             justify-content: center;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
             border: 1px solid rgba(74, 105, 189, 0.3);
-            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s ease, box-shadow 0.3s ease;
             position: absolute;
+        }
+        
+        .model-display.clickable {
+            cursor: pointer;
+        }
+        
+        .model-display.clickable:hover {
+            border-color: rgba(74, 105, 189, 0.8);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(74, 105, 189, 0.3);
         }
         
         .model-display.hidden {
@@ -397,27 +412,27 @@
         </div>
         
         <div class="display-area" id="displayArea">
-            <div class="model-display center" id="display0">
+            <div class="model-display center clickable" id="display0">
                 <div class="model-visual">M1</div>
                 <h2>模型一</h2>
                 <p>这是第一个模型的详细展示区域。该模型具有独特的特性和功能，可以帮助用户完成特定任务。</p>
             </div>
-            <div class="model-display hidden" id="display1">
+            <div class="model-display hidden clickable" id="display1">
                 <div class="model-visual">M2</div>
                 <h2>模型二</h2>
                 <p>这是第二个模型的详细展示区域。该模型采用先进的算法和技术，提供高效的解决方案。</p>
             </div>
-            <div class="model-display hidden" id="display2">
+            <div class="model-display hidden clickable" id="display2">
                 <div class="model-visual">M3</div>
                 <h2>模型三</h2>
                 <p>这是第三个模型的详细展示区域。该模型专注于数据分析和可视化，提供直观的洞察。</p>
             </div>
-            <div class="model-display hidden" id="display3">
+            <div class="model-display hidden clickable" id="display3">
                 <div class="model-visual">M4</div>
                 <h2>模型四</h2>
                 <p>这是第四个模型的详细展示区域。该模型集成了多种机器学习技术，具有强大的预测能力。</p>
             </div>
-            <div class="model-display hidden" id="display4">
+            <div class="model-display hidden clickable" id="display4">
                 <div class="model-visual">M5</div>
                 <h2>模型五</h2>
                 <p>这是第五个模型的详细展示区域。该模型采用深度学习架构，在复杂任务中表现出色。</p>
@@ -723,6 +738,26 @@
             document.getElementById('arcContainer').addEventListener('mouseleave', handleMouseLeave);
             document.getElementById('arcContainer').addEventListener('touchmove', handleTouchMove);
             document.getElementById('arcContainer').addEventListener('touchend', handleTouchEnd);
+            
+            document.getElementById('display0').addEventListener('click', () => {
+                window.location.href = 'model1.html';
+            });
+            
+            document.getElementById('display1').addEventListener('click', () => {
+                window.location.href = 'model2.html';
+            });
+            
+            document.getElementById('display2').addEventListener('click', () => {
+                window.location.href = 'model3.html';
+            });
+            
+            document.getElementById('display3').addEventListener('click', () => {
+                window.location.href = 'model4.html';
+            });
+            
+            document.getElementById('display4').addEventListener('click', () => {
+                window.location.href = 'model5.html';
+            });
         }
         
         document.addEventListener('DOMContentLoaded', () => {
