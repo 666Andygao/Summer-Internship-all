@@ -1,0 +1,120 @@
+/*
+ * 全局基础样式
+ * 统一重置默认样式，定义通用排版与响应式基线
+ */
+@import './variables.css';
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  line-height: 1.6;
+  /* 页面背景叠加极淡的织纹纹样，增强非遗质感（纯 CSS 生成，无需图片资源）*/
+  background-image:
+    linear-gradient(0deg, rgba(156, 90, 52, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(156, 90, 52, 0.015) 1px, transparent 1px);
+  background-size: 22px 22px;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+/* 标题统一使用厚重宋体系 */
+h1, h2, h3, h4 {
+  font-family: var(--font-title);
+  font-weight: 700;
+  color: var(--color-primary);
+  letter-spacing: 1px;
+}
+
+/* ===== 通用布局容器：居中限宽，适配 PC 端 ===== */
+.container {
+  width: 100%;
+  max-width: var(--container-width);
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* ===== 国风栏目标题：左侧竖纹 + 中英对照，模仿官网分区样式 ===== */
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 28px 0 20px;
+}
+.section-title::before {
+  content: '';
+  width: 4px;
+  height: 22px;
+  background: linear-gradient(var(--color-primary), var(--color-secondary));
+  border-radius: 2px;
+}
+.section-title h2 {
+  font-size: 22px;
+}
+.section-title .sub {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* ===== 民族标签通用样式 ===== */
+.ethnic-tag {
+  display: inline-block;
+  padding: 1px 8px;
+  font-size: 12px;
+  color: var(--color-secondary);
+  border: 1px solid var(--color-secondary);
+  border-radius: 2px;
+  background: rgba(156, 90, 52, 0.06);
+}
+
+/* ===== 价格通用样式 ===== */
+.price {
+  color: var(--color-accent);
+  font-family: var(--font-title);
+}
+.price .unit {
+  font-size: 13px;
+}
+
+/* ===== 响应式基线 ===== */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 12px;
+  }
+  .section-title h2 {
+    font-size: 19px;
+  }
+}
+
+/* 页面主体区域：为固定头部预留高度，撑满视口 */
+.page-main {
+  min-height: calc(100vh - 64px - 200px);
+  padding-bottom: 40px;
+}
