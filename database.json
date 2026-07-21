@@ -1,0 +1,78 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "testuser",
+      "password": "$2a$10$IbRFPtTCDnZObyiR.0whseQS3HL02wuoAt2LUX8j9L0xXsY5T5NZq",
+      "role": "user",
+      "display_name": "����",
+      "avatar": "",
+      "created_at": "2026-07-21T10:23:05.134Z"
+    },
+    {
+      "id": 2,
+      "username": "testdev",
+      "password": "$2a$10$9a7JjSL0OH2TVIKPzUsGsOKbLoYu8bN53BpRSV6wQjUAOqb78CERa",
+      "role": "developer",
+      "display_name": "����",
+      "avatar": "",
+      "created_at": "2026-07-21T10:26:45.871Z"
+    },
+    {
+      "id": 3,
+      "username": "1",
+      "password": "$2a$10$O8TWkSBXkvOlrzH.6WK9MevgaTuNFjeC1kuti/jLG.pHs5zynCxz2",
+      "role": "user",
+      "display_name": "1",
+      "avatar": "",
+      "created_at": "2026-07-21T10:29:00.091Z"
+    },
+    {
+      "id": 4,
+      "username": "开发者",
+      "password": "$2a$10$9PSI/kPqJLWlA/tctZ5GZ.lRJIQyElj7o9WZG7cJGSfNtv5VYDHDu",
+      "role": "developer",
+      "display_name": "开发者",
+      "avatar": "",
+      "created_at": "2026-07-21T10:32:52.763Z"
+    }
+  ],
+  "conversations": [
+    {
+      "id": 1,
+      "user_id": 3,
+      "developer_id": 2,
+      "created_at": "2026-07-21T10:29:02.339Z"
+    },
+    {
+      "id": 2,
+      "user_id": 1,
+      "developer_id": 4,
+      "created_at": "2026-07-21T10:32:58.296Z"
+    },
+    {
+      "id": 3,
+      "user_id": 3,
+      "developer_id": 4,
+      "created_at": "2026-07-21T10:32:58.884Z"
+    }
+  ],
+  "messages": [
+    {
+      "id": 1,
+      "conversation_id": 1,
+      "sender_id": 3,
+      "content": "我是大学生，我想要一个非遗物品",
+      "file_path": "",
+      "file_type": "",
+      "file_name": "",
+      "is_read": false,
+      "created_at": "2026-07-21T10:29:19.456Z"
+    }
+  ],
+  "nextId": {
+    "user": 5,
+    "conversation": 4,
+    "message": 2
+  }
+}

@@ -506,7 +506,7 @@
     </div>
     <div class="nav-actions">
       <span>🔍</span>
-      <span>👤</span>
+      <a href="login.html" title="登录" style="text-decoration:none;"><span>👤</span></a>
     </div>
   </div>
 
@@ -623,5 +623,40 @@
   </div>
 </div>
 <!-- 设计描述：此页面灵感源自华为官网的结构，但完全围绕中国非遗文化。包含顶栏、主导航、品牌横幅、推荐卡片及底部信息。 -->
+
+<script>
+// 检查登录状态，自动更新导航栏
+(function() {
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+    const loginLink = document.querySelector('.nav-actions a[href="login.html"]');
+
+    if (token && userStr && loginLink) {
+        try {
+            const user = JSON.parse(userStr);
+            // 根据角色跳转到对应 Dashboard
+            const dashboardUrl = user.role === 'user' ? 'user-dashboard.html' : 'developer-dashboard.html';
+
+            // 替换登录图标为个人中心链接
+            loginLink.href = dashboardUrl;
+            loginLink.title = '个人中心';
+            loginLink.style.textDecoration = 'none';
+            loginLink.innerHTML = '<span style="font-size:13px;color:#c0392b;font-weight:500;">' + user.display_name + '</span>';
+
+            // 也在顶栏添加个人中心快捷入口
+            var topLinks = document.querySelector('.top-links');
+            if (topLinks && !topLinks.querySelector('.personal-center')) {
+                var pcLink = document.createElement('a');
+                pcLink.href = dashboardUrl;
+                pcLink.className = 'personal-center';
+                pcLink.textContent = '个人中心';
+                pcLink.style.color = '#c0392b';
+                pcLink.style.fontWeight = '500';
+                topLinks.appendChild(pcLink);
+            }
+        } catch(e) {}
+    }
+})();
+</script>
 </body>
 </html>
