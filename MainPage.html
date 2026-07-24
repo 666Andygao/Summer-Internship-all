@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
   <title>华夏风物志 · 非遗传承</title>
-  <!-- 风格类似华为官网，但完全围绕中国非物质文化遗产 -->
   <style>
+    /* ===== 全局重置 & 基础 ===== */
     * {
       margin: 0;
       padding: 0;
@@ -19,7 +19,6 @@
       line-height: 1.5;
     }
 
-    /* 整体容器模拟 “集团网站” 风格，居中留白 */
     .site-wrapper {
       max-width: 1440px;
       margin: 0 auto;
@@ -27,7 +26,7 @@
       box-shadow: 0 0 20px rgba(0,0,0,0.02);
     }
 
-    /* ---- 顶部导航 (区域/语言 + logo + 菜单) ---- */
+    /* ===== 顶部栏 ===== */
     .top-bar {
       display: flex;
       justify-content: space-between;
@@ -68,10 +67,10 @@
     }
 
     .top-links a:hover {
-      color: #c0392b; /* 中国红点缀 */
+      color: #c0392b;
     }
 
-    /* ---- 主导航 (HUAWEI 风格) ---- */
+    /* ===== 主导航 ===== */
     .main-nav {
       display: flex;
       align-items: center;
@@ -152,9 +151,14 @@
       color: #444;
     }
 
-    /* ---- 主横幅 Hero (类似 HUAWEI nova 16 Pro) ---- */
+    .nav-actions a {
+      text-decoration: none;
+      color: #444;
+    }
+
+    /* ===== 主横幅 Hero ===== */
     .hero-section {
-      background: #f2ebe4;  /* 宣纸底色 */
+      background: #f2ebe4;
       background-image: radial-gradient(circle at 20% 30%, rgba(192, 57, 43, 0.03) 0%, transparent 40%),
                         radial-gradient(circle at 80% 70%, rgba(192, 57, 43, 0.05) 0%, transparent 50%);
       padding: 40px 40px 30px 40px;
@@ -257,10 +261,100 @@
       color: #7a5a4a;
     }
 
-    /* 推荐信息卡片区 (类似 "推荐信息" 板块) */
+    /* ===== 统计卡片 (新增) ===== */
+    .stats-section {
+      padding: 30px 40px;
+      background: #fcfaf8;
+      border-bottom: 1px solid #eee8e2;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 20px;
+      text-align: center;
+    }
+
+    .stat-item {
+      background: white;
+      padding: 18px 10px;
+      border-radius: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+      border: 1px solid #f0ebe7;
+    }
+
+    .stat-item .number {
+      font-size: 2.2rem;
+      font-weight: 600;
+      color: #c0392b;
+      letter-spacing: -0.5px;
+    }
+
+    .stat-item .label {
+      font-size: 0.85rem;
+      color: #5a4d44;
+      margin-top: 4px;
+    }
+
+    /* ===== 联合国名录 (新增) ===== */
+    .unesco-section {
+      padding: 30px 40px 10px 40px;
+      background: white;
+      border-bottom: 1px solid #f0ebe7;
+    }
+
+    .unesco-section .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #ececec;
+      padding-bottom: 10px;
+    }
+
+    .unesco-section .section-header h2 {
+      font-size: 1.6rem;
+      font-weight: 500;
+      color: #1a1a1a;
+    }
+
+    .unesco-badge {
+      display: inline-block;
+      background: #c0392b10;
+      color: #c0392b;
+      font-size: 0.9rem;
+      padding: 2px 16px;
+      border-radius: 30px;
+      border: 1px solid #c0392b30;
+    }
+
+    .unesco-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .unesco-item {
+      background: #faf8f6;
+      padding: 14px 12px;
+      border-radius: 16px;
+      border: 1px solid #f0ebe7;
+      font-size: 0.95rem;
+      color: #2d241f;
+      text-align: center;
+    }
+
+    .unesco-item strong {
+      display: block;
+      font-size: 0.8rem;
+      color: #b14f3e;
+      margin-top: 4px;
+      font-weight: 400;
+    }
+
+    /* ===== 推荐卡片 ===== */
     .recommend-section {
       padding: 40px 40px 50px 40px;
       background: white;
+      border-bottom: 1px solid #f0ebe7;
     }
 
     .section-header {
@@ -379,7 +473,7 @@
       border-bottom-color: #c0392b;
     }
 
-    /* 底部 (类似华为服务支持等) */
+    /* ===== 底部 ===== */
     .footer-links {
       background: #f5f2ef;
       padding: 30px 40px 20px;
@@ -426,7 +520,7 @@
       gap: 8px;
     }
 
-    /* 响应式 */
+    /* ===== 响应式 ===== */
     @media (max-width: 860px) {
       .top-bar, .main-nav {
         flex-wrap: wrap;
@@ -447,6 +541,9 @@
       }
       .card-grid {
         grid-template-columns: 1fr 1fr;
+      }
+      .stats-section {
+        grid-template-columns: repeat(3, 1fr);
       }
     }
 
@@ -469,12 +566,19 @@
         flex-direction: column;
         gap: 16px;
       }
+      .stats-section {
+        grid-template-columns: 1fr 1fr;
+      }
+      .unesco-grid {
+        grid-template-columns: 1fr 1fr;
+      }
     }
   </style>
 </head>
 <body>
 <div class="site-wrapper">
-  <!-- 顶部：选择区域/语言 + 服务支持等 -->
+
+  <!-- ===== 顶部栏 ===== -->
   <div class="top-bar">
     <div class="lang-region">
       <span>🌏 中国 · 中文</span>
@@ -489,7 +593,7 @@
     </div>
   </div>
 
-  <!-- 主导航 -->
+  <!-- ===== 主导航 ===== -->
   <div class="main-nav">
     <div class="logo-area">
       <div class="brand-icon">🎋 华夏风物</div>
@@ -506,11 +610,11 @@
     </div>
     <div class="nav-actions">
       <span>🔍</span>
-      <a href="login.html" title="登录" style="text-decoration:none;"><span>👤</span></a>
+      <a href="login.html" title="登录"><span>👤</span></a>
     </div>
   </div>
 
-  <!-- 主横幅 (类似 HUAWEI nova 16 Pro) -->
+  <!-- ===== 主横幅 ===== -->
   <div class="hero-section">
     <div class="hero-text">
       <div class="tagline">✦ 华夏非遗 · 新「枫」潮</div>
@@ -525,14 +629,51 @@
       <a href="#" class="btn-primary">探索非遗 · 了解更多</a>
     </div>
     <div class="hero-image">
-      <div class="icon-symbol">
-        🏮  ✿  🎋
-      </div>
-      <!-- 此处可以用抽象图形代替，保留类似华为产品图的意境 -->
+      <div class="icon-symbol">🏮  ✿  🎋</div>
     </div>
   </div>
 
-  <!-- 推荐信息 (卡片区) 类似华为官网 “推荐信息” -->
+  <!-- ===== 新增：统计卡片（数据来自官网） ===== -->
+  <div class="stats-section">
+    <div class="stat-item">
+      <div class="number">45</div>
+      <div class="label">联合国教科文组织名录（名册）项目</div>
+    </div>
+    <div class="stat-item">
+      <div class="number">1557</div>
+      <div class="label">国家级代表性项目</div>
+    </div>
+    <div class="stat-item">
+      <div class="number">3068</div>
+      <div class="label">国家级代表性传承人</div>
+    </div>
+    <div class="stat-item">
+      <div class="number">10</div>
+      <div class="label">非遗门类</div>
+    </div>
+  </div>
+
+  <!-- ===== 新增：联合国教科文组织名录精选 ===== -->
+  <div class="unesco-section">
+    <div class="section-header">
+      <h2>🌍 联合国教科文组织非物质文化遗产 <span class="unesco-badge">名录（名册）项目</span></h2>
+      <a href="#" class="more-link">查看全部 45 项 →</a>
+    </div>
+    <div class="unesco-grid">
+      <div class="unesco-item">昆曲 <strong>人类非遗</strong></div>
+      <div class="unesco-item">古琴艺术 <strong>人类非遗</strong></div>
+      <div class="unesco-item">新疆维吾尔木卡姆艺术 <strong>人类非遗</strong></div>
+      <div class="unesco-item">蒙古族长调民歌 <strong>人类非遗</strong></div>
+      <div class="unesco-item">中国篆刻 <strong>人类非遗</strong></div>
+      <div class="unesco-item">中国雕版印刷技艺 <strong>人类非遗</strong></div>
+      <div class="unesco-item">中国书法 <strong>人类非遗</strong></div>
+      <div class="unesco-item">中国剪纸 <strong>人类非遗</strong></div>
+      <div class="unesco-item">端午节 <strong>人类非遗</strong></div>
+      <div class="unesco-item">妈祖信俗 <strong>人类非遗</strong></div>
+    </div>
+  </div>
+
+  <!-- ===== 推荐信息卡片 ===== -->
   <div class="recommend-section">
     <div class="section-header">
       <h2>📌 推荐 · 非遗瑰宝</h2>
@@ -590,7 +731,7 @@
     </div>
   </div>
 
-  <!-- 底部 类似华为 “服务支持 / 合作伙伴” 等 -->
+  <!-- ===== 底部 ===== -->
   <div class="footer-links">
     <div class="col">
       <strong>非遗传承</strong>
@@ -619,44 +760,40 @@
   </div>
   <div class="copyright">
     <span>© 2026 华夏风物 · 非物质文化遗产数字平台</span>
-    <span>京ICP备 2026000000 号 | 传承中华文脉</span>
+    <span>数据参考：中国非物质文化遗产网 (www.ihchina.cn) | 京ICP备 2026000000 号</span>
   </div>
 </div>
-<!-- 设计描述：此页面灵感源自华为官网的结构，但完全围绕中国非遗文化。包含顶栏、主导航、品牌横幅、推荐卡片及底部信息。 -->
 
+<!-- ===== 登录状态检查脚本 ===== -->
 <script>
-// 检查登录状态，自动更新导航栏
-(function() {
+  (function() {
     const token = localStorage.getItem('token');
     const userStr = localStorage.getItem('user');
     const loginLink = document.querySelector('.nav-actions a[href="login.html"]');
 
     if (token && userStr && loginLink) {
-        try {
-            const user = JSON.parse(userStr);
-            // 根据角色跳转到对应 Dashboard
-            const dashboardUrl = user.role === 'user' ? 'user-dashboard.html' : 'developer-dashboard.html';
+      try {
+        const user = JSON.parse(userStr);
+        const dashboardUrl = user.role === 'user' ? 'user-dashboard.html' : 'developer-dashboard.html';
 
-            // 替换登录图标为个人中心链接
-            loginLink.href = dashboardUrl;
-            loginLink.title = '个人中心';
-            loginLink.style.textDecoration = 'none';
-            loginLink.innerHTML = '<span style="font-size:13px;color:#c0392b;font-weight:500;">' + user.display_name + '</span>';
+        loginLink.href = dashboardUrl;
+        loginLink.title = '个人中心';
+        loginLink.style.textDecoration = 'none';
+        loginLink.innerHTML = '<span style="font-size:13px;color:#c0392b;font-weight:500;">' + user.display_name + '</span>';
 
-            // 也在顶栏添加个人中心快捷入口
-            var topLinks = document.querySelector('.top-links');
-            if (topLinks && !topLinks.querySelector('.personal-center')) {
-                var pcLink = document.createElement('a');
-                pcLink.href = dashboardUrl;
-                pcLink.className = 'personal-center';
-                pcLink.textContent = '个人中心';
-                pcLink.style.color = '#c0392b';
-                pcLink.style.fontWeight = '500';
-                topLinks.appendChild(pcLink);
-            }
-        } catch(e) {}
+        const topLinks = document.querySelector('.top-links');
+        if (topLinks && !topLinks.querySelector('.personal-center')) {
+          const pcLink = document.createElement('a');
+          pcLink.href = dashboardUrl;
+          pcLink.className = 'personal-center';
+          pcLink.textContent = '个人中心';
+          pcLink.style.color = '#c0392b';
+          pcLink.style.fontWeight = '500';
+          topLinks.appendChild(pcLink);
+        }
+      } catch(e) {}
     }
-})();
+  })();
 </script>
 </body>
 </html>
