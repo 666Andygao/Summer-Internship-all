@@ -167,28 +167,28 @@ onMounted(() => {
 
       <div class="shop-layout">
         <!-- 左侧筛选侧边栏 -->
-        <FilterSidebar v-model:filters="filters" @change="onFilterChange" />
+        <FilterSidebar class="shop-filter" v-model:filters="filters" @change="onFilterChange" />
+
+        <!-- 工具条：结果计数 + 排序（单独占右列首行，使筛选栏与下方商品顶部对齐） -->
+        <div class="toolbar">
+          <span class="result-count">
+            共 <em>{{ total }}</em> 件器物
+            <template v-if="filters.keyword">
+              · 搜索「{{ filters.keyword }}」
+            </template>
+          </span>
+          <div class="sort-tabs">
+            <button
+              v-for="opt in sortOptions"
+              :key="opt.value"
+              :class="{ active: sort === opt.value }"
+              @click="sort = opt.value"
+            >{{ opt.label }}</button>
+          </div>
+        </div>
 
         <!-- 右侧内容区 -->
         <div class="shop-main">
-          <!-- 工具条：结果计数 + 排序 -->
-          <div class="toolbar">
-            <span class="result-count">
-              共 <em>{{ total }}</em> 件器物
-              <template v-if="filters.keyword">
-                · 搜索「{{ filters.keyword }}」
-              </template>
-            </span>
-            <div class="sort-tabs">
-              <button
-                v-for="opt in sortOptions"
-                :key="opt.value"
-                :class="{ active: sort === opt.value }"
-                @click="sort = opt.value"
-              >{{ opt.label }}</button>
-            </div>
-          </div>
-
           <!-- 商品网格（瀑布流卡片布局），加载时骨架屏 -->
           <div v-loading="loading" class="goods-grid" :class="{ empty: !goods.length && !loading }">
             <GoodsCard v-for="g in goods" :key="g.id" :goods="g" />
@@ -300,10 +300,23 @@ onMounted(() => {
 .shop-layout {
   display: grid;
   grid-template-columns: 240px 1fr;
-  gap: 24px;
+  grid-template-rows: auto 1fr;
+  column-gap: 24px;
+  row-gap: 18px;
   align-items: start;
 }
+/* 筛选栏放到第二行左列，与右侧商品网格同一行起始 → 顶部对齐 */
+.shop-filter {
+  grid-column: 1;
+  grid-row: 2;
+}
+.shop-main {
+  grid-column: 2;
+  grid-row: 2;
+}
 .toolbar {
+  grid-column: 2;
+  grid-row: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -311,7 +324,6 @@ onMounted(() => {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: 12px 18px;
-  margin-bottom: 18px;
   flex-wrap: wrap;
   gap: 10px;
 }
@@ -385,9 +397,16 @@ onMounted(() => {
     font-size: 30px;
     letter-spacing: 3px;
   }
-  /* 移动端：筛选栏移到顶部，单列铺开 */
+  /* 移动端：筛选栏移到顶部，单列铺开（清除桌面端的行列定位，按 DOM 顺序堆叠） */
   .shop-layout {
     grid-template-columns: 1fr;
+    grid-template-rows: none;
+  }
+  .shop-filter,
+  .toolbar,
+  .shop-main {
+    grid-column: auto;
+    grid-row: auto;
   }
   .goods-grid {
     grid-template-columns: repeat(2, 1fr);
