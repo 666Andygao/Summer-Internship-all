@@ -2854,7 +2854,209 @@ app.get('/api/profile/reviews', authMiddleware, (req, res) => {
     const reviews = db.reviews.filter(r => r.user_id === req.user.id);
     res.json(reviews);
 });
+// ============ 数据统计接口 ============
 
+/**
+ * 销量统计
+ * GET /api/stats/sales
+ */
+app.get('/api/stats/sales', authMiddleware, requireRole([ROLE_TYPES.ARTISAN, ROLE_TYPES.ADMIN]), (req, res) => {
+    db = loadDB();
+    const { start_date, end_date, merchant_id } = req.query;
+    const isAdmin = normalizeRole(req.user.role) === ROLE_TYPES.ADMIN;
+
+    let orders = db.orders.filter(order => {
+        if (!['paid', 'completed', 'shipped'].includes(order.status)) return false;
+        if (start_date && new Date(order.created_at) < new Date(start_date)) return false;
+        if (end_date) {
+            const end = new Date(end_date);
+            end.setHours(23, 59, 59, 999);
+            if (new Date(order.created_at) > end) return false;
+        }
+        if (!isAdmin) return isOrderOwnedByMerchant(db, order, req.user.id);
+        if (merchant_id && isAdmin) {
+            const merchant = db.merchants.find(m => m.id === Number(merchant_id));
+            return merchant ? isOrderOwnedByMerchant(db, order, merchant.user_id) : false;
+        }
+        return true;
+    });
+
+    const totalSales = orders.reduce((sum, order) => {
+        return sum + (order.items || []).reduce((itemSum, item) => itemSum + (Number(item.quantity) || 0), 0);
+    }, 0);
+
+    const categoryStats = {};
+    orders.forEach(order => {
+        (order.items || []).forEach(item => {
+            const product = db.products.find(p => p.id === item.product_id);
+            const category = product?.category || '未分类';
+            if (!categoryStats[category]) categoryStats[category] = { quantity: 0, amount: 0 };
+            categoryStats[category].quantity += Number(item.quantity) || 0;
+            categoryStats[category].amount += (Number(item.price) || 0) * (Number(item.quantity) || 0);
+        });
+    });
+
+    const dailyStats = {};
+    orders.forEach(order => {
+        const date = order.created_at.slice(0, 10);
+        if (!dailyStats[date]) dailyStats[date] = { orders: 0, quantity: 0, amount: 0 };
+        dailyStats[date].orders += 1;
+        dailyStats[date].quantity += (order.items || []).reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
+        dailyStats[date].amount += Number(order.total_amount) || 0;
+    });
+
+    res.json({ total_sales: totalSales, total_orders: orders.length, category_stats: categoryStats, daily_stats: dailyStats });
+});
+
+/**
+ * 收入统计
+ * GET /api/stats/revenue
+ */
+app.get('/api/stats/revenue', authMiddleware, requireRole([ROLE_TYPES.ARTISAN, ROLE_TYPES.ADMIN]), (req, res) => {
+    db = loadDB();
+    const { start_date, end_date, merchant_id } = req.query;
+    const isAdmin = normalizeRole(req.user.role) === ROLE_TYPES.ADMIN;
+
+    let orders = db.orders.filter(order => {
+        if (!['paid', 'completed', 'shipped'].includes(order.status)) return false;
+        if (start_date && new Date(order.created_at) < new Date(start_date)) return false;
+        if (end_date) {
+            const end = new Date(end_date);
+            end.setHours(23, 59, 59, 999);
+            if (new Date(order.created_at) > end) return false;
+        }
+        if (!isAdmin) return isOrderOwnedByMerchant(db, order, req.user.id);
+        if (merchant_id && isAdmin) {
+            const merchant = db.merchants.find(m => m.id === Number(merchant_id));
+            return merchant ? isOrderOwnedByMerchant(db, order, merchant.user_id) : false;
+        }
+        return true;
+    });
+
+    const totalRevenue = orders.reduce((sum, order) => sum + (Number(order.total_amount) || 0), 0);
+    const monthlyStats = {};
+    orders.forEach(order => {
+        const month = order.created_at.slice(0, 7);
+        if (!monthlyStats[month]) monthlyStats[month] = { revenue: 0, orders: 0 };
+        monthlyStats[month].revenue += Number(order.total_amount) || 0;
+        monthlyStats[month].orders += 1;
+    });
+
+    res.json({
+        total_revenue: totalRevenue.toFixed(2),
+        total_orders: orders.length,
+        avg_order_value: orders.length > 0 ? (totalRevenue / orders.length).toFixed(2) : '0.00',
+        monthly_stats: monthlyStats
+    });
+});
+
+/**
+ * 订单趋势分析
+ * GET /api/stats/orders/trend
+ */
+app.get('/api/stats/orders/trend', authMiddleware, requireRole([ROLE_TYPES.ARTISAN, ROLE_TYPES.ADMIN]), (req, res) => {
+    db = loadDB();
+    const { period = 'month', start_date, end_date, merchant_id } = req.query;
+    const isAdmin = normalizeRole(req.user.role) === ROLE_TYPES.ADMIN;
+
+    let orders = db.orders.filter(order => {
+        if (start_date && new Date(order.created_at) < new Date(start_date)) return false;
+        if (end_date) {
+            const end = new Date(end_date);
+            end.setHours(23, 59, 59, 999);
+            if (new Date(order.created_at) > end) return false;
+        }
+        if (!isAdmin) return isOrderOwnedByMerchant(db, order, req.user.id);
+        if (merchant_id && isAdmin) {
+            const merchant = db.merchants.find(m => m.id === Number(merchant_id));
+            return merchant ? isOrderOwnedByMerchant(db, order, merchant.user_id) : false;
+        }
+        return true;
+    });
+
+    const groupByPeriod = (order) => {
+        const date = new Date(order.created_at);
+        switch (period) {
+            case 'day': return order.created_at.slice(0, 10);
+            case 'week': {
+                const day = date.getDay();
+                const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+                return new Date(date.setDate(diff)).toISOString().slice(0, 10);
+            }
+            case 'year': return order.created_at.slice(0, 4);
+            default: return order.created_at.slice(0, 7);
+        }
+    };
+
+    const trendData = {};
+    orders.forEach(order => {
+        const key = groupByPeriod(order);
+        if (!trendData[key]) {
+            trendData[key] = { date: key, total_orders: 0, paid_orders: 0, completed_orders: 0, cancelled_orders: 0 };
+        }
+        trendData[key].total_orders += 1;
+        if (order.status === 'paid') trendData[key].paid_orders += 1;
+        if (order.status === 'completed') trendData[key].completed_orders += 1;
+        if (order.status === 'cancelled') trendData[key].cancelled_orders += 1;
+    });
+
+    const summary = {
+        total_orders: orders.length,
+        paid_rate: orders.length > 0 ? ((orders.filter(o => o.status === 'paid').length / orders.length) * 100).toFixed(1) : '0',
+        completion_rate: orders.length > 0 ? ((orders.filter(o => o.status === 'completed').length / orders.length) * 100).toFixed(1) : '0',
+        cancellation_rate: orders.length > 0 ? ((orders.filter(o => o.status === 'cancelled').length / orders.length) * 100).toFixed(1) : '0'
+    };
+
+    res.json({ period, trend: Object.values(trendData).sort((a, b) => a.date.localeCompare(b.date)), summary });
+});
+
+/**
+ * 热门商品统计
+ * GET /api/stats/hot-products
+ */
+app.get('/api/stats/hot-products', authMiddleware, requireRole([ROLE_TYPES.ARTISAN, ROLE_TYPES.ADMIN]), (req, res) => {
+    db = loadDB();
+    const { limit = 10, start_date, end_date, merchant_id } = req.query;
+    const isAdmin = normalizeRole(req.user.role) === ROLE_TYPES.ADMIN;
+
+    let orders = db.orders.filter(order => {
+        if (!['paid', 'completed', 'shipped'].includes(order.status)) return false;
+        if (start_date && new Date(order.created_at) < new Date(start_date)) return false;
+        if (end_date) {
+            const end = new Date(end_date);
+            end.setHours(23, 59, 59, 999);
+            if (new Date(order.created_at) > end) return false;
+        }
+        if (!isAdmin) return isOrderOwnedByMerchant(db, order, req.user.id);
+        if (merchant_id && isAdmin) {
+            const merchant = db.merchants.find(m => m.id === Number(merchant_id));
+            return merchant ? isOrderOwnedByMerchant(db, order, merchant.user_id) : false;
+        }
+        return true;
+    });
+
+    const productStats = {};
+    orders.forEach(order => {
+        (order.items || []).forEach(item => {
+            const productId = item.product_id;
+            if (!productStats[productId]) {
+                productStats[productId] = { product_id: productId, title: item.title, quantity: 0, revenue: 0 };
+            }
+            productStats[productId].quantity += Number(item.quantity) || 0;
+            productStats[productId].revenue += (Number(item.price) || 0) * (Number(item.quantity) || 0);
+        });
+    });
+
+    const hotProducts = Object.values(productStats)
+        .map(stat => {
+            const product = db.products.find(p => p.id === stat.product_id);
+            return { ...stat, category: product?.category || '', merchant_name: product?.merchant_name || '' };
+        })
+        .sort((a, b) => b.quantity - a.quantity)
+        .slice(0, Number(limit));
+
+    res.json({ hot_products: hotProducts, total_count: Object.keys(productStats).length });
+});
 // ============ 静态文件服务（上传目录） ============
 app.use('/uploads', express.static(uploadsDir));
 
