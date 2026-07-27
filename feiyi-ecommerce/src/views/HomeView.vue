@@ -309,6 +309,7 @@ onMounted(() => {
 .shop-filter {
   grid-column: 1;
   grid-row: 2;
+  align-self: stretch;
 }
 .shop-main {
   grid-column: 2;

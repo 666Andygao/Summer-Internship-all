@@ -15,7 +15,10 @@ const priceRanges = [
 // 筛选栏下方内容：补足留白，同时强化非遗导购氛围
 const heritageTips = [
   '苗族银饰常以蝴蝶、花鸟纹样寄托吉祥守护。',
-  '蜡染的冰裂纹来自手工浸染，每一件都独一无二。'
+  '蜡染的冰裂纹来自手工浸染，每一件都独一无二。',
+  '侗锦多用经纬交错织出几何纹，记录族群迁徙与生活记忆。',
+  '彝族漆器以黑、红、黄三色为主，寓意土地、火焰与阳光。',
+  '手作器物的细微差异，正是非遗“活态传承”的温度。'
 ]
 
 const hotPicks = [
@@ -130,11 +133,6 @@ watch(() => [local.ethnic, local.category, local.priceIndex], apply)
     </div>
 
     <!-- 侧边栏补充信息 -->
-    <div class="heritage-panel">
-      <div class="panel-kicker">非遗小知识</div>
-      <p v-for="tip in heritageTips" :key="tip">{{ tip }}</p>
-    </div>
-
     <div class="hot-panel">
       <div class="panel-kicker">热门推荐</div>
       <div class="hot-list">
@@ -146,11 +144,20 @@ watch(() => [local.ethnic, local.category, local.priceIndex], apply)
         >{{ pick.label }}</button>
       </div>
     </div>
+
+    <div class="heritage-panel">
+      <div class="panel-kicker">非遗小知识</div>
+      <p v-for="tip in heritageTips" :key="tip">{{ tip }}</p>
+    </div>
   </aside>
 </template>
 
 <style scoped>
 .filter-sidebar {
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -231,6 +238,9 @@ watch(() => [local.ethnic, local.category, local.priceIndex], apply)
   border-radius: var(--radius-md);
   border: 1px solid rgba(177, 79, 62, 0.18);
   background: linear-gradient(135deg, #fffaf4 0%, #f8efe6 100%);
+}
+.heritage-panel {
+  flex: 1;
 }
 .panel-kicker {
   display: flex;
