@@ -12,6 +12,21 @@ const priceRanges = [
   { label: '¥1500 以上', min: 1500, max: null }
 ]
 
+// 筛选栏下方内容：补足留白，同时强化非遗导购氛围
+const heritageTips = [
+  '苗族银饰常以蝴蝶、花鸟纹样寄托吉祥守护。',
+  '蜡染的冰裂纹来自手工浸染，每一件都独一无二。',
+  '侗锦多用经纬交错织出几何纹，记录族群迁徙与生活记忆。',
+  '彝族漆器以黑、红、黄三色为主，寓意土地、火焰与阳光。',
+  '手作器物的细微差异，正是非遗“活态传承”的温度。'
+]
+
+const hotPicks = [
+  { label: '苗族银饰', ethnic: '苗族', category: '银饰', priceIndex: 0 },
+  { label: '百元蜡染', ethnic: '', category: '蜡染', priceIndex: 2 },
+  { label: '彝族漆器', ethnic: '彝族', category: '漆器', priceIndex: 0 }
+]
+
 // 双向绑定：把筛选条件变化通过 update:filters 抛给父组件
 const props = defineProps({
   filters: { type: Object, required: true }
@@ -44,6 +59,13 @@ function reset() {
   local.category = ''
   local.priceIndex = 0
   apply()
+}
+
+// 热门推荐一键带入筛选
+function useHotPick(pick) {
+  local.ethnic = pick.ethnic
+  local.category = pick.category
+  local.priceIndex = pick.priceIndex
 }
 
 watch(() => [local.ethnic, local.category, local.priceIndex], apply)
@@ -109,11 +131,33 @@ watch(() => [local.ethnic, local.category, local.priceIndex], apply)
         </li>
       </ul>
     </div>
+
+    <!-- 侧边栏补充信息 -->
+    <div class="hot-panel">
+      <div class="panel-kicker">热门推荐</div>
+      <div class="hot-list">
+        <button
+          v-for="pick in hotPicks"
+          :key="pick.label"
+          class="hot-chip"
+          @click="useHotPick(pick)"
+        >{{ pick.label }}</button>
+      </div>
+    </div>
+
+    <div class="heritage-panel">
+      <div class="panel-kicker">非遗小知识</div>
+      <p v-for="tip in heritageTips" :key="tip">{{ tip }}</p>
+    </div>
   </aside>
 </template>
 
 <style scoped>
 .filter-sidebar {
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -186,5 +230,66 @@ watch(() => [local.ethnic, local.category, local.priceIndex], apply)
   color: var(--color-primary);
   font-weight: 600;
   background: rgba(192, 57, 43, 0.06);
+}
+.heritage-panel,
+.hot-panel {
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(177, 79, 62, 0.18);
+  background: linear-gradient(135deg, #fffaf4 0%, #f8efe6 100%);
+}
+.heritage-panel {
+  flex: 1;
+}
+.panel-kicker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: var(--color-primary);
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+.panel-kicker::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  box-shadow: 10px 0 0 rgba(192, 57, 43, 0.28);
+}
+.heritage-panel p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--color-text-light);
+}
+.heritage-panel p + p {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(177, 79, 62, 0.22);
+}
+.hot-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.hot-chip {
+  padding: 6px 10px;
+  color: var(--color-secondary);
+  background: #fff;
+  border: 1px solid rgba(177, 79, 62, 0.24);
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: var(--font-body);
+  transition: all 0.2s;
+}
+.hot-chip:hover {
+  color: #fff;
+  background: var(--color-primary);
+  border-color: var(--color-primary);
 }
 </style>

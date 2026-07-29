@@ -29,7 +29,7 @@ const sortOptions = [
 
 // 分页
 const page = ref(1)
-const pageSize = ref(8)
+const pageSize = ref(9)
 const total = ref(0)
 
 // 列表数据与加载态
@@ -309,6 +309,7 @@ onMounted(() => {
 .shop-filter {
   grid-column: 1;
   grid-row: 2;
+  align-self: stretch;
 }
 .shop-main {
   grid-column: 2;
