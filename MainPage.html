@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
-  <title>华夏风物志 · 非遗传承</title>
+  <title>华夏风物志 · 非遗传承 · 动态版</title>
   <style>
     /* ===== 全局重置 & 基础 ===== */
     * {
@@ -24,6 +24,7 @@
       margin: 0 auto;
       background: #ffffff;
       box-shadow: 0 0 20px rgba(0,0,0,0.02);
+      overflow: hidden; /* 防止滚动条偏移导致动画闪烁 */
     }
 
     /* ===== 顶部栏 ===== */
@@ -37,6 +38,11 @@
       border-bottom: 1px solid #eaeaea;
       font-size: 14px;
       color: #333;
+      transition: background 0.3s ease, box-shadow 0.3s ease;
+    }
+    .top-bar.scrolled {
+      background: #ffffff;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
     }
 
     .lang-region {
@@ -64,10 +70,23 @@
       text-decoration: none;
       color: #333;
       transition: color 0.2s;
+      position: relative;
     }
-
+    .top-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 0;
+      height: 1.5px;
+      background: #c0392b;
+      transition: width 0.3s ease;
+    }
     .top-links a:hover {
       color: #c0392b;
+    }
+    .top-links a:hover::after {
+      width: 100%;
     }
 
     /* ===== 主导航 ===== */
@@ -78,6 +97,10 @@
       padding: 12px 40px;
       background: white;
       border-bottom: 1px solid #f0f0f0;
+      transition: box-shadow 0.3s ease;
+    }
+    .main-nav.scrolled {
+      box-shadow: 0 4px 16px rgba(0,0,0,0.03);
     }
 
     .logo-area {
@@ -95,6 +118,11 @@
       padding: 4px 12px;
       border-radius: 30px;
       line-height: 1.2;
+      transition: transform 0.3s ease, background 0.3s ease;
+    }
+    .brand-icon:hover {
+      transform: scale(1.03) rotate(-1deg);
+      background: #fcded9;
     }
 
     .brand-sub {
@@ -118,17 +146,18 @@
       color: #1a1a1a;
       position: relative;
       transition: color 0.2s;
+      padding: 4px 0;
     }
 
     .nav-links a::after {
       content: '';
       position: absolute;
-      bottom: -6px;
+      bottom: -2px;
       left: 0;
       width: 0;
       height: 2px;
       background: #c0392b;
-      transition: width 0.25s ease;
+      transition: width 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
     }
 
     .nav-links a:hover {
@@ -149,11 +178,22 @@
       font-size: 20px;
       cursor: default;
       color: #444;
+      transition: transform 0.25s ease, color 0.2s;
+      display: inline-block;
+    }
+    .nav-actions span:hover {
+      transform: scale(1.15);
+      color: #c0392b;
     }
 
     .nav-actions a {
       text-decoration: none;
       color: #444;
+      transition: transform 0.25s ease;
+      display: inline-block;
+    }
+    .nav-actions a:hover {
+      transform: scale(1.1);
     }
 
     /* ===== 主横幅 Hero ===== */
@@ -167,11 +207,30 @@
       align-items: center;
       justify-content: space-between;
       border-bottom: 1px solid #e6ddd6;
+      transition: background 0.6s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-section::before {
+      content: '✦';
+      position: absolute;
+      font-size: 22rem;
+      color: rgba(192, 57, 43, 0.02);
+      right: -60px;
+      bottom: -80px;
+      transform: rotate(12deg);
+      pointer-events: none;
+      animation: floatSymbol 14s infinite alternate ease-in-out;
+    }
+    @keyframes floatSymbol {
+      0% { transform: rotate(8deg) translateY(0px); opacity: 0.6; }
+      100% { transform: rotate(-4deg) translateY(-30px); opacity: 1; }
     }
 
     .hero-text {
       flex: 1 1 300px;
       padding-right: 20px;
+      z-index: 2;
     }
 
     .hero-text .tagline {
@@ -184,6 +243,12 @@
       padding: 3px 14px;
       border-radius: 20px;
       margin-bottom: 14px;
+      animation: pulseTag 3s infinite ease-in-out;
+      box-shadow: 0 2px 12px rgba(192,57,43,0.2);
+    }
+    @keyframes pulseTag {
+      0%, 100% { transform: scale(1); box-shadow: 0 2px 12px rgba(192,57,43,0.2); }
+      50% { transform: scale(1.03); box-shadow: 0 4px 20px rgba(192,57,43,0.3); }
     }
 
     .hero-text h1 {
@@ -202,6 +267,11 @@
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       font-weight: 700;
+      animation: shimmerText 4s infinite alternate;
+    }
+    @keyframes shimmerText {
+      0% { background-position: 0% 50%; filter: drop-shadow(0 2px 4px rgba(192,57,43,0.1)); }
+      100% { background-position: 100% 50%; filter: drop-shadow(0 4px 12px rgba(192,57,43,0.2)); }
     }
 
     .hero-text .sub-head {
@@ -210,6 +280,8 @@
       margin-bottom: 12px;
       font-weight: 350;
       letter-spacing: 1px;
+      opacity: 0;
+      animation: fadeUp 0.9s 0.2s forwards;
     }
 
     .hero-text .desc {
@@ -219,6 +291,13 @@
       margin-bottom: 20px;
       line-height: 1.6;
       opacity: 0.85;
+      opacity: 0;
+      animation: fadeUp 0.9s 0.4s forwards;
+    }
+
+    @keyframes fadeUp {
+      0% { opacity: 0; transform: translateY(18px); }
+      100% { opacity: 1; transform: translateY(0); }
     }
 
     .btn-primary {
@@ -231,13 +310,29 @@
       font-size: 1rem;
       letter-spacing: 0.5px;
       text-decoration: none;
-      transition: background 0.25s, transform 0.1s;
+      transition: background 0.25s, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s;
       box-shadow: 0 4px 10px rgba(192, 57, 43, 0.2);
+      position: relative;
+      overflow: hidden;
     }
-
+    .btn-primary::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -60%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+      transform: rotate(25deg) translateY(-30%);
+      transition: transform 0.5s ease;
+    }
     .btn-primary:hover {
       background: #a83226;
-      transform: scale(1.02);
+      transform: scale(1.04) translateY(-2px);
+      box-shadow: 0 8px 24px rgba(192, 57, 43, 0.3);
+    }
+    .btn-primary:hover::after {
+      transform: rotate(25deg) translateY(30%);
     }
 
     .hero-image {
@@ -251,6 +346,16 @@
       min-height: 180px;
       background-image: linear-gradient(145deg, #dccfc4, #eee4db);
       box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+      transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.6s;
+      animation: floatImage 6s infinite alternate ease-in-out;
+    }
+    @keyframes floatImage {
+      0% { transform: translateY(0px) rotate(0deg); }
+      100% { transform: translateY(-12px) rotate(0.8deg); }
+    }
+    .hero-image:hover {
+      transform: scale(1.02) translateY(-6px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.06);
     }
 
     .hero-image .icon-symbol {
@@ -259,9 +364,14 @@
       filter: drop-shadow(2px 6px 12px rgba(0,0,0,0.08));
       letter-spacing: 8px;
       color: #7a5a4a;
+      animation: iconPulse 4s infinite alternate;
+    }
+    @keyframes iconPulse {
+      0% { transform: scale(1) rotate(-2deg); }
+      100% { transform: scale(1.04) rotate(2deg); }
     }
 
-    /* ===== 统计卡片 (新增) ===== */
+    /* ===== 统计卡片 ===== */
     .stats-section {
       padding: 30px 40px;
       background: #fcfaf8;
@@ -278,6 +388,13 @@
       border-radius: 20px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.02);
       border: 1px solid #f0ebe7;
+      transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s, border-color 0.3s;
+      cursor: default;
+    }
+    .stat-item:hover {
+      transform: translateY(-8px) scale(1.01);
+      box-shadow: 0 12px 28px rgba(0,0,0,0.05);
+      border-color: #dccfc4;
     }
 
     .stat-item .number {
@@ -285,6 +402,11 @@
       font-weight: 600;
       color: #c0392b;
       letter-spacing: -0.5px;
+      transition: transform 0.3s;
+      display: inline-block;
+    }
+    .stat-item:hover .number {
+      transform: scale(1.08);
     }
 
     .stat-item .label {
@@ -293,7 +415,7 @@
       margin-top: 4px;
     }
 
-    /* ===== 联合国名录 (新增) ===== */
+    /* ===== 联合国名录 ===== */
     .unesco-section {
       padding: 30px 40px 10px 40px;
       background: white;
@@ -323,6 +445,11 @@
       padding: 2px 16px;
       border-radius: 30px;
       border: 1px solid #c0392b30;
+      transition: all 0.3s;
+    }
+    .unesco-badge:hover {
+      background: #c0392b20;
+      transform: scale(1.03);
     }
 
     .unesco-grid {
@@ -340,6 +467,14 @@
       font-size: 0.95rem;
       color: #2d241f;
       text-align: center;
+      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      cursor: default;
+    }
+    .unesco-item:hover {
+      transform: translateY(-5px) scale(1.02);
+      background: #f5efe9;
+      border-color: #c0392b40;
+      box-shadow: 0 8px 18px rgba(192,57,43,0.06);
     }
 
     .unesco-item strong {
@@ -378,11 +513,13 @@
       font-size: 14px;
       text-decoration: none;
       border-bottom: 1px dashed #ccc;
+      transition: color 0.2s, border-color 0.2s, transform 0.2s;
+      display: inline-block;
     }
-
     .section-header .more-link:hover {
       color: #c0392b;
       border-bottom-color: #c0392b;
+      transform: translateX(4px);
     }
 
     .card-grid {
@@ -395,16 +532,38 @@
       background: #faf8f6;
       border-radius: 24px;
       padding: 20px 18px 24px;
-      transition: box-shadow 0.25s, transform 0.2s;
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
       border: 1px solid #f0ebe7;
       display: flex;
       flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #c0392b, #e67e6b, #c0392b);
+      background-size: 200% 100%;
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+    .card:hover::before {
+      opacity: 1;
+      animation: gradientMove 1.2s linear infinite;
+    }
+    @keyframes gradientMove {
+      0% { background-position: 0% 0%; }
+      100% { background-position: 200% 0%; }
     }
 
     .card:hover {
-      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.04), 0 2px 8px rgba(0,0,0,0.02);
-      transform: translateY(-4px);
-      border-color: #e1d5cc;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(0,0,0,0.02);
+      transform: translateY(-8px);
+      border-color: #dccfc4;
     }
 
     .card-emoji {
@@ -417,6 +576,11 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s;
+    }
+    .card:hover .card-emoji {
+      transform: rotate(6deg) scale(1.06);
+      background: #e5dbd2;
     }
 
     .card h3 {
@@ -436,6 +600,10 @@
       display: inline-block;
       padding: 0 10px;
       border-radius: 12px;
+      transition: background 0.3s;
+    }
+    .card:hover .sub {
+      background: #e8d7cf;
     }
 
     .card p {
@@ -456,6 +624,11 @@
       color: #4d3e36;
       margin-right: 6px;
       margin-bottom: 4px;
+      transition: all 0.25s;
+    }
+    .card:hover .tag {
+      background: #fcf8f5;
+      border-color: #c0392b40;
     }
 
     .card .learn-more {
@@ -466,11 +639,12 @@
       font-weight: 450;
       align-self: flex-start;
       border-bottom: 1px solid transparent;
-      transition: border-color 0.2s;
+      transition: border-color 0.25s, transform 0.25s;
+      display: inline-block;
     }
-
     .card .learn-more:hover {
       border-bottom-color: #c0392b;
+      transform: translateX(4px);
     }
 
     /* ===== 底部 ===== */
@@ -496,16 +670,22 @@
       font-weight: 500;
       color: #1f1b18;
       margin-bottom: 4px;
+      transition: color 0.2s;
+    }
+    .footer-links .col strong:hover {
+      color: #c0392b;
     }
 
     .footer-links a {
       color: #4f443d;
       text-decoration: none;
-      transition: color 0.2s;
+      transition: color 0.2s, transform 0.2s;
+      display: inline-block;
+      width: fit-content;
     }
-
     .footer-links a:hover {
       color: #c0392b;
+      transform: translateX(4px);
     }
 
     .copyright {
@@ -579,7 +759,7 @@
 <div class="site-wrapper">
 
   <!-- ===== 顶部栏 ===== -->
-  <div class="top-bar">
+  <div class="top-bar" id="topBar">
     <div class="lang-region">
       <span>🌏 中国 · 中文</span>
       <span class="divider">|</span>
@@ -594,7 +774,7 @@
   </div>
 
   <!-- ===== 主导航 ===== -->
-  <div class="main-nav">
+  <div class="main-nav" id="mainNav">
     <div class="logo-area">
       <div class="brand-icon">🎋 华夏风物</div>
       <div class="brand-sub">非遗·传承</div>
@@ -633,27 +813,27 @@
     </div>
   </div>
 
-  <!-- ===== 新增：统计卡片（数据来自官网） ===== -->
+  <!-- ===== 统计卡片 ===== -->
   <div class="stats-section">
     <div class="stat-item">
-      <div class="number">45</div>
+      <div class="number" data-count="45">45</div>
       <div class="label">联合国教科文组织名录（名册）项目</div>
     </div>
     <div class="stat-item">
-      <div class="number">1557</div>
+      <div class="number" data-count="1557">1557</div>
       <div class="label">国家级代表性项目</div>
     </div>
     <div class="stat-item">
-      <div class="number">3068</div>
+      <div class="number" data-count="3068">3068</div>
       <div class="label">国家级代表性传承人</div>
     </div>
     <div class="stat-item">
-      <div class="number">10</div>
+      <div class="number" data-count="10">10</div>
       <div class="label">非遗门类</div>
     </div>
   </div>
 
-  <!-- ===== 新增：联合国教科文组织名录精选 ===== -->
+  <!-- ===== 联合国教科文组织名录精选 ===== -->
   <div class="unesco-section">
     <div class="section-header">
       <h2>🌍 联合国教科文组织非物质文化遗产 <span class="unesco-badge">名录（名册）项目</span></h2>
@@ -680,7 +860,6 @@
       <a href="#" class="more-link">查看全部 →</a>
     </div>
     <div class="card-grid">
-      <!-- 卡片 1 -->
       <div class="card">
         <div class="card-emoji">🏮</div>
         <h3>秦淮灯彩</h3>
@@ -692,7 +871,6 @@
         </div>
         <a href="#" class="learn-more">了解技艺 →</a>
       </div>
-      <!-- 卡片 2 -->
       <div class="card">
         <div class="card-emoji">🎋</div>
         <h3>竹编 · 细丝</h3>
@@ -704,7 +882,6 @@
         </div>
         <a href="#" class="learn-more">了解技艺 →</a>
       </div>
-      <!-- 卡片 3 -->
       <div class="card">
         <div class="card-emoji">🖌️</div>
         <h3>徽墨 · 歙砚</h3>
@@ -716,7 +893,6 @@
         </div>
         <a href="#" class="learn-more">了解技艺 →</a>
       </div>
-      <!-- 卡片 4 -->
       <div class="card">
         <div class="card-emoji">🎶</div>
         <h3>古琴 · 广陵派</h3>
@@ -764,9 +940,90 @@
   </div>
 </div>
 
-<!-- ===== 登录状态检查脚本 ===== -->
+<!-- ===== 动态交互脚本 ===== -->
 <script>
   (function() {
+    // ------ 1. 滚动阴影效果 ------
+    const topBar = document.getElementById('topBar');
+    const mainNav = document.getElementById('mainNav');
+    window.addEventListener('scroll', function() {
+      const scrolled = window.scrollY > 20;
+      topBar.classList.toggle('scrolled', scrolled);
+      mainNav.classList.toggle('scrolled', scrolled);
+    });
+
+    // ------ 2. 统计数字动画 (滚动触发) ------
+    const statNumbers = document.querySelectorAll('.stat-item .number');
+    let animated = false;
+
+    function animateNumbers() {
+      if (animated) return;
+      const section = document.querySelector('.stats-section');
+      const rect = section.getBoundingClientRect();
+      if (rect.top < window.innerHeight - 80) {
+        animated = true;
+        statNumbers.forEach(el => {
+          const target = parseInt(el.getAttribute('data-count'), 10);
+          let current = 0;
+          const step = Math.max(1, Math.floor(target / 40));
+          const interval = setInterval(() => {
+            current += step;
+            if (current >= target) {
+              el.textContent = target;
+              clearInterval(interval);
+            } else {
+              el.textContent = current;
+            }
+          }, 25);
+        });
+      }
+    }
+
+    window.addEventListener('scroll', animateNumbers);
+    // 页面加载时也尝试触发
+    setTimeout(animateNumbers, 300);
+
+    // ------ 3. 卡片入场渐显 (Intersection Observer) ------
+    const cards = document.querySelectorAll('.card');
+    const unescoItems = document.querySelectorAll('.unesco-item');
+    const allAnimateItems = [...cards, ...unescoItems];
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry, index) => {
+        if (entry.isIntersecting) {
+          // 添加一个简单的渐入类
+          entry.target.style.opacity = '0';
+          entry.target.style.transform = 'translateY(20px)';
+          entry.target.style.transition = `opacity 0.6s ease ${index * 0.06}s, transform 0.6s ease ${index * 0.06}s`;
+          requestAnimationFrame(() => {
+            entry.target.style.opacity = '1';
+            entry.target.style.transform = 'translateY(0)';
+          });
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+
+    allAnimateItems.forEach(item => {
+      // 初始设置透明，但保留可见性以防不支持
+      item.style.opacity = '0';
+      item.style.transform = 'translateY(20px)';
+      observer.observe(item);
+    });
+
+    // 如果已经可见，强制触发一次
+    setTimeout(() => {
+      allAnimateItems.forEach(item => {
+        const rect = item.getBoundingClientRect();
+        if (rect.top < window.innerHeight - 50) {
+          item.style.opacity = '1';
+          item.style.transform = 'translateY(0)';
+          observer.unobserve(item);
+        }
+      });
+    }, 200);
+
+    // ------ 4. 登录状态检查 (保留原有功能) ------
     const token = localStorage.getItem('token');
     const userStr = localStorage.getItem('user');
     const loginLink = document.querySelector('.nav-actions a[href="login.html"]');
@@ -793,6 +1050,13 @@
         }
       } catch(e) {}
     }
+
+    // 增加一个小细节：搜索图标点击反馈
+    document.querySelector('.nav-actions span')?.addEventListener('click', function() {
+      this.style.transform = 'scale(1.3)';
+      setTimeout(() => { this.style.transform = 'scale(1)'; }, 200);
+    });
+
   })();
 </script>
 </body>
