@@ -96,7 +96,8 @@ function loadDB() {
             reviews: [],
             orders: [],
             carts: [],
-            nextId: { user: 1, conversation: 1, message: 1, address: 1, favorite: 1, review: 1, order: 1, cart: 1 }
+            friends: [],
+            nextId: { user: 1, conversation: 1, message: 1, address: 1, favorite: 1, review: 1, order: 1, cart: 1, friend: 1 }
         };
     }
     try {
@@ -109,7 +110,8 @@ function loadDB() {
         data.merchants = data.merchants || [];
         data.products = data.products || [];
         data.after_sales = data.after_sales || [];
-        data.nextId = data.nextId || { user: 1, conversation: 1, message: 1, address: 1, favorite: 1, review: 1, order: 1, merchant: 1, product: 1, cart: 1, complaint: 1 };
+        data.friends = data.friends || [];
+        data.nextId = data.nextId || { user: 1, conversation: 1, message: 1, address: 1, favorite: 1, review: 1, order: 1, merchant: 1, product: 1, cart: 1, complaint: 1, friend: 1 };
         data.nextId.address = data.nextId.address || 1;
         data.nextId.favorite = data.nextId.favorite || 1;
         data.nextId.review = data.nextId.review || 1;
@@ -118,6 +120,7 @@ function loadDB() {
         data.nextId.product = data.nextId.product || 1;
         data.nextId.cart = data.nextId.cart || 1;
         data.nextId.complaint = data.nextId.complaint || 1;
+        data.nextId.friend = data.nextId.friend || 1;
         data.complaints = data.complaints || [];
         return data;
     } catch (e) {
@@ -826,12 +829,23 @@ app.get('/api/contacts', authMiddleware, (req, res) => {
     res.json(contacts);
 });
 
-// 获取或创建对话
+// 获取或创建对话（需要是好友关系）
 app.post('/api/conversations', authMiddleware, (req, res) => {
     const { target_id } = req.body;
     db = loadDB();
     const target = db.users.find(u => u.id === target_id);
     if (!target) return res.status(404).json({ error: '对方不存在' });
+
+    // 检查是否是好友
+    const isFriend = db.friends.some(f =>
+        ((f.from_user_id === req.user.id && f.to_user_id === target.id) ||
+         (f.from_user_id === target.id && f.to_user_id === req.user.id)) &&
+        f.status === 'accepted'
+    );
+
+    if (!isFriend) {
+        return res.status(403).json({ error: '请先添加对方为好友才能发起对话' });
+    }
 
     const userId = isBuyerRole(req.user.role) ? req.user.id : target_id;
     const devId = isArtisanRole(req.user.role) ? req.user.id : target_id;
@@ -860,7 +874,12 @@ app.get('/api/conversations', authMiddleware, (req, res) => {
 
     if (isBuyerRole(req.user.role)) {
         convs = db.conversations
-            .filter(c => c.user_id === req.user.id)
+            .filter(c => {
+                // 过滤掉对方用户已被删除的对话
+                if (c.user_id !== req.user.id) return false;
+                const dev = db.users.find(u => u.id === c.developer_id);
+                return dev != null;
+            })
             .map(c => {
                 const dev = db.users.find(u => u.id === c.developer_id);
                 const unread = db.messages.filter(m =>
@@ -876,7 +895,12 @@ app.get('/api/conversations', authMiddleware, (req, res) => {
             });
     } else {
         convs = db.conversations
-            .filter(c => c.developer_id === req.user.id)
+            .filter(c => {
+                // 过滤掉对方用户已被删除的对话
+                if (c.developer_id !== req.user.id) return false;
+                const user = db.users.find(u => u.id === c.user_id);
+                return user != null;
+            })
             .map(c => {
                 const user = db.users.find(u => u.id === c.user_id);
                 const unread = db.messages.filter(m =>
@@ -981,6 +1005,274 @@ app.post('/api/conversations/:id/messages', authMiddleware, upload.single('file'
         sender_name: sender?.display_name || '',
         sender_role: sender?.role || ''
     });
+});
+
+// 删除对话（以及相关消息）
+app.delete('/api/conversations/:id', authMiddleware, (req, res) => {
+    db = loadDB();
+    const convId = parseInt(req.params.id);
+    const conv = db.conversations.find(c => c.id === convId);
+    if (!conv) return res.status(404).json({ error: '对话不存在' });
+
+    // 验证权限
+    if (conv.user_id !== req.user.id && conv.developer_id !== req.user.id) {
+        return res.status(403).json({ error: '无权操作' });
+    }
+
+    // 删除相关消息
+    db.messages = db.messages.filter(m => m.conversation_id !== convId);
+    // 删除对话
+    db.conversations = db.conversations.filter(c => c.id !== convId);
+    saveDB(db);
+
+    res.json({ success: true, message: '对话已删除' });
+});
+
+// 清理孤儿数据（后台自动 + 手动触发）
+app.post('/api/cleanup', authMiddleware, (req, res) => {
+    db = loadDB();
+    const beforeConvs = db.conversations.length;
+    const beforeMsgs = db.messages.length;
+
+    // 找出所有有效用户 ID
+    const validUserIds = new Set(db.users.map(u => u.id));
+
+    // 删除涉及已删除用户的对话
+    const orphanedConvIds = new Set();
+    db.conversations = db.conversations.filter(c => {
+        const userExists = validUserIds.has(c.user_id);
+        const devExists = validUserIds.has(c.developer_id);
+        if (!userExists || !devExists) {
+            orphanedConvIds.add(c.id);
+            return false;
+        }
+        return true;
+    });
+
+    // 删除这些对话的消息
+    db.messages = db.messages.filter(m => !orphanedConvIds.has(m.conversation_id));
+
+    // 删除对应文件
+    db.messages.forEach(m => {
+        // 确保消息中的发送者存在
+        if (!validUserIds.has(m.sender_id)) {
+            m.sender_id = req.user.id; // 设为当前用户
+        }
+    });
+
+    saveDB(db);
+
+    res.json({
+        success: true,
+        cleaned_conversations: beforeConvs - db.conversations.length,
+        cleaned_messages: beforeMsgs - db.messages.length
+    });
+});
+
+// ============ 好友系统 ============
+
+// 通过用户名查找用户（用于添加好友）
+app.get('/api/users/find', authMiddleware, (req, res) => {
+    const { username } = req.query;
+    if (!username) return res.status(400).json({ error: '请输入用户名' });
+
+    db = loadDB();
+    const user = db.users.find(u => u.username === username && u.id !== req.user.id);
+    if (!user) return res.status(404).json({ error: '未找到该用户' });
+
+    // 检查是否已经是好友
+    const isFriend = db.friends.some(f =>
+        ((f.from_user_id === req.user.id && f.to_user_id === user.id) ||
+         (f.from_user_id === user.id && f.to_user_id === req.user.id)) &&
+        f.status === 'accepted'
+    );
+
+    // 检查是否有待处理请求
+    const pendingSent = db.friends.find(f =>
+        f.from_user_id === req.user.id && f.to_user_id === user.id && f.status === 'pending'
+    );
+    const pendingReceived = db.friends.find(f =>
+        f.from_user_id === user.id && f.to_user_id === req.user.id && f.status === 'pending'
+    );
+
+    res.json({
+        id: user.id,
+        username: user.username,
+        display_name: user.display_name,
+        role: user.role,
+        avatar: user.avatar,
+        is_friend: isFriend,
+        request_status: pendingSent ? 'sent' : (pendingReceived ? 'received' : 'none'),
+        request_id: pendingSent?.id || pendingReceived?.id || null
+    });
+});
+
+// 发送好友请求
+app.post('/api/friends/request', authMiddleware, (req, res) => {
+    const { target_username, target_id } = req.body;
+    db = loadDB();
+
+    let target;
+    if (target_id) {
+        target = db.users.find(u => u.id === target_id);
+    } else if (target_username) {
+        target = db.users.find(u => u.username === target_username);
+    }
+
+    if (!target) return res.status(404).json({ error: '未找到该用户' });
+    if (target.id === req.user.id) return res.status(400).json({ error: '不能添加自己为好友' });
+
+    // 检查是否已经是好友
+    const alreadyFriend = db.friends.some(f =>
+        ((f.from_user_id === req.user.id && f.to_user_id === target.id) ||
+         (f.from_user_id === target.id && f.to_user_id === req.user.id)) &&
+        f.status === 'accepted'
+    );
+    if (alreadyFriend) return res.status(400).json({ error: '已经是好友了' });
+
+    // 检查是否已有待处理请求
+    const existingRequest = db.friends.find(f =>
+        f.from_user_id === req.user.id && f.to_user_id === target.id && f.status === 'pending'
+    );
+    if (existingRequest) return res.status(400).json({ error: '已发送过好友请求，请等待对方处理' });
+
+    // 如果对方已经向我发送请求，自动接受
+    const reverseRequest = db.friends.find(f =>
+        f.from_user_id === target.id && f.to_user_id === req.user.id && f.status === 'pending'
+    );
+    if (reverseRequest) {
+        reverseRequest.status = 'accepted';
+        saveDB(db);
+        return res.json({ success: true, message: '你们互相发送了好友请求，已自动成为好友！', friend_id: reverseRequest.id });
+    }
+
+    const id = db.nextId.friend++;
+    const now = new Date().toISOString();
+    const request = {
+        id,
+        from_user_id: req.user.id,
+        to_user_id: target.id,
+        status: 'pending',
+        created_at: now
+    };
+    db.friends.push(request);
+    saveDB(db);
+
+    res.json({ success: true, message: '好友请求已发送！', request_id: id });
+});
+
+// 获取我收到的好友请求
+app.get('/api/friends/requests', authMiddleware, (req, res) => {
+    db = loadDB();
+    const requests = db.friends
+        .filter(f => f.to_user_id === req.user.id && f.status === 'pending')
+        .map(f => {
+            const fromUser = db.users.find(u => u.id === f.from_user_id);
+            return {
+                ...f,
+                from_user: fromUser ? {
+                    id: fromUser.id,
+                    username: fromUser.username,
+                    display_name: fromUser.display_name,
+                    role: fromUser.role,
+                    avatar: fromUser.avatar
+                } : null
+            };
+        })
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    res.json(requests);
+});
+
+// 获取我发送的好友请求
+app.get('/api/friends/requests/sent', authMiddleware, (req, res) => {
+    db = loadDB();
+    const requests = db.friends
+        .filter(f => f.from_user_id === req.user.id && f.status === 'pending')
+        .map(f => {
+            const toUser = db.users.find(u => u.id === f.to_user_id);
+            return {
+                ...f,
+                to_user: toUser ? {
+                    id: toUser.id,
+                    username: toUser.username,
+                    display_name: toUser.display_name,
+                    role: toUser.role,
+                    avatar: toUser.avatar
+                } : null
+            };
+        })
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    res.json(requests);
+});
+
+// 接受好友请求
+app.post('/api/friends/requests/:id/accept', authMiddleware, (req, res) => {
+    db = loadDB();
+    const requestId = parseInt(req.params.id);
+    const request = db.friends.find(f => f.id === requestId && f.to_user_id === req.user.id);
+    if (!request) return res.status(404).json({ error: '请求不存在或无权操作' });
+    if (request.status !== 'pending') return res.status(400).json({ error: '该请求已处理' });
+
+    request.status = 'accepted';
+    saveDB(db);
+    res.json({ success: true, message: '已添加为好友！' });
+});
+
+// 拒绝好友请求
+app.post('/api/friends/requests/:id/reject', authMiddleware, (req, res) => {
+    db = loadDB();
+    const requestId = parseInt(req.params.id);
+    const request = db.friends.find(f => f.id === requestId && f.to_user_id === req.user.id);
+    if (!request) return res.status(404).json({ error: '请求不存在或无权操作' });
+
+    request.status = 'rejected';
+    saveDB(db);
+    res.json({ success: true, message: '已拒绝该请求' });
+});
+
+// 获取我的好友列表
+app.get('/api/friends', authMiddleware, (req, res) => {
+    db = loadDB();
+    const friends = db.friends
+        .filter(f =>
+            (f.from_user_id === req.user.id || f.to_user_id === req.user.id) &&
+            f.status === 'accepted'
+        )
+        .map(f => {
+            const friendId = f.from_user_id === req.user.id ? f.to_user_id : f.from_user_id;
+            const friend = db.users.find(u => u.id === friendId);
+            if (!friend) return null;
+            return {
+                friendship_id: f.id,
+                friend: {
+                    id: friend.id,
+                    username: friend.username,
+                    display_name: friend.display_name,
+                    role: friend.role,
+                    avatar: friend.avatar
+                },
+                created_at: f.created_at
+            };
+        })
+        .filter(Boolean)
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    res.json(friends);
+});
+
+// 删除好友
+app.delete('/api/friends/:id', authMiddleware, (req, res) => {
+    db = loadDB();
+    const friendshipId = parseInt(req.params.id);
+    const friendship = db.friends.find(f =>
+        f.id === friendshipId &&
+        (f.from_user_id === req.user.id || f.to_user_id === req.user.id) &&
+        f.status === 'accepted'
+    );
+    if (!friendship) return res.status(404).json({ error: '好友关系不存在' });
+
+    db.friends = db.friends.filter(f => f.id !== friendshipId);
+    saveDB(db);
+    res.json({ success: true, message: '已删除好友' });
 });
 
 // 搜索用户
@@ -2385,7 +2677,12 @@ app.get('/api/merchant/inquiries', authMiddleware, requireRole([ROLE_TYPES.ARTIS
     db = loadDB();
     const isAdmin = normalizeRole(req.user.role) === ROLE_TYPES.ADMIN;
     const conversations = db.conversations
-        .filter(conv => isAdmin || conv.developer_id === req.user.id)
+        .filter(conv => {
+            if (!isAdmin && conv.developer_id !== req.user.id) return false;
+            // 过滤掉对方用户已被删除的对话
+            const user = db.users.find(u => u.id === conv.user_id);
+            return user != null;
+        })
         .map(conv => {
             const user = db.users.find(u => u.id === conv.user_id);
             const unread = db.messages.filter(m => m.conversation_id === conv.id && m.sender_id !== req.user.id && !m.is_read).length;

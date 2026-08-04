@@ -39,12 +39,6 @@
   ],
   "conversations": [
     {
-      "id": 1,
-      "user_id": 3,
-      "developer_id": 2,
-      "created_at": "2026-07-21T10:29:02.339Z"
-    },
-    {
       "id": 2,
       "user_id": 1,
       "developer_id": 4,
@@ -55,24 +49,75 @@
       "user_id": 3,
       "developer_id": 4,
       "created_at": "2026-07-21T10:32:58.884Z"
+    },
+    {
+      "id": 4,
+      "user_id": 3,
+      "developer_id": 2,
+      "created_at": "2026-08-04T09:01:20.762Z"
     }
   ],
   "messages": [
     {
-      "id": 1,
-      "conversation_id": 1,
+      "id": 2,
+      "conversation_id": 3,
       "sender_id": 3,
-      "content": "我是大学生，我想要一个非遗物品",
+      "content": "我是大学生，给我钱",
       "file_path": "",
       "file_type": "",
       "file_name": "",
-      "is_read": false,
-      "created_at": "2026-07-21T10:29:19.456Z"
+      "is_read": true,
+      "created_at": "2026-07-21T11:48:10.843Z"
+    },
+    {
+      "id": 3,
+      "conversation_id": 3,
+      "sender_id": 3,
+      "content": "📎 10月14日(1).png",
+      "file_path": "/uploads/images/79e59a0f-3bd1-4704-902d-51dd1f133201.png",
+      "file_type": "image/png",
+      "file_name": "10æ14æ¥(1).png",
+      "is_read": true,
+      "created_at": "2026-07-21T11:48:43.811Z"
     }
   ],
   "nextId": {
     "user": 5,
-    "conversation": 4,
-    "message": 2
-  }
+    "conversation": 5,
+    "message": 4,
+    "address": 1,
+    "favorite": 1,
+    "review": 1,
+    "order": 1,
+    "merchant": 1,
+    "product": 1,
+    "cart": 1,
+    "complaint": 1,
+    "friend": 3
+  },
+  "addresses": [],
+  "favorites": [],
+  "reviews": [],
+  "orders": [],
+  "carts": [],
+  "merchants": [],
+  "products": [],
+  "after_sales": [],
+  "complaints": [],
+  "friends": [
+    {
+      "id": 1,
+      "from_user_id": 1,
+      "to_user_id": 2,
+      "status": "accepted",
+      "created_at": "2026-08-04T12:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "from_user_id": 3,
+      "to_user_id": 4,
+      "status": "accepted",
+      "created_at": "2026-08-04T12:00:00.000Z"
+    }
+  ]
 }

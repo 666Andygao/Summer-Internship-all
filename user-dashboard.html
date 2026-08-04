@@ -177,6 +177,27 @@
             font-weight: 500;
         }
 
+        .delete-conv-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            color: #bbb;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .delete-conv-btn:hover {
+            background: #fee2e2;
+            color: #ef4444;
+        }
+
         /* 右侧聊天区域 */
         .chat-area {
             flex: 1;
@@ -378,6 +399,79 @@
         }
 
         /* 无联系人提示 */
+        .tab-buttons {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 12px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 7px 10px;
+            border-radius: 8px;
+            border: 1px solid #e0d8d1;
+            background: #faf8f6;
+            cursor: pointer;
+            font-size: 12px;
+            color: #666;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .tab-btn.active {
+            background: #c0392b;
+            color: white;
+            border-color: #c0392b;
+        }
+
+        .request-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            border-bottom: 1px solid #f0ebe7;
+        }
+
+        .request-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .request-name {
+            font-weight: 500;
+            font-size: 13px;
+        }
+
+        .request-role {
+            font-size: 11px;
+            color: #999;
+        }
+
+        .request-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .accept-btn {
+            padding: 6px 14px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .reject-btn {
+            padding: 6px 14px;
+            background: #e0d8d1;
+            color: #666;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
         .no-contacts {
             text-align: center;
             padding: 40px 20px;
@@ -429,8 +523,23 @@
         <div class="sidebar">
             <div class="sidebar-header">
                 <h2>💬 消息</h2>
-                <input type="text" class="search-box" id="searchBox" placeholder="🔍 搜索开发者...">
+                <div class="tab-buttons">
+                    <button class="tab-btn active" onclick="switchTab('friends', this)">我的好友</button>
+                    <button class="tab-btn" onclick="switchTab('addFriend', this)">添加好友</button>
+                    <button class="tab-btn" id="requestsTabBtn" onclick="switchTab('requests', this)">好友请求</button>
+                </div>
+                <input type="text" class="search-box" id="searchBox" placeholder="🔍 搜索好友..." oninput="renderFriends()">
             </div>
+            <!-- 添加好友面板 -->
+            <div class="add-friend-panel" id="addFriendPanel" style="display:none; padding:12px 20px; border-bottom:1px solid #f0ebe7;">
+                <div style="display:flex; gap:8px;">
+                    <input type="text" id="friendUsername" placeholder="输入对方用户名..." style="flex:1; padding:9px 12px; border:2px solid #e0d8d1; border-radius:8px; font-size:13px; outline:none;">
+                    <button onclick="sendFriendRequest()" style="padding:9px 16px; background:linear-gradient(135deg,#c0392b,#a83226); color:white; border:none; border-radius:8px; cursor:pointer; font-size:13px; white-space:nowrap;">➕ 添加</button>
+                </div>
+                <div id="addFriendMsg" style="margin-top:8px; font-size:12px;"></div>
+            </div>
+            <!-- 好友请求面板 -->
+            <div id="requestsPanel" style="display:none;"></div>
             <div class="contact-list" id="contactList">
                 <div class="no-contacts">加载中...</div>
             </div>
@@ -467,9 +576,11 @@
     <script>
         const API = '/api';
         let token, currentUser;
-        let contacts = [];
+        let friends = [];
+        let friendRequests = [];
         let activeConversation = null;
         let messagesPolling = null;
+        let currentTab = 'friends'; // 'friends' | 'addFriend' | 'requests'
 
         // 初始化
         function init() {
@@ -488,7 +599,8 @@
             }
 
             document.getElementById('displayName').textContent = currentUser.display_name;
-            loadContacts();
+            loadFriends();
+            loadFriendRequests();
             startPolling();
         }
 
@@ -503,41 +615,217 @@
             return fetch(API + path, { ...options, headers });
         }
 
-        // 加载联系人（开发者列表）
-        async function loadContacts() {
+        // 加载好友列表
+        async function loadFriends() {
             try {
-                const res = await api('/contacts');
-                contacts = await res.json();
-                renderContacts();
+                const res = await api('/friends');
+                friends = await res.json();
+                renderFriends();
             } catch (e) {
-                console.error('加载联系人失败', e);
+                console.error('加载好友失败', e);
             }
         }
 
-        function renderContacts(filter = '') {
+        // 加载好友请求
+        async function loadFriendRequests() {
+            try {
+                const res = await api('/friends/requests');
+                friendRequests = await res.json();
+                updateRequestsBadge();
+                if (currentTab === 'requests') {
+                    renderRequests();
+                }
+            } catch (e) {
+                console.error('加载好友请求失败', e);
+            }
+        }
+
+        function updateRequestsBadge() {
+            const btn = document.getElementById('requestsTabBtn');
+            const count = friendRequests.length;
+            btn.textContent = count > 0 ? '好友请求(' + count + ')' : '好友请求';
+            if (count > 0) {
+                btn.style.color = '#c0392b';
+                btn.style.fontWeight = '600';
+            } else {
+                btn.style.color = '';
+                btn.style.fontWeight = '';
+            }
+        }
+
+        // 切换标签
+        async function switchTab(tab, btn) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            document.getElementById('addFriendPanel').style.display = (tab === 'addFriend') ? 'block' : 'none';
+            document.getElementById('requestsPanel').style.display = (tab === 'requests') ? 'block' : 'none';
+            document.getElementById('searchBox').placeholder =
+                tab === 'friends' ? '🔍 搜索好友...' :
+                tab === 'addFriend' ? '🔍 输入用户名搜索...' : '';
+
+            if (tab === 'friends') {
+                await loadFriends();
+            } else if (tab === 'requests') {
+                await loadFriendRequests();
+                renderRequests();
+            }
+        }
+
+        // 搜索+发送好友请求
+        document.getElementById('friendUsername').addEventListener('input', async (e) => {
+            const q = e.target.value.trim();
+            const msg = document.getElementById('addFriendMsg');
+            if (!q) { msg.textContent = ''; return; }
+        });
+
+        async function sendFriendRequest() {
+            const username = document.getElementById('friendUsername').value.trim();
+            const msg = document.getElementById('addFriendMsg');
+            if (!username) { msg.innerHTML = '<span style="color:#e74c3c;">请输入用户名</span>'; return; }
+
+            // 先查找用户
+            try {
+                const findRes = await api('/users/find?username=' + encodeURIComponent(username));
+                const user = await findRes.json();
+                if (findRes.ok) {
+                    if (user.is_friend) {
+                        msg.innerHTML = '<span style="color:#27ae60;">✅ 已经是好友了</span>';
+                        return;
+                    }
+                    if (user.request_status === 'sent') {
+                        msg.innerHTML = '<span style="color:#f39c12;">⏳ 已发送过请求，请等待对方处理</span>';
+                        return;
+                    }
+                    if (user.request_status === 'received') {
+                        msg.innerHTML = '<span style="color:#27ae60;">📩 对方已向你发送好友请求，请在"好友请求"中接受</span>';
+                        return;
+                    }
+
+                    // 发送请求
+                    const reqRes = await api('/friends/request', {
+                        method: 'POST',
+                        body: JSON.stringify({ target_id: user.id })
+                    });
+                    const result = await reqRes.json();
+                    if (reqRes.ok) {
+                        msg.innerHTML = '<span style="color:#27ae60;">✅ ' + result.message + '</span>';
+                        document.getElementById('friendUsername').value = '';
+                    } else {
+                        msg.innerHTML = '<span style="color:#e74c3c;">' + result.error + '</span>';
+                    }
+                } else {
+                    msg.innerHTML = '<span style="color:#e74c3c;">未找到用户: ' + user.error + '</span>';
+                }
+            } catch (e) {
+                msg.innerHTML = '<span style="color:#e74c3c;">网络错误</span>';
+            }
+        }
+
+        // 接受好友请求
+        async function acceptRequest(requestId) {
+            try {
+                const res = await api('/friends/requests/' + requestId + '/accept', { method: 'POST' });
+                const result = await res.json();
+                if (res.ok) {
+                    await loadFriendRequests();
+                    await loadFriends();
+                    if (currentTab === 'requests') renderRequests();
+                    else renderFriends();
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        // 拒绝好友请求
+        async function rejectRequest(requestId) {
+            if (!confirm('确定要拒绝此好友请求吗？')) return;
+            try {
+                const res = await api('/friends/requests/' + requestId + '/reject', { method: 'POST' });
+                if (res.ok) {
+                    await loadFriendRequests();
+                    renderRequests();
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        // 删除好友
+        async function removeFriend(friendshipId) {
+            if (!confirm('确定要删除此好友吗？相关对话将被保留。')) return;
+            try {
+                const res = await api('/friends/' + friendshipId, { method: 'DELETE' });
+                if (res.ok) {
+                    await loadFriends();
+                    renderFriends();
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        // 渲染好友请求
+        function renderRequests() {
+            const panel = document.getElementById('requestsPanel');
+            if (friendRequests.length === 0) {
+                panel.innerHTML = '<div class="no-contacts" style="padding:30px;">暂无好友请求</div>';
+                return;
+            }
+            panel.innerHTML = friendRequests.map(r => {
+                const user = r.from_user;
+                if (!user) return '';
+                return `
+                <div class="request-item">
+                    <div class="contact-avatar" style="width:36px;height:36px;font-size:14px;background:linear-gradient(135deg,#2d3436,#4a69bd)">
+                        ${user.display_name[0] || '?'}
+                    </div>
+                    <div class="request-info">
+                        <div class="request-name">${user.display_name}</div>
+                        <div class="request-role">@${user.username} · ${user.role === 'developer' || user.role === 'artisan' ? '开发者' : '用户'}</div>
+                    </div>
+                    <div class="request-actions">
+                        <button class="accept-btn" onclick="acceptRequest(${r.id})">✓ 接受</button>
+                        <button class="reject-btn" onclick="rejectRequest(${r.id})">✕ 拒绝</button>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        function renderFriends(filter = '') {
+            if (currentTab !== 'friends') return;
             const list = document.getElementById('contactList');
-            const filtered = contacts.filter(c =>
-                c.display_name.includes(filter) || c.username.includes(filter)
-            );
+            const filtered = friends.filter(f => {
+                const name = f.friend.display_name || f.friend.username || '';
+                return name.includes(filter) || (f.friend.username || '').includes(filter);
+            });
 
             if (filtered.length === 0) {
-                list.innerHTML = '<div class="no-contacts">' + (filter ? '未找到匹配的开发者' : '暂无可联系的开发者') + '</div>';
+                const emptyMsg = filter ? '未找到匹配的好友' : '还没有好友，点击"添加好友"搜索并添加好友';
+                list.innerHTML = '<div class="no-contacts">' + emptyMsg + '</div>';
                 return;
             }
 
-            list.innerHTML = filtered.map(c => `
-                <div class="contact-item ${activeConversation?.target_id === c.id ? 'active' : ''}"
-                     onclick="openConversation(${c.id}, '${c.display_name}')">
-                    <div class="contact-avatar" style="background:linear-gradient(135deg, #2d3436, #4a69bd)">
-                        ${c.display_name[0]}
+            list.innerHTML = filtered.map(f => {
+                const friend = f.friend;
+                const name = friend.display_name || friend.username;
+                const roleBadge = (friend.role === 'developer' || friend.role === 'artisan') ? '开发者' : '用户';
+                const avatarBg = (friend.role === 'developer' || friend.role === 'artisan')
+                    ? 'linear-gradient(135deg, #2d3436, #4a69bd)'
+                    : 'linear-gradient(135deg, #c0392b, #e74c3c)';
+
+                return `
+                <div class="contact-item ${activeConversation?.target_id === friend.id ? 'active' : ''}"
+                     onclick="openConversation(${friend.id}, '${name}')">
+                    <div class="contact-avatar" style="background:${avatarBg}">
+                        ${name[0] || '?'}
                     </div>
                     <div class="contact-info">
-                        <div class="contact-name">${c.display_name}</div>
-                        <div class="contact-role">@${c.username}</div>
+                        <div class="contact-name">${name}</div>
+                        <div class="contact-role">@${friend.username}</div>
                     </div>
-                    <span class="contact-badge">开发者</span>
+                    <span class="contact-badge">${roleBadge}</span>
+                    <button class="delete-conv-btn" title="删除好友" onclick="event.stopPropagation(); removeFriend(${f.friendship_id})">🗑️</button>
                 </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         document.getElementById('searchBox').addEventListener('input', (e) => {
@@ -551,6 +839,13 @@
                     method: 'POST',
                     body: JSON.stringify({ target_id: targetId })
                 });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    alert(err.error || '无法打开对话');
+                    return;
+                }
+
                 const conv = await res.json();
                 activeConversation = { ...conv, target_id: targetId, target_name: targetName };
 
@@ -561,7 +856,7 @@
                 document.getElementById('chatName').textContent = targetName;
                 document.getElementById('chatAvatar').textContent = targetName[0];
 
-                renderContacts();
+                renderFriends();
                 loadMessages();
             } catch (e) {
                 console.error('打开对话失败', e);
@@ -696,15 +991,47 @@
             document.body.appendChild(overlay);
         }
 
-        // 轮询新消息
+        // 删除对话
+        async function deleteConversation(convId) {
+            if (!confirm('确定要删除此对话吗？所有消息记录将被清除。')) return;
+            try {
+                const res = await api('/conversations/' + convId, { method: 'DELETE' });
+                const result = await res.json();
+                if (result.success) {
+                    // 清除活跃对话
+                    if (activeConversation?.id === convId) {
+                        activeConversation = null;
+                        document.getElementById('chatEmpty').style.display = 'flex';
+                        document.getElementById('chatHeader').classList.remove('show');
+                        document.getElementById('chatMessages').classList.remove('show');
+                        document.getElementById('chatInputArea').classList.remove('show');
+                    }
+                    loadContacts();
+                } else {
+                    alert('删除失败：' + (result.error || '未知错误'));
+                }
+            } catch (e) {
+                console.error('删除对话失败', e);
+            }
+        }
+
+        // 轮询新消息 + 好友请求
         function startPolling() {
             messagesPolling = setInterval(() => {
                 if (activeConversation) {
                     loadMessages();
-                    loadContacts(); // 也刷新联系人列表以更新未读状态
                 }
-            }, 3000);
+                if (currentTab === 'friends') loadFriends();
+                loadFriendRequests();
+            }, 5000);
         }
+
+        // 搜索框
+        document.getElementById('searchBox').addEventListener('input', (e) => {
+            if (currentTab === 'friends') {
+                renderFriends(e.target.value.trim());
+            }
+        });
 
         function logout() {
             localStorage.removeItem('token');
