@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.heritage.ecommerce.mapper.OrderMapper">
+
+    <resultMap id="OrderResultMap" type="com.heritage.ecommerce.entity.Order">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="merchant_id" property="merchantId"/>
+        <result column="order_no" property="orderNo"/>
+        <result column="status" property="status"/>
+        <result column="total_amount" property="totalAmount"/>
+        <result column="freight" property="freight"/>
+        <result column="pay_amount" property="payAmount"/>
+        <result column="receiver_name" property="receiverName"/>
+        <result column="receiver_phone" property="receiverPhone"/>
+        <result column="receiver_province" property="receiverProvince"/>
+        <result column="receiver_city" property="receiverCity"/>
+        <result column="receiver_district" property="receiverDistrict"/>
+        <result column="receiver_detail" property="receiverDetail"/>
+        <result column="remark" property="remark"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="paid_at" property="paidAt"/>
+        <result column="shipped_at" property="shippedAt"/>
+        <result column="completed_at" property="completedAt"/>
+        <result column="cancelled_at" property="cancelledAt"/>
+    </resultMap>
+
+    <resultMap id="OrderItemResultMap" type="com.heritage.ecommerce.entity.OrderItem">
+        <id column="id" property="id"/>
+        <result column="order_id" property="orderId"/>
+        <result column="product_id" property="productId"/>
+        <result column="merchant_id" property="merchantId"/>
+        <result column="product_title" property="productTitle"/>
+        <result column="product_cover_image" property="productCoverImage"/>
+        <result column="unit_price" property="unitPrice"/>
+        <result column="quantity" property="quantity"/>
+        <result column="subtotal" property="subtotal"/>
+        <result column="status" property="status"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <insert id="insertOrder" parameterType="com.heritage.ecommerce.entity.Order" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO orders(user_id, merchant_id, order_no, status, total_amount, freight, pay_amount,
+                           receiver_name, receiver_phone, receiver_province, receiver_city, receiver_district,
+                           receiver_detail, remark, created_at, updated_at)
+        VALUES (#{userId}, #{merchantId}, #{orderNo}, #{status}, #{totalAmount}, #{freight}, #{payAmount},
+                #{receiverName}, #{receiverPhone}, #{receiverProvince}, #{receiverCity}, #{receiverDistrict},
+                #{receiverDetail}, #{remark}, NOW(), NOW())
+    </insert>
+
+    <insert id="insertOrderItem" parameterType="com.heritage.ecommerce.entity.OrderItem" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO order_items(order_id, product_id, merchant_id, product_title, product_cover_image,
+                                unit_price, quantity, subtotal, status, created_at, updated_at)
+        VALUES (#{orderId}, #{productId}, #{merchantId}, #{productTitle}, #{productCoverImage},
+                #{unitPrice}, #{quantity}, #{subtotal}, #{status}, NOW(), NOW())
+    </insert>
+
+    <select id="selectById" resultMap="OrderResultMap">
+        SELECT * FROM orders WHERE id = #{id} AND user_id = #{userId}
+    </select>
+
+    <select id="selectByIdForMerchant" resultMap="OrderResultMap">
+        SELECT * FROM orders WHERE id = #{id} AND merchant_id = #{merchantId}
+    </select>
+
+    <select id="queryOrderListByUser" resultMap="OrderResultMap">
+        SELECT * FROM orders
+        WHERE user_id = #{userId}
+        <if test="status != null and status != ''">
+            AND status = #{status}
+        </if>
+        ORDER BY created_at DESC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="countOrderListByUser" resultType="long">
+        SELECT COUNT(1) FROM orders WHERE user_id = #{userId}
+        <if test="status != null and status != ''">
+            AND status = #{status}
+        </if>
+    </select>
+
+    <select id="queryOrderListByMerchant" resultMap="OrderResultMap">
+        SELECT * FROM orders
+        WHERE merchant_id = #{merchantId}
+        <if test="status != null and status != ''">
+            AND status = #{status}
+        </if>
+        ORDER BY created_at DESC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="countOrderListByMerchant" resultType="long">
+        SELECT COUNT(1) FROM orders WHERE merchant_id = #{merchantId}
+        <if test="status != null and status != ''">
+            AND status = #{status}
+        </if>
+    </select>
+
+    <select id="queryItemsByOrderId" resultMap="OrderItemResultMap">
+        SELECT * FROM order_items WHERE order_id = #{orderId} ORDER BY created_at ASC
+    </select>
+
+    <update id="updateOrderStatus">
+        UPDATE orders
+        SET status = #{status}, updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <update id="cancelOrderIfPending">
+        UPDATE orders
+        SET status = 'cancelled', cancelled_at = NOW(), updated_at = NOW()
+        WHERE id = #{id} AND user_id = #{userId} AND status = #{status}
+    </update>
+
+    <select id="queryExpiredUnpaidOrders" resultMap="OrderResultMap">
+        SELECT * FROM orders
+        WHERE status = 'pending_payment'
+          AND created_at &lt;= DATE_SUB(NOW(), INTERVAL 30 MINUTE)
+    </select>
+
+    <update id="updateOrderStatusByOrderNo">
+        UPDATE orders
+        SET status = #{status}, updated_at = NOW()
+        WHERE order_no = #{orderNo}
+    </update>
+</mapper>
