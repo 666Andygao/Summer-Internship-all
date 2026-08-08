@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.heritage.ecommerce.mapper.MerchantStatsMapper">
+
+    <resultMap id="SalesRankResultMap" type="com.heritage.ecommerce.dto.MerchantSalesRankDTO">
+        <result column="product_id" property="productId"/>
+        <result column="product_title" property="productTitle"/>
+        <result column="product_cover_image" property="productCoverImage"/>
+        <result column="total_quantity" property="totalQuantity"/>
+        <result column="total_amount" property="totalAmount"/>
+    </resultMap>
+
+    <resultMap id="RevenueResultMap" type="com.heritage.ecommerce.dto.MerchantRevenueDTO">
+        <result column="today_order_count" property="todayOrderCount"/>
+        <result column="today_revenue" property="todayRevenue"/>
+        <result column="total_order_count" property="totalOrderCount"/>
+        <result column="total_revenue" property="totalRevenue"/>
+    </resultMap>
+
+    <select id="querySalesRankByMerchant" resultMap="SalesRankResultMap">
+        SELECT
+            oi.product_id,
+            oi.product_title,
+            oi.product_cover_image,
+            SUM(oi.quantity) AS total_quantity,
+            SUM(oi.subtotal) AS total_amount
+        FROM order_items oi
+        INNER JOIN orders o ON o.id = oi.order_id
+        WHERE oi.merchant_id = #{merchantId}
+          AND o.status IN ('pending_shipment', 'shipped', 'completed')
+        GROUP BY oi.product_id, oi.product_title, oi.product_cover_image
+        ORDER BY total_quantity DESC, total_amount DESC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="countSalesRankByMerchant" resultType="long">
+        SELECT COUNT(DISTINCT oi.product_id)
+        FROM order_items oi
+        INNER JOIN orders o ON o.id = oi.order_id
+        WHERE oi.merchant_id = #{merchantId}
+          AND o.status IN ('pending_shipment', 'shipped', 'completed')
+    </select>
+
+    <select id="queryRevenueSummaryByMerchant" resultMap="RevenueResultMap">
+        SELECT
+            SUM(CASE WHEN DATE(o.created_at) = CURDATE() THEN 1 ELSE 0 END) AS today_order_count,
+            IFNULL(SUM(CASE WHEN DATE(o.created_at) = CURDATE() THEN o.pay_amount ELSE 0 END), 0) AS today_revenue,
+            COUNT(1) AS total_order_count,
+            IFNULL(SUM(o.pay_amount), 0) AS total_revenue
+        FROM orders o
+        WHERE o.merchant_id = #{merchantId}
+          AND o.status IN ('pending_shipment', 'shipped', 'completed')
+    </select>
+
+</mapper>
