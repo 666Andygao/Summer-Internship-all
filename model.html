@@ -139,6 +139,36 @@
             transform: scale(1.05);
         }
 
+        .ring-process-link {
+            display: none;
+            position: absolute;
+            bottom: 20px;
+            left: 16px;
+            z-index: 10;
+            padding: 8px 20px;
+            background: linear-gradient(135deg, #f48fb1 0%, #e91e63 100%);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 25px;
+            font-size: 0.82em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 14px rgba(233, 30, 99, 0.3);
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .ring-process-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(233, 30, 99, 0.45);
+        }
+
+        .ring-process-link.visible {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
         .main-content.subpage-active .ring-back-btn {
             display: inline-flex;
             align-items: center;
@@ -184,6 +214,14 @@
             padding: 4px 12px;
             border-radius: 20px;
             border: 1px solid rgba(233, 30, 99, 0.08);
+        }
+
+        .floating-card .card-hint {
+            font-size: 0.7em;
+            color: rgba(233, 30, 99, 0.5);
+            margin-top: 8px;
+            letter-spacing: 1px;
+            animation: hintBlink 2s ease-in-out infinite;
         }
 
         .floating-card .model-tag {
@@ -271,6 +309,19 @@
             padding: 4px 12px;
             border-radius: 20px;
             border: 1px solid rgba(233, 30, 99, 0.08);
+        }
+
+        .card-hint {
+            font-size: 0.7em;
+            color: rgba(233, 30, 99, 0.5);
+            margin-top: 8px;
+            letter-spacing: 1px;
+            animation: hintBlink 2s ease-in-out infinite;
+        }
+
+        @keyframes hintBlink {
+            0%, 100% { opacity: 0.25; }
+            50% { opacity: 0.8; }
         }
 
         .card .model-tag {
@@ -680,36 +731,38 @@
 
     <div class="main-content">
         <div class="ring-container" id="ringContainer">
-            <button class="ring-back-btn" id="ringBackBtn" title="返回模型列表">◀ 返回</button>
+            <button class="ring-back-btn" id="ringBackBtn" title="返回模型列表">&#9664; 返回</button>
             <div class="scene">
                 <div class="carousel" id="carousel">
                     <div class="card" data-index="0" style="transform: rotateY(0deg) translateZ(200px);">
                         <div class="model-tag">模型一</div>
-                        <div class="icon">🧩</div>
+                        <div class="icon">&#129513;</div>
                         <h3>模型一</h3>
                         <div class="sub">基础模型</div>
+                        <div class="card-hint">点击了解分类</div>
                     </div>
                     <div class="card" data-index="1" style="transform: rotateY(72deg) translateZ(200px);">
                         <div class="model-tag">模型二</div>
-                        <div class="icon">⚙️</div>
+                        <div class="icon">&#9881;</div>
                         <h3>模型二</h3>
                         <div class="sub">进阶模型</div>
+                        <div class="card-hint">点击了解制作流程</div>
                     </div>
                     <div class="card" data-index="2" style="transform: rotateY(144deg) translateZ(200px);">
                         <div class="model-tag">模型三</div>
-                        <div class="icon">📊</div>
+                        <div class="icon">&#128202;</div>
                         <h3>模型三</h3>
                         <div class="sub">分析模型</div>
                     </div>
                     <div class="card" data-index="3" style="transform: rotateY(216deg) translateZ(200px);">
                         <div class="model-tag">模型四</div>
-                        <div class="icon">🤖</div>
+                        <div class="icon">&#129302;</div>
                         <h3>模型四</h3>
                         <div class="sub">预测模型</div>
                     </div>
                     <div class="card" data-index="4" style="transform: rotateY(288deg) translateZ(200px);">
                         <div class="model-tag">模型五</div>
-                        <div class="icon">🚀</div>
+                        <div class="icon">&#128640;</div>
                         <h3>模型五</h3>
                         <div class="sub">深度学习</div>
                     </div>
@@ -718,8 +771,8 @@
 
             <div class="ring-controls">
                 <div class="ring-nav-buttons">
-                    <button id="prevBtn" aria-label="上一个模型">◀ 上一页</button>
-                    <button id="nextBtn" aria-label="下一个模型">下一页 ▶</button>
+                    <button id="prevBtn" aria-label="上一个模型">&#9664; 上一页</button>
+                    <button id="nextBtn" aria-label="下一个模型">下一页 &#9654;</button>
                 </div>
                 <div class="dot-indicators">
                     <span class="dot active" data-index="0"></span>
@@ -730,6 +783,8 @@
                 </div>
                 <span class="ring-current-label" id="ringCurrentLabel">模型一</span>
             </div>
+
+            <a class="ring-process-link" id="ringProcessLink" href="process.html" title="查看制作流程">&#128295; 制作流程</a>
         </div>
 
         <div class="display-area" id="displayArea">
@@ -837,6 +892,7 @@
 
             const modelNames = ['模型一', '模型二', '模型三', '模型四', '模型五'];
             const subpageIframe = document.getElementById('subpageIframe');
+            const ringProcessLink = document.getElementById('ringProcessLink');
 
             function updateCarousel(index) {
                 index = ((index % totalCards) + totalCards) % totalCards;
@@ -946,9 +1002,22 @@
 
             function enterSubpage(index) {
                 if (isAnimating || isSubpage) return;
+
+                if (index === 1) {
+                    window.location.href = 'process2.html';
+                    return;
+                }
+
                 isAnimating = true;
                 isSubpage = true;
                 activeSubpageIndex = index;
+
+                if (index === 0) {
+                    ringProcessLink.classList.add('visible');
+                    ringProcessLink.href = 'process.html';
+                } else {
+                    ringProcessLink.classList.remove('visible');
+                }
 
                 var clickedCard = document.querySelector('.card[data-index="' + index + '"]');
                 var cardRect = clickedCard.getBoundingClientRect();
@@ -1017,6 +1086,8 @@
             function exitSubpage() {
                 if (isAnimating || !isSubpage) return;
                 isAnimating = true;
+
+                ringProcessLink.classList.remove('visible');
 
                 var activeCard = document.querySelector('.card[data-index="' + activeSubpageIndex + '"]');
                 activeCard.classList.remove('card-revealed');
@@ -1178,6 +1249,41 @@
             setTimeout(handleResize, 50);
 
             updateCarousel(0);
+
+            var urlParams = new URLSearchParams(window.location.search);
+            var autoSubpage = urlParams.get('subpage');
+            if (autoSubpage !== null) {
+                var targetIndex = parseInt(autoSubpage, 10) - 1;
+                if (targetIndex >= 0 && targetIndex < totalCards) {
+                    if (targetIndex !== currentIndex) {
+                        updateCarousel(targetIndex);
+                        updateRightDisplay(targetIndex);
+                    }
+                    setTimeout(function() {
+                        if (targetIndex === 1) {
+                            window.location.href = 'process2.html';
+                            return;
+                        }
+                        isSubpage = true;
+                        activeSubpageIndex = targetIndex;
+                        mainContent.classList.add('subpage-active');
+                        subpageIframe.src = 'model' + (targetIndex + 1) + '.html';
+                        if (targetIndex === 0) {
+                            ringProcessLink.classList.add('visible');
+                            ringProcessLink.href = 'process.html';
+                        }
+                        var cards = document.querySelectorAll('.card');
+                        cards.forEach(function(card) {
+                            if (parseInt(card.dataset.index) !== targetIndex) {
+                                card.classList.add('hidden-card');
+                            } else {
+                                card.classList.add('card-revealed');
+                            }
+                        });
+                        updateRightDisplay(targetIndex);
+                    }, 100);
+                }
+            }
         })();
     </script>
 </body>
