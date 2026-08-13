@@ -21,12 +21,118 @@
             align-items: stretch;
         }
 
+        .top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 24px;
+            background: rgba(255, 250, 240, 0.95);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid rgba(160, 136, 104, 0.25);
+            box-shadow: 0 4px 20px rgba(62, 39, 35, 0.1);
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .nav-back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 18px;
+            background: linear-gradient(135deg, #a08868 0%, #5d4037 100%);
+            color: #f5ecd7;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.88em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 12px rgba(93, 64, 55, 0.3);
+            letter-spacing: 0.5px;
+        }
+
+        .nav-back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(93, 64, 55, 0.45);
+        }
+
+        .nav-center {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 22px;
+            background: transparent;
+            color: #5d4037;
+            text-decoration: none;
+            border-radius: 10px;
+            font-size: 0.92em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(160, 136, 104, 0.3);
+            letter-spacing: 0.5px;
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(135deg, #bcaaa4 0%, #8d6e63 100%);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 4px 14px rgba(93, 64, 55, 0.35);
+        }
+
+        .nav-tab:not(.active):hover {
+            background: rgba(160, 136, 104, 0.1);
+            border-color: rgba(141, 110, 99, 0.5);
+            transform: translateY(-1px);
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .fullscreen-toggle {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: linear-gradient(135deg, #efebe9 0%, #d7ccc8 100%);
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.15em;
+            color: #5d4037;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(93, 64, 55, 0.15);
+        }
+
+        .fullscreen-toggle:hover {
+            transform: scale(1.08);
+            background: linear-gradient(135deg, #d7ccc8 0%, #bcaaa4 100%);
+            box-shadow: 0 4px 14px rgba(93, 64, 55, 0.3);
+        }
+
         .image-panel {
             flex: 2;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 2%;
+            padding: calc(2% + 64px) 2% 2%;
             position: relative;
             min-width: 0;
         }
@@ -574,9 +680,31 @@
     </style>
 </head>
 <body>
+    <nav class="top-nav">
+        <div class="nav-left">
+            <a href="model.html" class="nav-back-btn">
+                <span>◀</span>
+                <span>返回主界面</span>
+            </a>
+        </div>
+
+        <div class="nav-center">
+            <a href="model3.html" class="nav-tab">
+                <span>🎨</span>
+                <span>查看3D模型</span>
+            </a>
+            <a href="#" class="nav-tab active">
+                <span>🔧</span>
+                <span>查看工艺流程</span>
+            </a>
+        </div>
+
+        <div class="nav-right">
+            <button class="fullscreen-toggle" id="fullscreenToggleBtn" title="全屏查看">&#9974;</button>
+        </div>
+    </nav>
+
     <div class="image-panel" id="imagePanel">
-        <a class="back-link" href="model.html" title="返回模型展示中心">&#9664; 返回</a>
-        <button class="fullscreen-btn" id="fullscreenBtn" title="全屏查看">&#9974; 全屏</button>
         <div class="image-container" id="imageContainer">
             <div class="image-placeholder" id="imagePlaceholder">
                 <span class="icon">&#9874;</span>
@@ -890,6 +1018,13 @@
             fullscreenBtn.addEventListener('click', function() {
                 openFullscreen(currentIndex);
             });
+
+            var fullscreenToggleBtn = document.getElementById('fullscreenToggleBtn');
+            if (fullscreenToggleBtn) {
+                fullscreenToggleBtn.addEventListener('click', function() {
+                    openFullscreen(currentIndex);
+                });
+            }
 
             fullscreenClose.addEventListener('click', closeFullscreen);
             fullscreenPrev.addEventListener('click', fullscreenGoPrev);
