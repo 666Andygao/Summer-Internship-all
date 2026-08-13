@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>火草纺织工艺 - 3D模型展示</title>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
     <style>
         * {
             margin: 0;
@@ -19,13 +27,120 @@
             overflow: hidden;
         }
 
+        .top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid rgba(225, 29, 72, 0.15);
+            box-shadow: 0 4px 20px rgba(225, 29, 72, 0.08);
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .nav-back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 18px;
+            background: linear-gradient(135deg, #fb7185 0%, #e11d48 100%);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.88em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 12px rgba(225, 29, 72, 0.25);
+            letter-spacing: 0.5px;
+        }
+
+        .nav-back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(225, 29, 72, 0.4);
+        }
+
+        .nav-center {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 22px;
+            background: transparent;
+            color: #be123c;
+            text-decoration: none;
+            border-radius: 10px;
+            font-size: 0.92em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(225, 29, 72, 0.2);
+            letter-spacing: 0.5px;
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(135deg, #fb7185 0%, #e11d48 100%);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 4px 14px rgba(225, 29, 72, 0.35);
+        }
+
+        .nav-tab:not(.active):hover {
+            background: rgba(225, 29, 72, 0.08);
+            border-color: rgba(225, 29, 72, 0.35);
+            transform: translateY(-1px);
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .fullscreen-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: linear-gradient(135deg, #fecdd3 0%, #fda4af 100%);
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.2em;
+            color: #be123c;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(225, 29, 72, 0.15);
+        }
+
+        .fullscreen-btn:hover {
+            transform: scale(1.08);
+            background: linear-gradient(135deg, #fda4af 0%, #fb7185 100%);
+            box-shadow: 0 4px 14px rgba(225, 29, 72, 0.3);
+        }
+
         header {
             text-align: center;
-            padding: 16px 20px;
+            padding: 24px 20px 20px;
             background: rgba(255, 255, 255, 0.75);
             backdrop-filter: blur(12px);
             border-bottom: 1px solid rgba(225, 29, 72, 0.12);
             box-shadow: 0 2px 16px rgba(225, 29, 72, 0.06);
+            margin-top: 65px;
         }
 
         header h1 {
@@ -43,7 +158,8 @@
 
         .main-container {
             display: flex;
-            height: calc(100vh - 80px);
+            height: calc(100vh - 145px);
+            margin-top: 0;
             gap: 0;
         }
 
@@ -72,6 +188,87 @@
             width: 100%;
             height: 100%;
             display: block;
+        }
+
+        .model-switcher-container {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 10px 24px;
+            border-radius: 25px;
+            box-shadow: 0 4px 20px rgba(225, 29, 72, 0.2);
+            z-index: 15;
+            border: 2px solid rgba(225, 29, 72, 0.15);
+        }
+
+        .switch-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: linear-gradient(135deg, #fb7185 0%, #e11d48 100%);
+            color: white;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(225, 29, 72, 0.3);
+        }
+
+        .switch-btn:hover {
+            transform: scale(1.15);
+            box-shadow: 0 4px 14px rgba(225, 29, 72, 0.45);
+        }
+
+        .switch-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .model-indicator-dots {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .indicator-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(225, 29, 72, 0.25);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .indicator-dot.active {
+            background: linear-gradient(135deg, #fb7185 0%, #e11d48 100%);
+            transform: scale(1.2);
+            box-shadow: 0 2px 8px rgba(225, 29, 72, 0.4);
+            border-color: rgba(254, 205, 211, 0.6);
+        }
+
+        .indicator-dot:hover:not(.active) {
+            background: rgba(225, 29, 72, 0.45);
+            transform: scale(1.1);
+        }
+
+        .current-model-label {
+            font-size: 0.88em;
+            color: #be123c;
+            font-weight: 600;
+            min-width: 110px;
+            text-align: center;
+            letter-spacing: 0.5px;
         }
 
         .model-loading-overlay {
@@ -112,6 +309,36 @@
             color: #e11d48;
             font-size: 0.95em;
             font-weight: 500;
+        }
+
+        .model-switch-hint {
+            position: absolute;
+            bottom: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, rgba(251, 113, 133, 0.95) 0%, rgba(225, 29, 72, 0.9) 100%);
+            padding: 10px 28px;
+            border-radius: 22px;
+            font-size: 0.88em;
+            color: white;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 16px rgba(225, 29, 72, 0.35);
+            z-index: 12;
+            animation: pulse-hint 2s infinite;
+            white-space: nowrap;
+            letter-spacing: 0.5px;
+        }
+
+        @keyframes pulse-hint {
+            0%, 100% { 
+                opacity: 1; 
+                transform: translateX(-50%) translateY(0); 
+            }
+            50% { 
+                opacity: 0.85; 
+                transform: translateX(-50%) translateY(-3px); 
+            }
         }
 
         .model-controls-hint {
@@ -160,47 +387,6 @@
             transform: scale(1.1);
             background: #fff;
             box-shadow: 0 4px 12px rgba(225, 29, 72, 0.35);
-        }
-
-        .fullscreen-btn {
-            width: 36px;
-            height: 36px;
-            border: none;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 16px;
-            color: #e11d48;
-            box-shadow: 0 2px 8px rgba(225, 29, 72, 0.2);
-            transition: all 0.25s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .fullscreen-btn:hover {
-            transform: scale(1.1);
-            background: #fff;
-            box-shadow: 0 4px 12px rgba(225, 29, 72, 0.35);
-        }
-
-        .model-display-section.fullscreen-mode {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
-            z-index: 9999 !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            background: linear-gradient(160deg, #fff1f2 0%, #fecdd3 30%, #fda4af 70%, #fb7185 100%) !important;
-        }
-
-        .model-display-section.fullscreen-mode .model-3d-wrapper {
-            width: 100% !important;
-            height: 100% !important;
-            border-radius: 0 !important;
-            border: none !important;
         }
 
         .info-section {
@@ -348,8 +534,25 @@
         }
 
         @media (max-width: 1024px) {
+            .top-nav {
+                flex-wrap: wrap;
+                padding: 10px 16px;
+                gap: 10px;
+            }
+
+            .nav-center {
+                order: 3;
+                width: 100%;
+                justify-content: center;
+            }
+
+            header {
+                margin-top: 120px;
+            }
+
             .main-container {
                 flex-direction: column;
+                height: calc(100vh - 200px);
             }
 
             .model-display-section {
@@ -366,6 +569,21 @@
     </style>
 </head>
 <body>
+    <nav class="top-nav">
+        <div class="nav-left">
+            <a href="index.html" class="nav-back-btn">← 返回首页</a>
+        </div>
+
+        <div class="nav-center">
+            <a href="#" class="nav-tab active">🧵 模型展示</a>
+            <a href="process5.html" class="nav-tab">🔧 制作流程</a>
+        </div>
+
+        <div class="nav-right">
+            <button class="fullscreen-btn" id="fullscreenBtn" title="全屏展示">⛶</button>
+        </div>
+    </nav>
+
     <header>
         <h1>🧵 火草纺织工艺 - 传统非遗文化</h1>
         <p>3D数字模型展示 · 交互式浏览体验</p>
@@ -376,9 +594,26 @@
             <div class="model-3d-wrapper" id="model3DWrapper">
                 <canvas id="threeCanvas" class="model-3d-canvas"></canvas>
 
+                <div class="model-switcher-container" id="modelSwitcherContainer">
+                    <button class="switch-btn" id="prevModelBtn" title="上一个模型">◀</button>
+                    
+                    <div class="current-model-label" id="currentModelLabel">🧵 1/2 火草布卷</div>
+                    
+                    <div class="model-indicator-dots">
+                        <div class="indicator-dot active" data-model-index="0" title="火草布卷"></div>
+                        <div class="indicator-dot" data-model-index="1" title="火草衣物"></div>
+                    </div>
+                    
+                    <button class="switch-btn" id="nextModelBtn" title="下一个模型">▶</button>
+                </div>
+
                 <div class="model-loading-overlay" id="loadingOverlay">
                     <div class="loading-spinner"></div>
                     <div class="loading-text">正在加载3D火草纺织模型...</div>
+                </div>
+
+                <div class="model-switch-hint" id="modelSwitchHint">
+                    ⬅️ 切换查看火草布卷 / 火草衣物 ➡️
                 </div>
 
                 <div class="model-controls-hint">
@@ -388,7 +623,6 @@
                 <div class="zoom-controls">
                     <button class="zoom-btn" id="zoomInBtn" title="放大">+</button>
                     <button class="zoom-btn" id="zoomOutBtn" title="缩小">−</button>
-                    <button class="fullscreen-btn" id="fullscreenBtn" title="全屏展示">⛶</button>
                 </div>
             </div>
         </div>
@@ -448,15 +682,6 @@
         </div>
     </div>
 
-    <script type="importmap">
-    {
-        "imports": {
-            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-        }
-    }
-    </script>
-
     <script type="module">
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -468,9 +693,57 @@
         const loadingOverlay = document.getElementById('loadingOverlay');
         const zoomInBtn = document.getElementById('zoomInBtn');
         const zoomOutBtn = document.getElementById('zoomOutBtn');
+        const prevModelBtn = document.getElementById('prevModelBtn');
+        const nextModelBtn = document.getElementById('nextModelBtn');
+        const currentModelLabel = document.getElementById('currentModelLabel');
+        const indicatorDots = document.querySelectorAll('.indicator-dot');
 
         let scene, camera, renderer, controls;
+        let currentModelIndex = 0;
+        let currentModel = null;
         let isInitialized = false;
+
+        const modelConfigs = [
+            {
+                title: '🧵 1/2 火草布卷',
+                label: '🧵 火草布卷',
+                mtlPath: encodeURI('模型五模型/fabric roll 3d model/fabric+roll+3d+model.mtl'),
+                objPath: encodeURI('模型五模型/fabric roll 3d model/fabric+roll+3d+model.obj'),
+                loadingText: '正在加载火草布卷模型...'
+            },
+            {
+                title: '👗 2/2 火草衣物',
+                label: '👗 火草衣物',
+                mtlPath: encodeURI('模型五模型/traditional dress 3d model/traditional+dress+3d+model.mtl'),
+                objPath: encodeURI('模型五模型/traditional dress 3d model/traditional+dress+3d+model.obj'),
+                loadingText: '正在加载火草衣物模型...'
+            }
+        ];
+
+        function updateUI() {
+            currentModelLabel.textContent = modelConfigs[currentModelIndex].title;
+
+            indicatorDots.forEach((dot, index) => {
+                dot.classList.toggle('active', index === currentModelIndex);
+            });
+
+            prevModelBtn.disabled = currentModelIndex === 0;
+            nextModelBtn.disabled = currentModelIndex === modelConfigs.length - 1;
+        }
+
+        function switchModel(index) {
+            if (index < 0 || index >= modelConfigs.length || index === currentModelIndex) return;
+
+            currentModelIndex = index;
+            updateUI();
+
+            if (currentModel) {
+                scene.remove(currentModel);
+                currentModel = null;
+            }
+
+            loadCurrentModel();
+        }
 
         function initThreeJS() {
             if (isInitialized) return;
@@ -543,22 +816,38 @@
             wrapper.addEventListener('wheel', handleWheelZoom, { passive: false });
 
             controls.update();
+            
+            prevModelBtn.addEventListener('click', () => switchModel(currentModelIndex - 1));
+            nextModelBtn.addEventListener('click', () => switchModel(currentModelIndex + 1));
 
+            indicatorDots.forEach((dot, index) => {
+                dot.addEventListener('click', () => switchModel(index));
+            });
+
+            updateUI();
+            loadCurrentModel();
+
+            animate();
+        }
+
+        function loadCurrentModel() {
             loadingOverlay.classList.remove('hidden');
+            const config = modelConfigs[currentModelIndex];
+            const textEl = loadingOverlay.querySelector('.loading-text');
+            textEl.textContent = config.loadingText;
 
             const mtlLoader = new MTLLoader();
             const objLoader = new OBJLoader();
 
-            const mtlPath = encodeURI('模型五模型/fabric roll 3d model/fabric+roll+3d+model.mtl');
-            const objPath = encodeURI('模型五模型/fabric roll 3d model/fabric+roll+3d+model.obj');
-
-            mtlLoader.load(mtlPath, (materials) => {
+            mtlLoader.load(config.mtlPath, (materials) => {
                 materials.preload();
                 objLoader.setMaterials(materials);
 
-                objLoader.load(objPath,
+                objLoader.load(config.objPath,
                     (object) => {
-                        console.log('火草纺织模型加载成功');
+                        console.log(`${config.label}模型加载成功`);
+
+                        currentModel = object;
 
                         object.traverse((child) => {
                             if (child.isMesh) {
@@ -567,17 +856,17 @@
                             }
                         });
 
-                        const box = new THREE.Box3().setFromObject(object);
+                        const box = new THREE.Box3().setFromObject(currentModel);
                         const size = box.getSize(new THREE.Vector3());
                         const maxDim = Math.max(size.x, size.y, size.z);
                         const scale = 4 / maxDim;
-                        object.scale.multiplyScalar(scale);
+                        currentModel.scale.multiplyScalar(scale);
 
-                        box.setFromObject(object);
+                        box.setFromObject(currentModel);
                         const center = box.getCenter(new THREE.Vector3());
-                        object.position.sub(center);
+                        currentModel.position.sub(center);
 
-                        scene.add(object);
+                        scene.add(currentModel);
 
                         setTimeout(() => {
                             loadingOverlay.classList.add('hidden');
@@ -586,30 +875,24 @@
                     (xhr) => {
                         if (xhr.lengthComputable) {
                             const percent = Math.round((xhr.loaded / xhr.total) * 100);
-                            const textEl = loadingOverlay.querySelector('.loading-text');
-                            if (textEl) {
-                                const loadedMB = (xhr.loaded / 1024 / 1024).toFixed(2);
-                                const totalMB = (xhr.total / 1024 / 1024).toFixed(2);
-                                textEl.textContent = `正在加载3D火草纺织模型... ${percent}% (${loadedMB}MB / ${totalMB}MB)`;
-                            }
+                            const loadedMB = (xhr.loaded / 1024 / 1024).toFixed(2);
+                            const totalMB = (xhr.total / 1024 / 1024).toFixed(2);
+                            textEl.textContent = `${config.loadingText} ${percent}% (${loadedMB}MB / ${totalMB}MB)`;
                         }
                     },
                     (error) => {
-                        console.error('OBJ模型加载错误:', error);
-                        const textEl = loadingOverlay.querySelector('.loading-text');
-                        if (textEl) {
-                            textEl.innerHTML = '⚠️ 模型加载失败<br><span style="font-size: 0.85em; color: #666;">请检查文件路径或刷新页面重试</span>';
-                        }
-                        const spinnerEl = loadingOverlay.querySelector('.loading-spinner');
-                        if (spinnerEl) spinnerEl.style.borderTopColor = '#e53935';
+                        console.error(`${config.label}模型加载错误:`, error);
+                        textEl.innerHTML = `⚠️ ${config.label}加载失败<br><span style="font-size: 0.85em; color: #666;">请检查文件路径或刷新页面重试</span>`;
+                        loadingOverlay.querySelector('.loading-spinner').style.borderTopColor = '#e53935';
                     }
                 );
-            }, undefined, (error) => {
-                console.error('MTL材质加载错误:', error);
+            }, undefined, () => {
 
-                objLoader.load(objPath,
+                objLoader.load(config.objPath,
                     (object) => {
-                        console.log('火草纺织模型加载成功（无材质）');
+                        console.log(`${config.label}模型加载成功（无材质）`);
+
+                        currentModel = object;
 
                         object.traverse((child) => {
                             if (child.isMesh) {
@@ -627,13 +910,13 @@
                         const size = box.getSize(new THREE.Vector3());
                         const maxDim = Math.max(size.x, size.y, size.z);
                         const scale = 4 / maxDim;
-                        object.scale.multiplyScalar(scale);
+                        currentModel.scale.multiplyScalar(scale);
 
-                        box.setFromObject(object);
+                        box.setFromObject(currentModel);
                         const center = box.getCenter(new THREE.Vector3());
-                        object.position.sub(center);
+                        currentModel.position.sub(center);
 
-                        scene.add(object);
+                        scene.add(currentModel);
 
                         setTimeout(() => {
                             loadingOverlay.classList.add('hidden');
@@ -642,34 +925,25 @@
                     (xhr) => {
                         if (xhr.lengthComputable) {
                             const percent = Math.round((xhr.loaded / xhr.total) * 100);
-                            const textEl = loadingOverlay.querySelector('.loading-text');
-                            if (textEl) {
-                                const loadedMB = (xhr.loaded / 1024 / 1024).toFixed(2);
-                                const totalMB = (xhr.total / 1024 / 1024).toFixed(2);
-                                textEl.textContent = `正在加载3D火草纺织模型... ${percent}% (${loadedMB}MB / ${totalMB}MB)`;
-                            }
+                            const loadedMB = (xhr.loaded / 1024 / 1024).toFixed(2);
+                            const totalMB = (xhr.total / 1024 / 1024).toFixed(2);
+                            textEl.textContent = `${config.loadingText} ${percent}% (${loadedMB}MB / ${totalMB}MB)`;
                         }
                     },
                     (error) => {
-                        console.error('模型加载完全失败:', error);
-                        const textEl = loadingOverlay.querySelector('.loading-text');
-                        if (textEl) {
-                            textEl.innerHTML = '⚠️ 模型加载失败<br><span style="font-size: 0.85em; color: #666;">请检查文件路径或刷新页面重试</span>';
-                        }
-                        const spinnerEl = loadingOverlay.querySelector('.loading-spinner');
-                        if (spinnerEl) spinnerEl.style.borderTopColor = '#e53935';
+                        console.error(`${config.label}模型加载完全失败:`, error);
+                        textEl.innerHTML = `⚠️ ${config.label}加载失败<br><span style="font-size: 0.85em; color: #666;">请检查文件路径或刷新页面重试</span>`;
+                        loadingOverlay.querySelector('.loading-spinner').style.borderTopColor = '#e53935';
                     }
                 );
             });
+        }
 
-            function animate() {
-                if (!isInitialized) return;
-                requestAnimationFrame(animate);
-                controls.update();
-                renderer.render(scene, camera);
-            }
-
-            animate();
+        function animate() {
+            if (!isInitialized) return;
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
         }
 
         function handleWheelZoom(event) {

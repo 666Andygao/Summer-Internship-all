@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>火草纺织工艺 - 全屏展示</title>
+    <title>火草纺织工艺 · 双模型展示</title>
     <script type="importmap">
     {
         "imports": {
@@ -19,38 +19,14 @@
             box-sizing: border-box;
         }
 
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
         body {
             font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif;
             background: linear-gradient(160deg, #fff1f2 0%, #fecdd3 30%, #fda4af 70%, #fb7185 100%);
-            min-height: 100vh;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .fullscreen-container {
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-
-        .model-canvas-wrapper {
-            width: 85%;
-            height: 85vh;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        #fullscreenCanvas {
-            width: 100%;
-            height: 100%;
-            display: block;
-            border-radius: 20px;
-            box-shadow: 0 12px 48px rgba(225, 29, 72, 0.25);
         }
 
         .top-bar {
@@ -63,7 +39,7 @@
             align-items: center;
             justify-content: space-between;
             padding: 16px 32px;
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.92);
             backdrop-filter: blur(14px);
             border-bottom: 2px solid rgba(225, 29, 72, 0.15);
             box-shadow: 0 4px 20px rgba(225, 29, 72, 0.1);
@@ -97,55 +73,119 @@
             letter-spacing: 1px;
         }
 
-        .controls-panel {
-            position: fixed;
-            bottom: 40px;
-            right: 40px;
+        .page-indicator {
             display: flex;
-            flex-direction: column;
             gap: 12px;
-            z-index: 50;
+            align-items: center;
         }
 
-        .control-btn {
-            width: 50px;
-            height: 50px;
-            border: none;
-            background: rgba(255, 255, 255, 0.95);
+        .page-dot {
+            width: 14px;
+            height: 14px;
             border-radius: 50%;
+            background: rgba(225, 29, 72, 0.25);
             cursor: pointer;
-            font-size: 22px;
-            font-weight: bold;
-            color: #e11d48;
-            box-shadow: 0 4px 16px rgba(225, 29, 72, 0.25);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid transparent;
+        }
+
+        .page-dot.active {
+            background: linear-gradient(135deg, #fb7185 0%, #e11d48 100%);
+            transform: scale(1.25);
+            box-shadow: 0 4px 16px rgba(225, 29, 72, 0.45);
+            border-color: rgba(254, 205, 211, 0.6);
+        }
+
+        .page-dot:hover:not(.active) {
+            background: rgba(225, 29, 72, 0.45);
+            transform: scale(1.15);
+        }
+
+        .scroll-container {
+            width: 100vw;
+            height: 100vh;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .scroll-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .page-section {
+            width: 100%;
+            height: 100vh;
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+            position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        .control-btn:hover {
-            transform: scale(1.15);
-            background: #fff;
-            box-shadow: 0 6px 24px rgba(225, 29, 72, 0.45);
+        .model-canvas-wrapper {
+            width: 85%;
+            height: 85vh;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .hint-bar {
+        .model-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            border-radius: 20px;
+            box-shadow: 0 12px 48px rgba(225, 29, 72, 0.25);
+        }
+
+        .page-label {
+            position: absolute;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 14px 40px;
+            border-radius: 30px;
+            font-size: 1.05em;
+            color: #be123c;
+            font-weight: 700;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(225, 29, 72, 0.2);
+            box-shadow: 0 6px 24px rgba(225, 29, 72, 0.18);
+            z-index: 50;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+
+        .scroll-hint {
             position: fixed;
-            bottom: 40px;
+            bottom: 50px;
             left: 50%;
             transform: translateX(-50%);
             background: rgba(255, 255, 255, 0.92);
-            padding: 12px 36px;
+            padding: 12px 32px;
             border-radius: 28px;
-            font-size: 0.95em;
+            font-size: 0.92em;
             color: #be123c;
             font-weight: 600;
             backdrop-filter: blur(10px);
             border: 2px solid rgba(225, 29, 72, 0.2);
             box-shadow: 0 4px 20px rgba(225, 29, 72, 0.15);
-            z-index: 50;
-            letter-spacing: 0.5px;
+            z-index: 60;
+            animation: bounce 2s infinite;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+            40% { transform: translateX(-50%) translateY(-8px); }
+            60% { transform: translateX(-50%) translateY(-4px); }
         }
 
         .loading-overlay {
@@ -161,6 +201,7 @@
             background: rgba(255, 255, 255, 0.98);
             z-index: 200;
             transition: opacity 0.6s ease;
+            border-radius: 20px;
         }
 
         .loading-overlay.hidden {
@@ -169,8 +210,8 @@
         }
 
         .spinner {
-            width: 60px;
-            height: 60px;
+            width: 56px;
+            height: 56px;
             border: 5px solid rgba(225, 29, 72, 0.15);
             border-top-color: #e11d48;
             border-radius: 50%;
@@ -182,39 +223,90 @@
         }
 
         .loading-text {
-            margin-top: 20px;
+            margin-top: 18px;
             color: #be123c;
-            font-size: 1.05em;
+            font-size: 1em;
             font-weight: 600;
+        }
+
+        .controls-panel {
+            position: fixed;
+            bottom: 110px;
+            right: 45px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 55;
+        }
+
+        .control-btn {
+            width: 48px;
+            height: 48px;
+            border: none;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            font-weight: bold;
+            color: #e11d48;
+            box-shadow: 0 4px 16px rgba(225, 29, 72, 0.25);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .control-btn:hover {
+            transform: scale(1.15);
+            background: #fff;
+            box-shadow: 0 6px 24px rgba(225, 29, 72, 0.45);
         }
     </style>
 </head>
 <body>
     <div class="top-bar">
         <a href="model5.html" class="back-button">← 返回详情页</a>
-        <div class="title-text">🧵 火草纺织工艺 · 全屏展示</div>
-        <div style="width: 120px;"></div>
-    </div>
-
-    <div class="fullscreen-container">
-        <div class="model-canvas-wrapper">
-            <canvas id="fullscreenCanvas"></canvas>
-
-            <div class="loading-overlay" id="loadingOverlay">
-                <div class="spinner"></div>
-                <div class="loading-text">正在加载3D火草纺织模型...</div>
-            </div>
+        <div class="title-text">🧵 火草纺织工艺 · 双模型展示</div>
+        <div class="page-indicator">
+            <div class="page-dot active" data-page="0" title="火草布卷"></div>
+            <div class="page-dot" data-page="1" title="火草衣物"></div>
         </div>
     </div>
+
+    <div class="scroll-container" id="scrollContainer">
+
+        <div class="page-section" data-page="0">
+            <div class="model-canvas-wrapper">
+                <canvas id="canvas_page0" class="model-canvas"></canvas>
+
+                <div class="loading-overlay" id="loading_page0">
+                    <div class="spinner"></div>
+                    <div class="loading-text">正在加载火草布卷模型...</div>
+                </div>
+            </div>
+            <div class="page-label">🧵 第1页 · 火草纺织布卷</div>
+        </div>
+
+        <div class="page-section" data-page="1">
+            <div class="model-canvas-wrapper">
+                <canvas id="canvas_page1" class="model-canvas"></canvas>
+
+                <div class="loading-overlay" id="loading_page1">
+                    <div class="spinner"></div>
+                    <div class="loading-text">正在加载火草衣物模型...</div>
+                </div>
+            </div>
+            <div class="page-label">👗 第2页 · 火草纺织衣物</div>
+        </div>
+
+    </div>
+
+    <div class="scroll-hint" id="scrollHint">⬇️ 滚动鼠标查看下一个模型</div>
 
     <div class="controls-panel">
         <button class="control-btn" id="zoomInBtn" title="放大">+</button>
         <button class="control-btn" id="zoomOutBtn" title="缩小">−</button>
         <button class="control-btn" id="resetBtn" title="重置视角">⟳</button>
-    </div>
-
-    <div class="hint-bar">
-        🖱️ 拖拽旋转 · 滚轮缩放 · 右键平移
     </div>
 
     <script type="module">
@@ -223,24 +315,47 @@
         import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
         import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
 
-        const canvas = document.getElementById('fullscreenCanvas');
-        const loadingOverlay = document.getElementById('loadingOverlay');
+        const scrollContainer = document.getElementById('scrollContainer');
+        const pageDots = document.querySelectorAll('.page-dot');
+        const scrollHint = document.getElementById('scrollHint');
         const zoomInBtn = document.getElementById('zoomInBtn');
         const zoomOutBtn = document.getElementById('zoomOutBtn');
         const resetBtn = document.getElementById('resetBtn');
 
-        let scene, camera, renderer, controls;
-        let currentModel = null;
+        let currentPage = 0;
+        const totalPages = 2;
 
-        function init() {
-            scene = new THREE.Scene();
+        const scenes = [];
+        const cameras = [];
+        const renderers = [];
+        const controlsList = [];
+
+        const modelConfigs = [
+            {
+                title: '火草纺织布卷',
+                mtlPath: encodeURI('模型五模型/fabric roll 3d model/fabric+roll+3d+model.mtl'),
+                objPath: encodeURI('模型五模型/fabric roll 3d model/fabric+roll+3d+model.obj'),
+                loadingText: '正在加载火草布卷模型...'
+            },
+            {
+                title: '火草纺织衣物',
+                mtlPath: encodeURI('模型五模型/traditional dress 3d model/traditional+dress+3d+model.mtl'),
+                objPath: encodeURI('模型五模型/traditional dress 3d model/traditional+dress+3d+model.obj'),
+                loadingText: '正在加载火草衣物模型...'
+            }
+        ];
+
+        function initScene(pageIndex) {
+            const canvas = document.getElementById(`canvas_page${pageIndex}`);
+            
+            const scene = new THREE.Scene();
             scene.background = new THREE.Color(0xfff5f7);
 
             const aspect = canvas.clientWidth / canvas.clientHeight;
-            camera = new THREE.PerspectiveCamera(40, aspect, 0.1, 1000);
+            const camera = new THREE.PerspectiveCamera(40, aspect, 0.1, 1000);
             camera.position.set(6, 3, 6);
 
-            renderer = new THREE.WebGLRenderer({
+            const renderer = new THREE.WebGLRenderer({
                 canvas: canvas,
                 antialias: true,
                 alpha: true
@@ -285,7 +400,7 @@
             ground.receiveShadow = true;
             scene.add(ground);
 
-            controls = new OrbitControls(camera, renderer.domElement);
+            const controls = new OrbitControls(camera, renderer.domElement);
             controls.target.set(0, 0.3, 0);
             controls.enableDamping = true;
             controls.dampingFactor = 0.08;
@@ -296,49 +411,52 @@
             controls.autoRotate = true;
             controls.autoRotateSpeed = 0.6;
 
-            controls.update();
+            scenes.push(scene);
+            cameras.push(camera);
+            renderers.push(renderer);
+            controlsList.push(controls);
 
-            loadModel();
-            animate();
+            loadModel(pageIndex);
         }
 
-        function loadModel() {
+        function loadModel(pageIndex) {
+            const config = modelConfigs[pageIndex];
+            const scene = scenes[pageIndex];
+            const loadingOverlay = document.getElementById(`loading_page${pageIndex}`);
+            const textEl = loadingOverlay.querySelector('.loading-text');
+
+            textEl.textContent = config.loadingText;
             loadingOverlay.classList.remove('hidden');
 
             const mtlLoader = new MTLLoader();
             const objLoader = new OBJLoader();
 
-            const mtlPath = encodeURI('模型五模型/fabric roll 3d model/fabric+roll+3d+model.mtl');
-            const objPath = encodeURI('模型五模型/fabric roll 3d model/fabric+roll+3d+model.obj');
-
-            mtlLoader.load(mtlPath, (materials) => {
+            mtlLoader.load(config.mtlPath, (materials) => {
                 materials.preload();
                 objLoader.setMaterials(materials);
 
-                objLoader.load(objPath,
+                objLoader.load(config.objPath,
                     (object) => {
-                        console.log('火草纺织模型加载成功');
+                        console.log(`${config.title}模型加载成功`);
 
-                        currentModel = object;
-
-                        currentModel.traverse((child) => {
+                        object.traverse((child) => {
                             if (child.isMesh) {
                                 child.castShadow = true;
                                 child.receiveShadow = true;
                             }
                         });
 
-                        const box = new THREE.Box3().setFromObject(currentModel);
+                        const box = new THREE.Box3().setFromObject(object);
                         const size = box.getSize(new THREE.Vector3());
                         const maxDim = Math.max(size.x, size.y, size.z);
                         const scale = 5 / maxDim;
-                        currentModel.scale.multiplyScalar(scale);
+                        object.scale.multiplyScalar(scale);
 
-                        box.setFromObject(currentModel);
+                        box.setFromObject(object);
                         const center = box.getCenter(new THREE.Vector3());
-                        currentModel.position.sub(center);
+                        object.position.sub(center);
 
-                        scene.add(currentModel);
+                        scene.add(object);
 
                         setTimeout(() => {
                             loadingOverlay.classList.add('hidden');
@@ -347,34 +465,23 @@
                     (xhr) => {
                         if (xhr.lengthComputable) {
                             const percent = Math.round((xhr.loaded / xhr.total) * 100);
-                            const textEl = loadingOverlay.querySelector('.loading-text');
-                            if (textEl) {
-                                const loadedMB = (xhr.loaded / 1024 / 1024).toFixed(2);
-                                const totalMB = (xhr.total / 1024 / 1024).toFixed(2);
-                                textEl.textContent = `正在加载3D火草纺织模型... ${percent}% (${loadedMB}MB / ${totalMB}MB)`;
-                            }
+                            const loadedMB = (xhr.loaded / 1024 / 1024).toFixed(2);
+                            const totalMB = (xhr.total / 1024 / 1024).toFixed(2);
+                            textEl.textContent = `${config.loadingText} ${percent}% (${loadedMB}MB / ${totalMB}MB)`;
                         }
                     },
                     (error) => {
-                        console.error('OBJ模型加载错误:', error);
-                        const textEl = loadingOverlay.querySelector('.loading-text');
-                        if (textEl) {
-                            textEl.innerHTML = '⚠️ 模型加载失败<br><span style="font-size: 0.88em; color: #666; margin-top: 8px; display: block;">请检查文件路径或返回重试</span>';
-                        }
-                        const spinnerEl = loadingOverlay.querySelector('.spinner');
-                        if (spinnerEl) spinnerEl.style.borderTopColor = '#e53935';
+                        console.error(`${config.title}模型加载错误:`, error);
+                        textEl.innerHTML = '⚠️ 模型加载失败<br><span style="font-size: 0.88em; color: #666; margin-top: 8px; display: block;">请检查文件路径或返回重试</span>';
+                        loadingOverlay.querySelector('.spinner').style.borderTopColor = '#e53935';
                     }
                 );
-            }, undefined, (error) => {
-                console.error('MTL材质加载错误:', error);
-
-                objLoader.load(objPath,
+            }, undefined, () => {
+                objLoader.load(config.objPath,
                     (object) => {
-                        console.log('火草纺织模型加载成功（无材质）');
+                        console.log(`${config.title}模型加载成功（无材质）`);
 
-                        currentModel = object;
-
-                        currentModel.traverse((child) => {
+                        object.traverse((child) => {
                             if (child.isMesh) {
                                 child.castShadow = true;
                                 child.receiveShadow = true;
@@ -386,17 +493,17 @@
                             }
                         });
 
-                        const box = new THREE.Box3().setFromObject(currentModel);
+                        const box = new THREE.Box3().setFromObject(object);
                         const size = box.getSize(new THREE.Vector3());
                         const maxDim = Math.max(size.x, size.y, size.z);
                         const scale = 5 / maxDim;
-                        currentModel.scale.multiplyScalar(scale);
+                        object.scale.multiplyScalar(scale);
 
-                        box.setFromObject(currentModel);
+                        box.setFromObject(object);
                         const center = box.getCenter(new THREE.Vector3());
-                        currentModel.position.sub(center);
+                        object.position.sub(center);
 
-                        scene.add(currentModel);
+                        scene.add(object);
 
                         setTimeout(() => {
                             loadingOverlay.classList.add('hidden');
@@ -405,59 +512,72 @@
                     (xhr) => {
                         if (xhr.lengthComputable) {
                             const percent = Math.round((xhr.loaded / xhr.total) * 100);
-                            const textEl = loadingOverlay.querySelector('.loading-text');
-                            if (textEl) {
-                                const loadedMB = (xhr.loaded / 1024 / 1024).toFixed(2);
-                                const totalMB = (xhr.total / 1024 / 1024).toFixed(2);
-                                textEl.textContent = `正在加载3D火草纺织模型... ${percent}% (${loadedMB}MB / ${totalMB}MB)`;
-                            }
+                            const loadedMB = (xhr.loaded / 1024 / 1024).toFixed(2);
+                            const totalMB = (xhr.total / 1024 / 1024).toFixed(2);
+                            textEl.textContent = `${config.loadingText} ${percent}% (${loadedMB}MB / ${totalMB}MB)`;
                         }
                     },
                     (error) => {
-                        console.error('模型加载完全失败:', error);
-                        const textEl = loadingOverlay.querySelector('.loading-text');
-                        if (textEl) {
-                            textEl.innerHTML = '⚠️ 模型加载失败<br><span style="font-size: 0.88em; color: #666; margin-top: 8px; display: block;">请检查文件路径或返回重试</span>';
-                        }
-                        const spinnerEl = loadingOverlay.querySelector('.spinner');
-                        if (spinnerEl) spinnerEl.style.borderTopColor = '#e53935';
+                        console.error(`${config.title}模型加载完全失败:`, error);
+                        textEl.innerHTML = '⚠️ 模型加载失败<br><span style="font-size: 0.88em; color: #666; margin-top: 8px; display: block;">请检查文件路径或返回重试</span>';
+                        loadingOverlay.querySelector('.spinner').style.borderTopColor = '#e53935';
                     }
                 );
             });
         }
 
+        function updatePageIndicator() {
+            pageDots.forEach((dot, index) => {
+                dot.classList.toggle('active', index === currentPage);
+            });
+
+            if (currentPage === totalPages - 1) {
+                scrollHint.style.opacity = '0';
+                scrollHint.style.pointerEvents = 'none';
+            } else {
+                scrollHint.style.opacity = '1';
+                scrollHint.style.pointerEvents = 'auto';
+            }
+        }
+
         function animate() {
             requestAnimationFrame(animate);
-            controls.update();
-            renderer.render(scene, camera);
-        }
 
-        function handleResize() {
-            if (!camera || !renderer || !canvas) return;
-
-            const width = canvas.clientWidth || window.innerWidth;
-            const height = canvas.clientHeight || window.innerHeight;
-
-            if (width <= 0 || height <= 0) return;
-
-            camera.aspect = width / height;
-            camera.updateProjectionMatrix();
-            renderer.setSize(width, height, false);
-
-            if (controls) {
-                controls.target.set(0, 0.3, 0);
-                controls.update();
+            for (let i = 0; i < totalPages; i++) {
+                if (renderers[i] && scenes[i] && cameras[i] && controlsList[i]) {
+                    controlsList[i].update();
+                    renderers[i].render(scenes[i], cameras[i]);
+                }
             }
-
-            renderer.render(scene, camera);
         }
 
-        window.addEventListener('resize', () => {
-            handleResize();
+        scrollContainer.addEventListener('scroll', () => {
+            const scrollTop = scrollContainer.scrollTop;
+            const viewportHeight = window.innerHeight;
+            currentPage = Math.round(scrollTop / viewportHeight);
+            currentPage = Math.max(0, Math.min(currentPage, totalPages - 1));
+            updatePageIndicator();
+        });
+
+        pageDots.forEach(dot => {
+            dot.addEventListener('click', () => {
+                const targetPage = parseInt(dot.dataset.page);
+                const targetPosition = targetPage * window.innerHeight;
+                
+                scrollContainer.scrollTo({
+                    top: targetPosition,
+                    behavior: 'smooth'
+                });
+
+                currentPage = targetPage;
+                updatePageIndicator();
+            });
         });
 
         zoomInBtn.addEventListener('click', () => {
-            if (controls && camera) {
+            if (cameras[currentPage] && controlsList[currentPage]) {
+                const camera = cameras[currentPage];
+                const controls = controlsList[currentPage];
                 const direction = new THREE.Vector3().subVectors(camera.position, controls.target).normalize();
                 const distance = camera.position.distanceTo(controls.target);
                 const newDistance = Math.max(distance * 0.75, controls.minDistance);
@@ -467,7 +587,9 @@
         });
 
         zoomOutBtn.addEventListener('click', () => {
-            if (controls && camera) {
+            if (cameras[currentPage] && controlsList[currentPage]) {
+                const camera = cameras[currentPage];
+                const controls = controlsList[currentPage];
                 const direction = new THREE.Vector3().subVectors(camera.position, controls.target).normalize();
                 const distance = camera.position.distanceTo(controls.target);
                 const newDistance = Math.min(distance * 1.3, controls.maxDistance);
@@ -477,39 +599,62 @@
         });
 
         resetBtn.addEventListener('click', () => {
-            if (camera && controls) {
+            if (cameras[currentPage] && controlsList[currentPage]) {
+                const camera = cameras[currentPage];
+                const controls = controlsList[currentPage];
                 camera.position.set(6, 3, 6);
                 controls.target.set(0, 0.3, 0);
                 controls.update();
             }
         });
 
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                window.location.href = 'model5.html';
+        window.addEventListener('resize', () => {
+            for (let i = 0; i < totalPages; i++) {
+                const canvas = document.getElementById(`canvas_page${i}`);
+                if (!canvas || !cameras[i] || !renderers[i]) continue;
+
+                const container = canvas.parentElement;
+                const width = container.clientWidth;
+                const height = container.clientHeight;
+
+                if (width <= 0 || height <= 0) continue;
+
+                cameras[i].aspect = width / height;
+                cameras[i].updateProjectionMatrix();
+                renderers[i].setSize(width, height, false);
             }
         });
 
-        canvas.addEventListener('wheel', (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-
-            const delta = event.deltaY * 0.001;
-            const direction = new THREE.Vector3().subVectors(camera.position, controls.target).normalize();
-            const distance = camera.position.distanceTo(controls.target);
-            let newDistance;
-
-            if (delta > 0) {
-                newDistance = Math.min(distance * 1.12, controls.maxDistance);
-            } else {
-                newDistance = Math.max(distance * 0.88, controls.minDistance);
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                window.location.href = 'model5.html';
+            } else if (e.key === 'ArrowDown' || e.key === 'PageDown') {
+                e.preventDefault();
+                if (currentPage < totalPages - 1) {
+                    const nextPosition = (currentPage + 1) * window.innerHeight;
+                    scrollContainer.scrollTo({
+                        top: nextPosition,
+                        behavior: 'smooth'
+                    });
+                }
+            } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+                e.preventDefault();
+                if (currentPage > 0) {
+                    const prevPosition = (currentPage - 1) * window.innerHeight;
+                    scrollContainer.scrollTo({
+                        top: prevPosition,
+                        behavior: 'smooth'
+                    });
+                }
             }
+        });
 
-            camera.position.copy(controls.target).add(direction.multiplyScalar(newDistance));
-            controls.update();
-        }, { passive: false });
+        for (let i = 0; i < totalPages; i++) {
+            initScene(i);
+        }
 
-        init();
+        updatePageIndicator();
+        animate();
     </script>
 </body>
 </html>
