@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
-  <title>华夏风物志 · 非遗传承 · 动态版</title>
+  <title>华夏风物志 · 非遗传承</title>
   <style>
     /* ===== 全局重置 & 基础 ===== */
     * {
@@ -753,6 +753,55 @@
         grid-template-columns: 1fr 1fr;
       }
     }
+	
+	/* 回到顶部按钮 */
+	  .back-to-top {
+	    position: fixed;
+	    bottom: 40px;
+	    right: 40px;
+	    width: 50px;
+	    height: 50px;
+	    background: #c0392b;
+	    color: white;
+	    border: none;
+	    border-radius: 50%;
+	    font-size: 24px;
+	    cursor: pointer;
+	    box-shadow: 0 4px 16px rgba(192, 57, 43, 0.35);
+	    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+	    opacity: 0;
+	    visibility: hidden;
+	    transform: translateY(20px);
+	    z-index: 999;
+	    display: flex;
+	    align-items: center;
+	    justify-content: center;
+	    font-family: inherit;
+	  }
+	  .back-to-top:hover {
+	    background: #a83226;
+	    transform: scale(1.08) translateY(-2px);
+	    box-shadow: 0 6px 24px rgba(192, 57, 43, 0.45);
+	  }
+	  .back-to-top.visible {
+	    opacity: 1;
+	    visibility: visible;
+	    transform: translateY(0);
+	  }
+	  .back-to-top:active {
+	    transform: scale(0.92);
+	  }
+	
+	  @media (max-width: 550px) {
+	    .back-to-top {
+	      bottom: 24px;
+	      right: 24px;
+	      width: 44px;
+	      height: 44px;
+	      font-size: 20px;
+	    }
+	  }
+	
   </style>
 </head>
 <body>
@@ -784,9 +833,10 @@
       <a href="#">非遗名录</a>
       <a href="#">匠人</a>
       <a href="model.html">数字馆</a>
-      <a href="https://snazzy-eclair-66e364.netlify.app/" target="_blank">商城</a>
+      <a href="/shop/">商城</a>
       <a href="#">活动</a>
       <a href="#">社区</a>
+	  <a href="archive.html" class="active">📖 文化档案</a>
     </div>
     <div class="nav-actions">
       <span>🔍</span>
@@ -904,6 +954,13 @@
         </div>
         <a href="#" class="learn-more">了解技艺 →</a>
       </div>
+	  <div class="card" style="background: linear-gradient(145deg, #f5ede7, #fcf8f5); border-color: #c0392b40;">
+	    <div class="card-emoji" style="background: #c0392b20;">📚</div>
+	    <h3>文化档案 · 非遗宝库</h3>
+	    <div class="sub">贵州 · 四川 · 云南</div>
+	    <p>汇集西南地区国家级非物质文化遗产，苗绣、蜀锦、扎染……一键探索千年匠心。</p>
+	    <a href="archive.html" class="learn-more" style="color:#c0392b; font-weight:600;">进入文化档案 →</a>
+	  </div>
     </div>
   </div>
 
@@ -1059,5 +1116,34 @@
 
   })();
 </script>
+
+<button class="back-to-top" id="backToTop" aria-label="回到顶部" title="回到顶部">
+  ↑
+</button>
+
+<script>
+  // ===== 回到顶部功能 =====
+  (function() {
+    const backToTopBtn = document.getElementById('backToTop');
+
+    // 监听滚动事件，控制按钮显示/隐藏
+    window.addEventListener('scroll', function() {
+      if (window.scrollY > 300) {
+        backToTopBtn.classList.add('visible');
+      } else {
+        backToTopBtn.classList.remove('visible');
+      }
+    });
+
+    // 点击按钮平滑滚动到顶部
+    backToTopBtn.addEventListener('click', function() {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    });
+  })();
+</script>
+
 </body>
 </html>

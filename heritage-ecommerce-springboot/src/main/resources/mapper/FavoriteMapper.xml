@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.heritage.ecommerce.mapper.FavoriteMapper">
+
+    <resultMap id="FavoriteResultMap" type="com.heritage.ecommerce.entity.FavoriteProduct">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="product_id" property="productId"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <resultMap id="ProductResultMap" type="com.heritage.ecommerce.entity.Product">
+        <id column="id" property="id"/>
+        <result column="merchant_id" property="merchantId"/>
+        <result column="merchant_user_id" property="merchantUserId"/>
+        <result column="title" property="title"/>
+        <result column="slug" property="slug"/>
+        <result column="summary" property="summary"/>
+        <result column="description" property="description"/>
+        <result column="cover_image" property="coverImage"/>
+        <result column="images" property="images"/>
+        <result column="video_url" property="videoUrl"/>
+        <result column="category_id" property="categoryId"/>
+        <result column="tags" property="tags"/>
+        <result column="price" property="price"/>
+        <result column="stock" property="stock"/>
+        <result column="sales_count" property="salesCount"/>
+        <result column="status" property="status"/>
+        <result column="product_type" property="productType"/>
+        <result column="target_platform" property="targetPlatform"/>
+        <result column="source_product_id" property="sourceProductId"/>
+        <result column="purchase_url" property="purchaseUrl"/>
+        <result column="is_deleted" property="isDeleted"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <select id="selectByUserAndProduct" resultMap="FavoriteResultMap">
+        SELECT * FROM favorite_products WHERE user_id = #{userId} AND product_id = #{productId} LIMIT 1
+    </select>
+
+    <insert id="insertFavorite" parameterType="com.heritage.ecommerce.entity.FavoriteProduct" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO favorite_products(user_id, product_id, created_at)
+        VALUES (#{userId}, #{productId}, NOW())
+    </insert>
+
+    <delete id="deleteFavorite">
+        DELETE FROM favorite_products WHERE user_id = #{userId} AND product_id = #{productId}
+    </delete>
+
+    <select id="queryFavoriteProducts" resultMap="ProductResultMap">
+        SELECT p.*
+        FROM favorite_products f
+        LEFT JOIN products p ON p.id = f.product_id
+        WHERE f.user_id = #{userId}
+          AND p.is_deleted = 0
+        ORDER BY f.created_at DESC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="countFavoriteProducts" resultType="long">
+        SELECT COUNT(1)
+        FROM favorite_products f
+        LEFT JOIN products p ON p.id = f.product_id
+        WHERE f.user_id = #{userId} AND p.is_deleted = 0
+    </select>
+</mapper>

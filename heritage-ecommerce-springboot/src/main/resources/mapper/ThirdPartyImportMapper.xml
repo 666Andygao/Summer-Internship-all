@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.heritage.ecommerce.mapper.ThirdPartyImportMapper">
+
+    <resultMap id="CrawlLogResultMap" type="com.heritage.ecommerce.entity.ThirdPartyCrawlLog">
+        <id column="id" property="id"/>
+        <result column="merchant_user_id" property="merchantUserId"/>
+        <result column="source_name" property="sourceName"/>
+        <result column="source_url" property="sourceUrl"/>
+        <result column="source_product_id" property="sourceProductId"/>
+        <result column="task_name" property="taskName"/>
+        <result column="status" property="status"/>
+        <result column="request_url" property="requestUrl"/>
+        <result column="response_code" property="responseCode"/>
+        <result column="response_body" property="responseBody"/>
+        <result column="error_message" property="errorMessage"/>
+        <result column="cost_ms" property="costMs"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <resultMap id="MappingResultMap" type="com.heritage.ecommerce.entity.ThirdPartyProductMapping">
+        <id column="id" property="id"/>
+        <result column="local_product_id" property="localProductId"/>
+        <result column="source_name" property="sourceName"/>
+        <result column="source_product_id" property="sourceProductId"/>
+        <result column="source_url" property="sourceUrl"/>
+        <result column="mapping_status" property="mappingStatus"/>
+        <result column="sync_fields" property="syncFields"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <insert id="insertCrawlLog" parameterType="com.heritage.ecommerce.entity.ThirdPartyCrawlLog" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO third_party_crawl_log(
+            merchant_user_id, source_name, source_url, source_product_id, task_name, status,
+            request_url, response_code, response_body, error_message, cost_ms, created_at, updated_at
+        ) VALUES (
+            #{merchantUserId}, #{sourceName}, #{sourceUrl}, #{sourceProductId}, #{taskName}, #{status},
+            #{requestUrl}, #{responseCode}, #{responseBody}, #{errorMessage}, #{costMs}, NOW(), NOW()
+        )
+    </insert>
+
+    <select id="queryCrawlLogsByMerchant" resultMap="CrawlLogResultMap">
+        SELECT * FROM third_party_crawl_log
+        WHERE merchant_user_id = #{merchantUserId}
+        <if test="status != null and status != ''">
+            AND status = #{status}
+        </if>
+        ORDER BY created_at DESC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="countCrawlLogsByMerchant" resultType="long">
+        SELECT COUNT(1) FROM third_party_crawl_log
+        WHERE merchant_user_id = #{merchantUserId}
+        <if test="status != null and status != ''">
+            AND status = #{status}
+        </if>
+    </select>
+
+    <delete id="deleteCrawlLog">
+        DELETE FROM third_party_crawl_log WHERE id = #{id} AND merchant_user_id = #{merchantUserId}
+    </delete>
+
+    <insert id="insertProductMapping" parameterType="com.heritage.ecommerce.entity.ThirdPartyProductMapping" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO third_party_product_mapping(
+            local_product_id, source_name, source_product_id, source_url, mapping_status, sync_fields, created_at, updated_at
+        ) VALUES (
+            #{localProductId}, #{sourceName}, #{sourceProductId}, #{sourceUrl}, #{mappingStatus}, #{syncFields}, NOW(), NOW()
+        )
+    </insert>
+
+    <select id="selectMappingByLocalProduct" resultMap="MappingResultMap">
+        SELECT * FROM third_party_product_mapping
+        WHERE local_product_id = #{localProductId}
+          AND source_name = #{sourceName}
+          AND source_product_id = #{sourceProductId}
+        LIMIT 1
+    </select>
+</mapper>

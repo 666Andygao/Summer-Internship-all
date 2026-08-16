@@ -28,6 +28,12 @@ const routes = [
     meta: { title: '订单结算' }
   },
   {
+    path: '/user', // 个人中心：与主平台共享账号体系
+    name: 'user-center',
+    component: () => import('@/views/UserCenterView.vue'),
+    meta: { title: '个人中心' }
+  },
+  {
     // 兜底：未匹配路由重定向到首页
     path: '/:pathMatch(.*)*',
     redirect: '/'
@@ -35,7 +41,8 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  // 使用 Vite 注入的 base 路径（/shop/），确保商城部署到主站子路径时路由正确
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes,
   // 路由切换时的滚动行为
   scrollBehavior(to) {

@@ -6,6 +6,7 @@ import { fileURLToPath, URL } from 'node:url'
 // 文档地址：https://vitejs.dev/config/
 export default defineConfig({
   plugins: [vue()],
+  base: '/shop/', // 部署到主站 /shop/ 路径下，与主平台同源以共享登录态
   resolve: {
     alias: {
       // 配置 @ 指向 src 目录，方便模块导入

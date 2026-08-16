@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.heritage.ecommerce.mapper.ProductMapper">
+
+    <resultMap id="CategoryResultMap" type="com.heritage.ecommerce.entity.ProductCategory">
+        <id column="id" property="id"/>
+        <result column="parent_id" property="parentId"/>
+        <result column="name" property="name"/>
+        <result column="level" property="level"/>
+        <result column="sort_order" property="sortOrder"/>
+        <result column="is_deleted" property="isDeleted"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <resultMap id="ProductResultMap" type="com.heritage.ecommerce.entity.Product">
+        <id column="id" property="id"/>
+        <result column="merchant_id" property="merchantId"/>
+        <result column="merchant_user_id" property="merchantUserId"/>
+        <result column="title" property="title"/>
+        <result column="slug" property="slug"/>
+        <result column="summary" property="summary"/>
+        <result column="description" property="description"/>
+        <result column="cover_image" property="coverImage"/>
+        <result column="images" property="images"/>
+        <result column="video_url" property="videoUrl"/>
+        <result column="category_id" property="categoryId"/>
+        <result column="tags" property="tags"/>
+        <result column="price" property="price"/>
+        <result column="stock" property="stock"/>
+        <result column="sales_count" property="salesCount"/>
+        <result column="status" property="status"/>
+        <result column="product_type" property="productType"/>
+        <result column="target_platform" property="targetPlatform"/>
+        <result column="source_product_id" property="sourceProductId"/>
+        <result column="purchase_url" property="purchaseUrl"/>
+        <result column="is_deleted" property="isDeleted"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <resultMap id="MediaResultMap" type="com.heritage.ecommerce.entity.ProductMedia">
+        <id column="id" property="id"/>
+        <result column="product_id" property="productId"/>
+        <result column="file_type" property="fileType"/>
+        <result column="file_name" property="fileName"/>
+        <result column="file_url" property="fileUrl"/>
+        <result column="file_path" property="filePath"/>
+        <result column="sort_order" property="sortOrder"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <insert id="insertCategory" parameterType="com.heritage.ecommerce.entity.ProductCategory" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO product_categories(parent_id, name, level, sort_order, is_deleted, created_at)
+        VALUES (#{parentId}, #{name}, #{level}, #{sortOrder}, #{isDeleted}, NOW())
+    </insert>
+
+    <update id="updateCategory" parameterType="com.heritage.ecommerce.entity.ProductCategory">
+        UPDATE product_categories
+        SET parent_id = #{parentId}, name = #{name}, level = #{level}, sort_order = #{sortOrder}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteCategory">
+        UPDATE product_categories SET is_deleted = 1 WHERE id = #{id}
+    </delete>
+
+    <select id="queryCategoryList" resultMap="CategoryResultMap">
+        SELECT * FROM product_categories
+        WHERE is_deleted = 0
+        <if test="parentId != null">
+            AND parent_id = #{parentId}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND name LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+        ORDER BY sort_order ASC, created_at DESC
+    </select>
+
+    <select id="selectCategoryById" resultMap="CategoryResultMap">
+        SELECT * FROM product_categories WHERE id = #{id} AND is_deleted = 0
+    </select>
+
+    <insert id="insertProduct" parameterType="com.heritage.ecommerce.entity.Product" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO products(merchant_id, merchant_user_id, title, slug, summary, description, cover_image, images, video_url,
+                             category_id, tags, price, stock, sales_count, status, product_type, target_platform, source_product_id, purchase_url,
+                             is_deleted, created_at, updated_at)
+        VALUES (#{merchantId}, #{merchantUserId}, #{title}, #{slug}, #{summary}, #{description}, #{coverImage}, #{images}, #{videoUrl},
+                #{categoryId}, #{tags}, #{price}, #{stock}, #{salesCount}, #{status}, #{productType}, #{targetPlatform}, #{sourceProductId}, #{purchaseUrl},
+                #{isDeleted}, NOW(), NOW())
+    </insert>
+
+    <update id="updateProduct" parameterType="com.heritage.ecommerce.entity.Product">
+        UPDATE products
+        SET title = #{title}, slug = #{slug}, summary = #{summary}, description = #{description}, cover_image = #{coverImage},
+            images = #{images}, video_url = #{videoUrl}, category_id = #{categoryId}, tags = #{tags}, price = #{price},
+            stock = #{stock}, status = #{status}, product_type = #{productType}, target_platform = #{targetPlatform},
+            source_product_id = #{sourceProductId}, purchase_url = #{purchaseUrl}, updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateProductStatus">
+        UPDATE products SET status = #{status}, updated_at = NOW() WHERE id = #{id} AND merchant_user_id = #{merchantUserId}
+    </update>
+
+    <update id="updateProductStock">
+        UPDATE products SET stock = #{stock}, updated_at = NOW() WHERE id = #{id} AND merchant_user_id = #{merchantUserId}
+    </update>
+
+    <update id="decreaseStock">
+        UPDATE products
+        SET stock = stock - #{quantity}, sales_count = IFNULL(sales_count, 0) + #{quantity}, updated_at = NOW()
+        WHERE id = #{id} AND stock >= #{quantity}
+    </update>
+
+    <update id="increaseStock">
+        UPDATE products
+        SET stock = stock + #{quantity}, updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <select id="selectProductById" resultMap="ProductResultMap">
+        SELECT * FROM products WHERE id = #{id} AND is_deleted = 0
+    </select>
+
+    <select id="queryProductListByMerchant" resultMap="ProductResultMap">
+        SELECT * FROM products
+        WHERE merchant_user_id = #{merchantUserId} AND is_deleted = 0
+        <if test="keyword != null and keyword != ''">
+            AND (title LIKE CONCAT('%', #{keyword}, '%') OR summary LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        <if test="status != null and status != ''">
+            AND status = #{status}
+        </if>
+        ORDER BY updated_at DESC
+        LIMIT #{page}, #{size}
+    </select>
+
+    <select id="countProductListByMerchant" resultType="long">
+        SELECT COUNT(1) FROM products
+        WHERE merchant_user_id = #{merchantUserId} AND is_deleted = 0
+        <if test="keyword != null and keyword != ''">
+            AND (title LIKE CONCAT('%', #{keyword}, '%') OR summary LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        <if test="status != null and status != ''">
+            AND status = #{status}
+        </if>
+    </select>
+
+    <select id="queryProducts" resultMap="ProductResultMap">
+        SELECT * FROM products
+        WHERE is_deleted = 0 AND status = #{status}
+        <if test="keyword != null and keyword != ''">
+            AND (title LIKE CONCAT('%', #{keyword}, '%') OR summary LIKE CONCAT('%', #{keyword}, '%') OR description LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        <if test="categoryId != null">
+            AND category_id = #{categoryId}
+        </if>
+        <if test="minPrice != null">
+            AND price >= #{minPrice}
+        </if>
+        <if test="maxPrice != null">
+            AND price &lt;= #{maxPrice}
+        </if>
+        <if test="tag != null and tag != ''">
+            AND tags LIKE CONCAT('%', #{tag}, '%')
+        </if>
+        <if test="productType != null and productType != ''">
+            AND product_type = #{productType}
+        </if>
+        ORDER BY ${sort}
+        LIMIT #{page}, #{size}
+    </select>
+
+    <select id="countProducts" resultType="long">
+        SELECT COUNT(1) FROM products
+        WHERE is_deleted = 0 AND status = #{status}
+        <if test="keyword != null and keyword != ''">
+            AND (title LIKE CONCAT('%', #{keyword}, '%') OR summary LIKE CONCAT('%', #{keyword}, '%') OR description LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        <if test="categoryId != null">
+            AND category_id = #{categoryId}
+        </if>
+        <if test="minPrice != null">
+            AND price >= #{minPrice}
+        </if>
+        <if test="maxPrice != null">
+            AND price &lt;= #{maxPrice}
+        </if>
+        <if test="tag != null and tag != ''">
+            AND tags LIKE CONCAT('%', #{tag}, '%')
+        </if>
+        <if test="productType != null and productType != ''">
+            AND product_type = #{productType}
+        </if>
+    </select>
+
+    <insert id="insertMedia" parameterType="com.heritage.ecommerce.entity.ProductMedia" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO product_media(product_id, file_type, file_name, file_url, file_path, sort_order, created_at)
+        VALUES (#{productId}, #{fileType}, #{fileName}, #{fileUrl}, #{filePath}, #{sortOrder}, NOW())
+    </insert>
+
+    <select id="listMediaByProduct" resultMap="MediaResultMap">
+        SELECT * FROM product_media WHERE product_id = #{productId} ORDER BY sort_order ASC, created_at DESC
+    </select>
+</mapper>

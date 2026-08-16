@@ -9,8 +9,9 @@ const fs = require('fs');
 
 const app = express();
 const PORT = 3000;
-const JWT_SECRET = 'ich-heritage-platform-secret-key-2026';
-const PAYMENT_CALLBACK_TOKEN = 'ich-heritage-platform-callback-2026';
+// ⚠️ 开发占位符：生产环境请改用环境变量 process.env.JWT_SECRET / PAYMENT_CALLBACK_TOKEN
+const JWT_SECRET = 'dev-placeholder-jwt';
+const PAYMENT_CALLBACK_TOKEN = 'dev-placeholder-payment';
 const ALLOWED_PAYMENT_METHODS = ['alipay', 'wechat', 'bank'];
 const ROLE_TYPES = {
     BUYER: 'buyer',
@@ -49,10 +50,765 @@ function requireRole(requiredRoles) {
     };
 }
 
+const BUSINESS_FLOW = {
+    name: '非遗电商业务完整流程',
+    summary: '注册与入驻 → 商品上架与展示 → 购物车与下单 → 支付 → 商家发货 → 收货与评价 → 售后与客服 → 数据统计',
+    stages: [
+        {
+            id: 'user',
+            name: '用户与商家入驻',
+            steps: [
+                '用户注册',
+                '角色选择：普通买家 / 非遗手艺人商家',
+                '登录校验',
+                '完善个人资料或店铺资料',
+                '提交资质并等待审核',
+                '入驻成功后进入对应后台'
+            ]
+        },
+        {
+            id: 'product',
+            name: '商品管理与展示',
+            steps: [
+                '商家发布商品',
+                '填写商品标题、简介、详情',
+                '上传封面图、主图、详情图和视频',
+                '配置分类、标签、规格、库存和价格',
+                '设置上下架状态',
+                '买家浏览、搜索、筛选和详情查看'
+            ]
+        },
+        {
+            id: 'cart',
+            name: '购物车与订单创建',
+            steps: [
+                '买家加入购物车',
+                '修改数量和勾选商品',
+                '计算商品金额、运费和优惠',
+                '选择收货地址',
+                '提交订单确认',
+                '生成订单号，状态变为待付款'
+            ]
+        },
+        {
+            id: 'payment',
+            name: '支付与状态流转',
+            steps: [
+                '买家选择支付方式',
+                '发起支付请求',
+                '支付回调和金额校验',
+                '支付成功后状态变为已付款',
+                '商家确认订单并进入待发货',
+                '订单状态持续流转：待付款 → 已付款 → 待发货 → 已发货 → 已完成'
+            ]
+        },
+        {
+            id: 'shipping',
+            name: '商家订单管理与发货',
+            steps: [
+                '商家查看订单列表',
+                '筛选和查询订单',
+                '确认订单数据信息',
+                '填写物流公司和运单号',
+                '执行发货',
+                '订单状态更新为已发货'
+            ]
+        },
+        {
+            id: 'after-sales',
+            name: '售后与客服',
+            steps: [
+                '买家申请退款、退货、换货或仅退款',
+                '填写售后原因和物流信息',
+                '商家审核并做出批准或拒绝',
+                '处理退货物流和退款结果',
+                '商家回复买家咨询',
+                '处理投诉和纠纷工单'
+            ]
+        },
+        {
+            id: 'review',
+            name: '评价与口碑',
+            steps: [
+                '买家确认收货',
+                '提交评分和评价内容',
+                '上传图片或视频',
+                '商家回复评价',
+                '平台处理违规内容',
+                '统计好评率和口碑数据'
+            ]
+        },
+        {
+            id: 'analytics',
+            name: '数据统计与经营分析',
+            steps: [
+                '统计销量',
+                '统计收入',
+                '分析订单趋势',
+                '统计热门商品',
+                '输出商家经营报表',
+                '支持后续运营优化'
+            ]
+        }
+    ],
+    mermaid: `flowchart TD
+    A[用户注册与入驻] --> B[角色选择与登录]
+    B --> C[完善个人资料/店铺资料]
+    C --> D[提交资质审核]
+    D --> E[商家后台启用]
+    E --> F[商品发布与管理]
+    F --> G[买家浏览与搜索]
+    G --> H[加入购物车]
+    H --> I[下单确认]
+    I --> J[支付]
+    J --> K[订单状态流转]
+    K --> L[商家发货]
+    L --> M[买家收货]
+    M --> N[评价]
+    N --> O[售后与客服]
+    O --> P[数据统计与分析]
+    P --> Q[经营优化]
+`
+};
+
+const DATABASE_ER_SCHEMA = {
+    er_description: {
+        summary: '非遗电商数据库采用“用户—商家—商品—订单—支付—售后—评价—客服—统计”主线，核心实体之间关系为：用户创建订单，商家发布商品，商品属于分类/属性，订单包含多个订单项，支付绑定单个订单，售后与投诉挂接订单，评价挂接商品和订单，客服会话关联买家与商家。',
+        entities: [
+            'users: 用户基础表，统一承载买家、商家、管理员角色信息',
+            'merchants: 商家扩展信息表，关联 users.id，保存店铺、资质、认证信息',
+            'products: 商品主表，关联 merchants.id，保存商品基础信息和状态',
+            'product_categories: 商品分类表，支持层级分类管理',
+            'product_attributes: 商品属性表，保存规格、材质、颜色、尺寸等动态属性',
+            'orders: 订单主表，关联 users.id 与收货地址',
+            'order_items: 订单明细表，关联 orders.id 与 products.id',
+            'payments: 支付表，关联 orders.id',
+            'after_sales: 售后表，关联 orders.id 与 users.id',
+            'reviews: 评价表，关联 users.id、products.id、orders.id',
+            'conversations: 咨询会话表，连接买家与商家/平台',
+            'messages: 消息详情表，关联 conversations.id 与发送者用户',
+            'complaints: 投诉/纠纷表，关联订单和用户',
+            'favorites: 收藏表，关联用户和商品',
+            'addresses: 收货地址表，关联用户',
+            'carts: 购物车表，关联用户/游客和商品'
+        ],
+        relationships: [
+            'users 1:N merchants',
+            'users 1:N addresses',
+            'users 1:N orders',
+            'users 1:N favorites',
+            'users 1:N reviews',
+            'users 1:N after_sales',
+            'users 1:N complaints',
+            'merchants 1:N products',
+            'products 1:N order_items',
+            'products 1:N reviews',
+            'orders 1:N order_items',
+            'orders 1:1 payments',
+            'orders 1:N after_sales',
+            'orders 1:N complaints',
+            'conversations 1:N messages',
+            'users 1:N conversations (buyer side)',
+            'users 1:N conversations (merchant side)'
+        ]
+    },
+    tables: [
+        {
+            table_name: 'users',
+            description: '用户主表，承载买家/商家/管理员账户信息',
+            columns: [
+                { name: 'id', type: 'bigint', pk: true, nullable: false, default: 'AUTO_INCREMENT', index: ['idx_users_username', 'idx_users_role'] },
+                { name: 'username', type: 'varchar(64)', pk: false, nullable: false, default: null, index: ['uniq_users_username'] },
+                { name: 'password', type: 'varchar(255)', pk: false, nullable: false, default: null, index: [] },
+                { name: 'role', type: 'varchar(32)', pk: false, nullable: false, default: "'buyer'", index: ['idx_users_role'] },
+                { name: 'display_name', type: 'varchar(128)', pk: false, nullable: false, default: null, index: ['idx_users_display_name'] },
+                { name: 'phone', type: 'varchar(32)', pk: false, nullable: true, default: null, index: ['idx_users_phone'] },
+                { name: 'avatar', type: 'varchar(255)', pk: false, nullable: true, default: null, index: [] },
+                { name: 'status', type: 'varchar(32)', pk: false, nullable: false, default: "'active'", index: ['idx_users_status'] },
+                { name: 'created_at', type: 'datetime', pk: false, nullable: false, default: 'CURRENT_TIMESTAMP', index: ['idx_users_created_at'] },
+                { name: 'updated_at', type: 'datetime', pk: false, nullable: false, default: 'CURRENT_TIMESTAMP', index: [] }
+            ]
+        },
+        {
+            table_name: 'merchants',
+            description: '商家扩展资料表，关联用户表',
+            columns: [
+                { name: 'id', type: 'bigint', pk: true, nullable: false, default: 'AUTO_INCREMENT', index: [] },
+                { name: 'user_id', type: 'bigint', pk: false, nullable: false, default: null, index: ['uniq_merchants_user_id', 'idx_merchants_user_id'] },
+                { name: 'shop_name', type: 'varchar(128)', pk: false, nullable: false, default: null, index: ['idx_merchants_shop_name'] },
+                { name: 'intro', type: 'text', pk: false, nullable: true, default: null, index: [] },
+                { name: 'heritage_category', type: 'varchar(128)', pk: false, nullable: true, default: null, index: ['idx_merchants_category'] },
+                { name: 'contact_phone', type: 'varchar(32)', pk: false, nullable: true, default: null, index: [] },
+                { name: 'qualification_note', type: 'text', pk: false, nullable: true, default: null, index: [] },
+                { name: 'certification_status', type: 'varchar(32)', pk: false, nullable: false, default: "'pending'", index: ['idx_merchants_cert_status'] },
+                { name: 'created_at', type: 'datetime', pk: false, nullable: false, default: 'CURRENT_TIMESTAMP', index: ['idx_merchants_created_at'] },
+                { name: 'updated_at', type: 'datetime', pk: false, nullable: false, default: 'CURRENT_TIMESTAMP', index: [] }
+            ]
+        },
+        {
+            table_name: 'products',
+            description: '商品主表',
+            columns: [
+                { name: 'id', type: 'bigint', pk: true, nullable: false, default: 'AUTO_INCREMENT', index: [] },
+                { name: 'merchant_id', type: 'bigint', pk: false, nullable: false, default: null, index: ['idx_products_merchant_id'] },
+                { name: 'merchant_user_id', type: 'bigint', pk: false, nullable: false, default: null, index: ['idx_products_merchant_user_id'] },
+                { name: 'title', type: 'varchar(255)', pk: false, nullable: false, default: null, index: ['idx_products_title'] },
+                { name: 'slug', type: 'varchar(255)', pk: false, nullable: true, default: null, index: ['idx_products_slug'] },
+                { name: 'summary', type: 'varchar(500)', pk: false, nullable: true, default: null, index: [] },
+                { name: 'description', type: 'text', pk: false, nullable: true, default: null, index: [] },
+                { name: 'cover_image', type: 'varchar(255)', pk: false, nullable: true, default: null, index: [] },
+                { name: 'images', type: 'json', pk: false, nullable: true, default: null, index: [] },
+                { name: 'video_url', type: 'varchar(255)', pk: false, nullable: true, default: null, index: [] },
+                { name: 'category_id', type: 'bigint', pk: false, nullable: true, default: null, index: ['idx_products_category_id'] },
+                { name: 'tags', type: 'json', pk: false, nullable: true, default: null, index: [] },
+                { name: 'price', type: 'decimal(10,2)', pk: false, nullable: false, default: '0.00', index: ['idx_products_price'] },
+                { name: 'stock', type: 'int', pk: false, nullable: false, default: '0', index: ['idx_products_stock'] },
+                { name: 'sales_count', type: 'int', pk: false, nullable: false, default: '0', index: ['idx_products_sales_count'] },
+                { name: 'status', type: 'varchar(32)', pk: false, nullable: false, default: "'draft'", index: ['idx_products_status'] },
+                { name: 'is_deleted', type: 'tinyint(1)', pk: false, nullable: false, default: '0', index: ['idx_products_is_deleted'] },
+                { name: 'created_at', type: 'datetime', pk: false, nullable: false, default: 'CURRENT_TIMESTAMP', index: ['idx_products_created_at'] },
+                { name: 'updated_at', type: 'datetime', pk: false, nullable: false, default: 'CURRENT_TIMESTAMP', index: [] }
+            ]
+        },
+        {
+            table_name: 'product_categories',
+            description: '商品分类表，支持树状分类和非遗文创品类管理',
+            columns: [
+                { name: 'id', type: 'bigint', pk: true, nullable: false, default: 'AUTO_INCREMENT', index: [] },
+                { name: 'parent_id', type: 'bigint', pk: false, nullable: true, default: null, index: ['idx_product_categories_parent_id'] },
+                { name: 'name', type: 'varchar(128)', pk: false, nullable: false, default: null, index: ['idx_product_categories_name'] },
+                { name: 'level', type: 'tinyint', pk: false, nullable: false, default: '1', index: ['idx_product_categories_level'] },
+                { name: 'sort_order', type: 'int', pk: false, nullable: false, default: '0', index: [] },
+                { name: 'created_at', type: 'datetime', pk: false, nullable: false, default: 'CURRENT_TIMESTAMP', index: [] }
+            ]
+        },
+        {
+            table_name: 'product_attributes',
+            description: '商品属性表，用于保存规格、材质、尺寸等结构化信息',
+            columns: [
+                { name: 'id', type: 'bigint', pk: true, nullable: false, default: 'AUTO_INCREMENT', index: [] },
+                { name: 'product_id', type: 'bigint', pk: false, nullable: false, default: null, index: ['idx_product_attributes_product_id'] },
+                { name: 'attribute_name', type: 'varchar(64)', pk: false, nullable: false, default: null, index: [] },
+                { name: 'attribute_value', type: 'varchar(255)', pk: false, nullable: false, default: null, index: [] },
+                { name: 'created_at', type: 'datetime', pk: false, nullable: false, default: 'CURRENT_TIMESTAMP', index: [] }
+            ]
+        },
+        {
+            table_name: 'addresses',
+            description: '用户收货地址表',
+            columns: [
+                { name: 'id', type: 'bigint', pk: true, nullable: false, default: 'AUTO_INCREMENT', index: [] },
+                { name: 'user_id', type: 'bigint', pk: false, nullable: false, default: null, index: ['idx_addresses_user_id'] },
+                { name: 'recipient_name', type: 'varchar(64)', pk: false, nullable: false, default: null, index: [] },
+                { name: 'phone', type: 'varchar(32)', pk: false, nullable: false, default: null, index: [] },
+                { name: 'province', type: 'varchar(64)', pk: false, nullable: false, default: null, index: [] },
+                { name: 'city', type: 'varchar(64)', pk: false, nullable: false, default: null, index: [] },
+                { name: 'district', type: 'varchar(64)', pk: false, nullable: false, default: null, index: [] },
+                { name: 'detail', type: 'varchar(255)', pk: false, nullable: false, default: null, index: [] },
+                { name: 'is_default', type: 'tinyint(1)', pk: false, nullable: false, default: '0', index: ['idx_addresses_default'] },
+                { name: 'created_at', type: 'datetime', pk: false, nullable: false, default: 'CURRENT_TIMESTAMP', index: [] }
+            ]
+        },
+        {
+            table_name: 'favorites',
+            description: '用户收藏表',
+            columns: [
+                { name: 'id', type: 'bigint', pk: true, nullable: false, default: 'AUTO_INCREMENT', index: [] },
+                { name: 'user_id', type: 'bigint', pk: false, nullable: false, default: null, index: ['idx_favorites_user_id'] },
+                { name: 'product_id', type: 'bigint', pk: false, nullable: false, default: null, index: ['idx_favorites_product_id'] },
+                { name: 'created_at', type: 'datetime', pk: false, nullable: false, default: 'CURRENT_TIMESTAMP', index: [] }
+            ]
+        },
+        {
+            table_name: 'carts',
+            description: '购物车表，支持登录态和游客临时购物车',
+            columns: [
+                { name: 'id', type: 'bigint', pk: true, nullable: false, default: 'AUTO_INCREMENT', index: [] },
+                { name: 'user_id', type: 'bigint', pk: false, nullable: true, default: null, index: ['idx_carts_user_id'] },
+                { name: 'guest_id', type: 'varchar(128)', pk: false, nullable: true, default: null, index: ['idx_carts_guest_id'] },
+                { name: 'product_id', type: 'bigint', pk: false, nullable: false, default: null, index: ['idx_carts_product_id'] },
+                { name: 'merchant_id', type: 'bigint', pk: false, nullable: true, default: null, index: ['idx_carts_merchant_id'] },
+                { name: 'quantity', type: 'int', pk: false, nullable: false, default: '1', index: [] },
+                { name: 'selected', type: 'tinyint(1)', pk: false, nullable: false, default: '1', index: [] },
+                { name: 'price', type: 'decimal(10,2)', pk: false, nullable: false, default: '0.00', index: [] },
+                { name: 'created_at', type: 'datetime', pk: false, nullable: false, default: 'CURRENT_TIMESTAMP', index: [] },
+                { name: 'updated_at', type: 'datetime', pk: false, nullable: false, default: 'CURRENT_TIMESTAMP', index: [] }
+            ]
+        },
+        {
+            table_name: 'orders',
+            description: '订单主表',
+            columns: [
+                { name: 'id', type: 'bigint', pk: true, nullable: false, default: 'AUTO_INCREMENT', index: [] },
+                { name: 'order_no', type: 'varchar(64)', pk: false, nullable: false, default: null, index: ['uniq_orders_order_no'] },
+                { name: 'user_id', type: 'bigint', pk: false, nullable: false, default: null, index: ['idx_orders_user_id'] },
+                { name: 'buyer_id', type: 'bigint', pk: false, nullable: false, default: null, index: ['idx_orders_buyer_id'] },
+                { name: 'address_id', type: 'bigint', pk: false, nullable: true, default: null, index: ['idx_orders_address_id'] },
+                { name: 'shipping_address', type: 'json', pk: false, nullable: true, default: null, index: [] },
+                { name: 'subtotal', type: 'decimal(10,2)', pk: false, nullable: false, default: '0.00', index: [] },
+                { name: 'shipping_fee', type: 'decimal(10,2)', pk: false, nullable: false, default: '0.00', index: [] },
+                { name: 'discount_amount', type: 'decimal(10,2)', pk: false, nullable: false, default: '0.00', index: [] },
+                { name: 'total_amount', type: 'decimal(10,2)', pk: false, nullable: false, default: '0.00', index: ['idx_orders_total_amount'] },
+                { name: 'status', type: 'varchar(32)', pk: false, nullable: false, default: "'pending_payment'", index: ['idx_orders_status'] },
+                { name: 'remarks', type: 'text', pk: false, nullable: true, default: null, index: [] },
+                { name: 'coupon_code', type: 'varchar(64)', pk: false, nullable: true, default: null, index: [] },
+                { name: 'created_at', type: 'datetime', pk: false, nullable: false, default: 'CURRENT_TIMESTAMP', index: ['idx_orders_created_at'] },
+                { name: 'updated_at', type: 'datetime', pk: false, nullable: false, default: 'CURRENT_TIMESTAMP', index: [] }
+            ]
+        },
+        {
+            table_name: 'order_items',
+            description: '订单明细表',
+            columns: [
+                { name: 'id', type: 'bigint', pk: true, nullable: false, default: 'AUTO_INCREMENT', index: [] },
+                { name: 'order_id', type: 'bigint', pk: false, nullable: false, default: null, index: ['idx_order_items_order_id'] },
+                { name: 'product_id', type: 'bigint', pk: false, nullable: false, default: null, index: ['idx_order_items_product_id'] },
+                { name: 'title', type: 'varchar(255)', pk: false, nullable: false, default: null, index: [] },
+                { name: 'price', type: 'decimal(10,2)', pk: false, nullable: false, default: '0.00', index: [] },
+                { name: 'quantity', type: 'int', pk: false, nullable: false, default: '1', index: [] },
+                { name: 'cover_image', type: 'varchar(255)', pk: false, nullable: true, default: null, index: [] },
+                { name: 'created_at', type: 'datetime', pk: false, nullable: false, default: 'CURRENT_TIMESTAMP', index: [] }
+            ]
+        },
+        {
+            table_name: 'payments',
+            description: '支付表，保存支付请求、结果和校验状态',
+            columns: [
+                { name: 'id', type: 'bigint', pk: true, nullable: false, default: 'AUTO_INCREMENT', index: [] },
+                { name: 'order_id', type: 'bigint', pk: false, nullable: false, default: null, index: ['uniq_payments_order_id', 'idx_payments_order_id'] },
+                { name: 'payment_method', type: 'varchar(32)', pk: false, nullable: false, default: "'alipay'", index: ['idx_payments_method'] },
+                { name: 'payment_id', type: 'varchar(128)', pk: false, nullable: true, default: null, index: ['idx_payments_payment_id'] },
+                { name: 'amount', type: 'decimal(10,2)', pk: false, nullable: false, default: '0.00', index: [] },
+                { name: 'status', type: 'varchar(32)', pk: false, nullable: false, default: "'pending'", index: ['idx_payments_status'] },
+                { name: 'result', type: 'varchar(32)', pk: false, nullable: true, default: null, index: [] },
+                { name: 'paid_at', type: 'datetime', pk: false, nullable: true, default: null, index: [] },
+                { name: 'timeout_at', type: 'datetime', pk: false, nullable: true, default: null, index: [] },
+                { name: 'created_at', type: 'datetime', pk: false, nullable: false, default: 'CURRENT_TIMESTAMP', index: [] },
+                { name: 'updated_at', type: 'datetime', pk: false, nullable: false, default: 'CURRENT_TIMESTAMP', index: [] }
+            ]
+        },
+        {
+            table_name: 'payment_credentials',
+            description: '支付凭证表，用于存储支付回调凭据和校验日志',
+            columns: [
+                { name: 'id', type: 'bigint', pk: true, nullable: false, default: 'AUTO_INCREMENT', index: [] },
+                { name: 'order_id', type: 'bigint', pk: false, nullable: false, default: null, index: ['idx_payment_credentials_order_id'] },
+                { name: 'credential_type', type: 'varchar(32)', pk: false, nullable: false, default: null, index: [] },
+                { name: 'credential_value', type: 'text', pk: false, nullable: false, default: null, index: [] },
+                { name: 'status', type: 'varchar(32)', pk: false, nullable: false, default: "'pending'", index: ['idx_payment_credentials_status'] },
+                { name: 'created_at', type: 'datetime', pk: false, nullable: false, default: 'CURRENT_TIMESTAMP', index: [] }
+            ]
+        },
+        {
+            table_name: 'after_sales',
+            description: '售后申请表',
+            columns: [
+                { name: 'id', type: 'varchar(64)', pk: true, nullable: false, default: null, index: [] },
+                { name: 'order_id', type: 'bigint', pk: false, nullable: false, default: null, index: ['idx_after_sales_order_id'] },
+                { name: 'user_id', type: 'bigint', pk: false, nullable: false, default: null, index: ['idx_after_sales_user_id'] },
+                { name: 'type', type: 'varchar(32)', pk: false, nullable: false, default: "'refund'", index: ['idx_after_sales_type'] },
+                { name: 'reason', type: 'text', pk: false, nullable: false, default: null, index: [] },
+                { name: 'amount', type: 'decimal(10,2)', pk: false, nullable: false, default: '0.00', index: [] },
+                { name: 'description', type: 'text', pk: false, nullable: true, default: null, index: [] },
+                { name: 'logistics', type: 'json', pk: false, nullable: true, default: null, index: [] },
+                { name: 'status', type: 'varchar(32)', pk: false, nullable: false, default: "'pending_review'", index: ['idx_after_sales_status'] },
+                { name: 'reviewed_by', type: 'bigint', pk: false, nullable: true, default: null, index: ['idx_after_sales_reviewer'] },
+                { name: 'review_remark', type: 'text', pk: false, nullable: true, default: null, index: [] },
+                { name: 'created_at', type: 'datetime', pk: false, nullable: false, default: 'CURRENT_TIMESTAMP', index: ['idx_after_sales_created_at'] },
+                { name: 'updated_at', type: 'datetime', pk: false, nullable: false, default: 'CURRENT_TIMESTAMP', index: [] }
+            ]
+        },
+        {
+            table_name: 'reviews',
+            description: '商品评价表',
+            columns: [
+                { name: 'id', type: 'varchar(64)', pk: true, nullable: false, default: null, index: [] },
+                { name: 'order_id', type: 'bigint', pk: false, nullable: false, default: null, index: ['idx_reviews_order_id'] },
+                { name: 'product_id', type: 'bigint', pk: false, nullable: true, default: null, index: ['idx_reviews_product_id'] },
+                { name: 'user_id', type: 'bigint', pk: false, nullable: false, default: null, index: ['idx_reviews_user_id'] },
+                { name: 'rating', type: 'tinyint', pk: false, nullable: false, default: '5', index: ['idx_reviews_rating'] },
+                { name: 'content', type: 'text', pk: false, nullable: true, default: null, index: [] },
+                { name: 'experience', type: 'text', pk: false, nullable: true, default: null, index: [] },
+                { name: 'files', type: 'json', pk: false, nullable: true, default: null, index: [] },
+                { name: 'status', type: 'varchar(32)', pk: false, nullable: false, default: "'approved'", index: ['idx_reviews_status'] },
+                { name: 'reply', type: 'json', pk: false, nullable: true, default: null, index: [] },
+                { name: 'created_at', type: 'datetime', pk: false, nullable: false, default: 'CURRENT_TIMESTAMP', index: ['idx_reviews_created_at'] },
+                { name: 'updated_at', type: 'datetime', pk: false, nullable: false, default: 'CURRENT_TIMESTAMP', index: [] }
+            ]
+        },
+        {
+            table_name: 'conversations',
+            description: '咨询会话表，记录买家与商家/客服之间的会话',
+            columns: [
+                { name: 'id', type: 'bigint', pk: true, nullable: false, default: 'AUTO_INCREMENT', index: [] },
+                { name: 'user_id', type: 'bigint', pk: false, nullable: false, default: null, index: ['idx_conversations_user_id'] },
+                { name: 'developer_id', type: 'bigint', pk: false, nullable: false, default: null, index: ['idx_conversations_developer_id'] },
+                { name: 'created_at', type: 'datetime', pk: false, nullable: false, default: 'CURRENT_TIMESTAMP', index: ['idx_conversations_created_at'] }
+            ]
+        },
+        {
+            table_name: 'messages',
+            description: '消息表，保存对话消息内容',
+            columns: [
+                { name: 'id', type: 'bigint', pk: true, nullable: false, default: 'AUTO_INCREMENT', index: [] },
+                { name: 'conversation_id', type: 'bigint', pk: false, nullable: false, default: null, index: ['idx_messages_conversation_id'] },
+                { name: 'sender_id', type: 'bigint', pk: false, nullable: false, default: null, index: ['idx_messages_sender_id'] },
+                { name: 'content', type: 'text', pk: false, nullable: true, default: null, index: [] },
+                { name: 'file_path', type: 'varchar(255)', pk: false, nullable: true, default: null, index: [] },
+                { name: 'file_type', type: 'varchar(128)', pk: false, nullable: true, default: null, index: [] },
+                { name: 'file_name', type: 'varchar(255)', pk: false, nullable: true, default: null, index: [] },
+                { name: 'is_read', type: 'tinyint(1)', pk: false, nullable: false, default: '0', index: ['idx_messages_is_read'] },
+                { name: 'created_at', type: 'datetime', pk: false, nullable: false, default: 'CURRENT_TIMESTAMP', index: ['idx_messages_created_at'] }
+            ]
+        },
+        {
+            table_name: 'complaints',
+            description: '投诉/纠纷表',
+            columns: [
+                { name: 'id', type: 'varchar(64)', pk: true, nullable: false, default: null, index: [] },
+                { name: 'order_id', type: 'bigint', pk: false, nullable: true, default: null, index: ['idx_complaints_order_id'] },
+                { name: 'user_id', type: 'bigint', pk: false, nullable: false, default: null, index: ['idx_complaints_user_id'] },
+                { name: 'type', type: 'varchar(32)', pk: false, nullable: false, default: "'complaint'", index: ['idx_complaints_type'] },
+                { name: 'reason', type: 'varchar(255)', pk: false, nullable: false, default: null, index: [] },
+                { name: 'description', type: 'text', pk: false, nullable: false, default: null, index: [] },
+                { name: 'evidence', type: 'json', pk: false, nullable: true, default: null, index: [] },
+                { name: 'status', type: 'varchar(32)', pk: false, nullable: false, default: "'pending'", index: ['idx_complaints_status'] },
+                { name: 'remark', type: 'text', pk: false, nullable: true, default: null, index: [] },
+                { name: 'created_at', type: 'datetime', pk: false, nullable: false, default: 'CURRENT_TIMESTAMP', index: ['idx_complaints_created_at'] },
+                { name: 'updated_at', type: 'datetime', pk: false, nullable: false, default: 'CURRENT_TIMESTAMP', index: [] }
+            ]
+        },
+        {
+            table_name: 'coupons',
+            description: '优惠券表（可扩展字段）',
+            columns: [
+                { name: 'id', type: 'bigint', pk: true, nullable: false, default: 'AUTO_INCREMENT', index: [] },
+                { name: 'code', type: 'varchar(64)', pk: false, nullable: false, default: null, index: ['uniq_coupons_code'] },
+                { name: 'name', type: 'varchar(128)', pk: false, nullable: false, default: null, index: [] },
+                { name: 'type', type: 'varchar(32)', pk: false, nullable: false, default: "'full_reduction'", index: [] },
+                { name: 'value', type: 'decimal(10,2)', pk: false, nullable: false, default: '0.00', index: [] },
+                { name: 'threshold', type: 'decimal(10,2)', pk: false, nullable: true, default: null, index: [] },
+                { name: 'valid_from', type: 'datetime', pk: false, nullable: false, default: 'CURRENT_TIMESTAMP', index: [] },
+                { name: 'valid_to', type: 'datetime', pk: false, nullable: false, default: null, index: ['idx_coupons_valid_to'] },
+                { name: 'status', type: 'varchar(32)', pk: false, nullable: false, default: "'active'", index: ['idx_coupons_status'] }
+            ]
+        }
+    ],
+    reserved_tables: [
+        {
+            table_name: 'third_party_product_mapping',
+            purpose: '第三方商品映射表，保存平台商品与外部电商/采集源商品的对应关系，便于跨平台比价、商品合并和同步更新。',
+            columns: [
+                { name: 'id', type: 'bigint', pk: true, nullable: false, default: 'AUTO_INCREMENT', index: [] },
+                { name: 'local_product_id', type: 'bigint', pk: false, nullable: false, default: null, index: ['idx_tp_mapping_local_product_id'] },
+                { name: 'source_name', type: 'varchar(64)', pk: false, nullable: false, default: null, index: ['idx_tp_mapping_source_name'] },
+                { name: 'source_product_id', type: 'varchar(128)', pk: false, nullable: false, default: null, index: ['idx_tp_mapping_source_product_id'] },
+                { name: 'source_url', type: 'varchar(512)', pk: false, nullable: true, default: null, index: [] },
+                { name: 'mapping_status', type: 'varchar(32)', pk: false, nullable: false, default: "'active'", index: ['idx_tp_mapping_status'] },
+                { name: 'created_at', type: 'datetime', pk: false, nullable: false, default: 'CURRENT_TIMESTAMP', index: ['idx_tp_mapping_created_at'] },
+                { name: 'updated_at', type: 'datetime', pk: false, nullable: false, default: 'CURRENT_TIMESTAMP', index: [] }
+            ],
+            index_plan: 'local_product_id + source_name + source_product_id 建立联合唯一索引，避免重复映射。'
+        },
+        {
+            table_name: 'product_crawl_log',
+            purpose: '抓取日志表，记录商品抓取任务执行状态、频率和异常信息，便于排查同步问题。',
+            columns: [
+                { name: 'id', type: 'bigint', pk: true, nullable: false, default: 'AUTO_INCREMENT', index: [] },
+                { name: 'source_name', type: 'varchar(64)', pk: false, nullable: false, default: null, index: ['idx_crawl_log_source_name'] },
+                { name: 'task_name', type: 'varchar(128)', pk: false, nullable: false, default: null, index: ['idx_crawl_log_task_name'] },
+                { name: 'source_product_id', type: 'varchar(128)', pk: false, nullable: true, default: null, index: ['idx_crawl_log_source_product_id'] },
+                { name: 'status', type: 'varchar(32)', pk: false, nullable: false, default: "'pending'", index: ['idx_crawl_log_status'] },
+                { name: 'request_url', type: 'varchar(512)', pk: false, nullable: true, default: null, index: [] },
+                { name: 'response_code', type: 'int', pk: false, nullable: true, default: null, index: [] },
+                { name: 'error_message', type: 'text', pk: false, nullable: true, default: null, index: [] },
+                { name: 'cost_ms', type: 'int', pk: false, nullable: true, default: null, index: [] },
+                { name: 'created_at', type: 'datetime', pk: false, nullable: false, default: 'CURRENT_TIMESTAMP', index: ['idx_crawl_log_created_at'] }
+            ],
+            index_plan: '按 source_name、status、created_at 建立索引，便于查看抓取成功率和异常轨迹。'
+        }
+    ],
+    notes: [
+        '主键统一使用 bigint 或字符串 ID；业务流水号使用 order_no、review_id 等独立字段保证跨表追踪。',
+        '索引优先建立在查询字段上：用户账号、角色、订单状态、支付状态、商品状态、时间范围、规格查询等。',
+        '为提升性能，建议将订单、支付、售后、评价等高频查询表按 created_at 和 status 组合建立索引。',
+        '第三方商品映射表與抓取日志表需在后续数据采集模块实现时引入，当前已预留接口和设计位置。'
+    ]
+};
+
+const API_RESTFUL_SPEC = {
+    title: 'RESTful 接口通用规范',
+    summary: '遵循统一资源定位、统一请求方式和统一响应结构，使用 HTTP Method 映射 CRUD，所有接口返回统一 JSON 格式，并通过状态码和错误码区分成功与失败。',
+    resource_rules: [
+        '资源命名统一使用名词复数，如 /api/users、/api/orders、/api/products。',
+        '路径中使用 /:id 表示单个资源，子资源使用 /:id/children 表达，如 /api/orders/:id/items。',
+        'GET 仅查询，不产生副作用；POST 创建资源；PUT/PATCH 更新资源；DELETE 删除资源。',
+        '动作类接口必须避免写入业务动作语义到路径中，建议使用 /status、/pay、/cancel 等状态动作资源。',
+        '分页查询使用 page、size 或 page、limit；排序使用 sort 字段。',
+        '幂等性要求：PUT、DELETE、PATCH 在业务语义允许情况下应保持幂等；状态更新类接口需显式业务校验。'
+    ],
+    response_standard: {
+        success: {
+            code: 200,
+            message: 'success',
+            data: '具体返回对象或数组'
+        },
+        created: {
+            code: 201,
+            message: 'created',
+            data: '新建对象'
+        },
+        bad_request: {
+            code: 400,
+            message: '参数错误',
+            error: '详细错误说明'
+        },
+        unauthorized: {
+            code: 401,
+            message: '未登录或令牌失效',
+            error: '请先登录'
+        },
+        forbidden: {
+            code: 403,
+            message: '无权限',
+            error: '当前角色无权限访问此接口'
+        },
+        not_found: {
+            code: 404,
+            message: '资源不存在',
+            error: '订单不存在'
+        },
+        server_error: {
+            code: 500,
+            message: '内部服务错误',
+            error: '系统异常'
+        }
+    },
+    conventions: [
+        '请求头统一使用 Authorization: Bearer xxx 传递 JWT。',
+        '所有接口返回统一使用 JSON，对象字段命名统一采用 snake_case。',
+        '日期字段统一使用 ISO-8601 格式，例如 2026-08-08T10:00:00.000Z。',
+        '分页返回结构建议为 { items, total, page, size, total_pages }。',
+        '查询参数使用 snake_case，如 status、merchant_id、order_no。',
+        '错误信息需要明确指出失败原因，避免只返回 generic error。'
+    ],
+    examples: [
+        'GET /api/products?page=1&size=20&status=published',
+        'POST /api/orders { "address_id": 12, "coupon_code": "WELCOME" }',
+        'PATCH /api/orders/100/status { "status": "shipped" }',
+        'POST /api/after-sales { "order_id": 100, "type": "refund", "reason": "质量问题" }'
+    ]
+};
+
+const PROJECT_LAYER_ARCHITECTURE = {
+    title: '项目分层架构规范',
+    description: '建议采用 Controller / Service / Mapper（Repository） / Utils 的四层或五层分层结构，将 HTTP、业务、数据访问、工具方法分离，保障职责清晰和扩展性。',
+    layers: [
+        {
+            name: 'Controller',
+            responsibility: '接收 HTTP 请求，参数校验，调用 Service，返回统一响应。',
+            files: [
+                'UserController',
+                'ProductController',
+                'OrderController',
+                'PaymentController',
+                'AfterSalesController',
+                'MerchantController'
+            ],
+            rules: [
+                '不写复杂业务逻辑，只负责参数解析与返回封装。',
+                '尽量保持方法短小，单个接口只做一类事情。',
+                '通过统一异常处理器捕获业务异常。'
+            ]
+        },
+        {
+            name: 'Service',
+            responsibility: '承载核心业务逻辑，协调多个 Mapper、校验状态、生成订单、处理支付和售后流程。',
+            files: [
+                'UserService',
+                'ProductService',
+                'CartService',
+                'OrderService',
+                'PaymentService',
+                'AfterSalesService',
+                'MerchantService',
+                'AnalyticsService'
+            ],
+            rules: [
+                '事务性逻辑集中在 Service 层。',
+                '状态流转规则必须在 Service 中统一处理。',
+                '不要在 Controller 中直接操作数据库。'
+            ]
+        },
+        {
+            name: 'Mapper / Repository',
+            responsibility: '负责数据持久化访问，封装数据库查询、写入和复杂 SQL。',
+            files: [
+                'UserMapper',
+                'ProductMapper',
+                'OrderMapper',
+                'PaymentMapper',
+                'AfterSalesMapper',
+                'ReviewMapper',
+                'ComplaintMapper'
+            ],
+            rules: [
+                '只负责 CRUD 和数据访问，不写业务判断。',
+                '结果集推荐转换为 DTO / VO 对象。',
+                '名称统一为 Mapper 或 Repository。'
+            ]
+        },
+        {
+            name: 'Utils / Common',
+            responsibility: '放通用工具方法，如加解密、时间处理、分页、校验、序列号生成、图片处理。',
+            files: [
+                'JwtUtil',
+                'PasswordUtil',
+                'DateUtil',
+                'PageUtil',
+                'IdGeneratorUtil',
+                'FileUploadUtil',
+                'MoneyUtil',
+                'ValidationUtil'
+            ],
+            rules: [
+                '方法需具备可复用性和无状态性。',
+                '工具类不能依赖 Controller 或 Service 实例。',
+                '统一处理排序、分页、金额格式化等通用能力。'
+            ]
+        }
+    ],
+    recommended_package_structure: {
+        root: [
+            'controller',
+            'service',
+            'mapper',
+            'entity',
+            'dto',
+            'vo',
+            'utils',
+            'config',
+            'exception',
+            'middleware',
+            'constants',
+            'docs'
+        ],
+        example: [
+            'controller/UserController.java',
+            'service/UserService.java',
+            'service/impl/UserServiceImpl.java',
+            'mapper/UserMapper.java',
+            'entity/User.java',
+            'dto/UserLoginRequest.java',
+            'vo/UserInfoVO.java',
+            'utils/JwtUtil.java',
+            'exception/BusinessException.java',
+            'config/SwaggerConfig.java'
+        ]
+    },
+    coding_principles: [
+        'Controller 只负责请求响应，Service 管理业务流程，Mapper 管理数据访问。',
+        'DTO 用于接收参数，VO 用于输出数据，Entity 用于持久化结构。',
+        '统一处理异常，避免在各层随意抛出裸异常。',
+        '模块职责单一，避免“胖控制器”和“万能 Service”。',
+        '业务状态字段和枚举统一管理，避免魔法字符串散落在代码里。'
+    ]
+};
+
+const STAGE_DELIVERY_CHECKLIST = {
+    phase: '本阶段交付物清单',
+    version: 'v1.0',
+    core_objective: '完成非遗电商业务需求梳理、设计方案整理和可运行的后端基础原型交付。',
+    deliverables: [
+        {
+            category: '业务与需求交付',
+            items: [
+                '完整梳理非遗电商主业务流程：注册入驻、商品管理、购物车、订单、支付、售后、评价、商家后台、数据统计。',
+                '输出标准化业务流程图说明，覆盖从用户到商家、从浏览到成交的全链路。',
+                '明确角色划分：普通买家、非遗手艺人商家、平台管理员。',
+                '设计关键功能模块与状态流转，确保后续开发基于统一业务规则。'
+            ]
+        },
+        {
+            category: '数据模型交付',
+            items: [
+                '输出数据库 ER 图文字描述。',
+                '设计核心表结构：users、merchants、products、product_categories、orders、order_items、payments、after_sales、reviews、complaints 等。',
+                '设计字段、类型、主键、索引与说明，满足业务查询和扩展需求。',
+                '预留第三方商品映射表 third_party_product_mapping 和抓取日志表 product_crawl_log 的落地位置。'
+            ]
+        },
+        {
+            category: '接口与架构交付',
+            items: [
+                '输出 RESTful 接口通用规范，包括 URL、HTTP Method、统一返回结构、状态码约定。',
+                '输出项目分层架构规范：Controller / Service / Mapper / Utils / DTO / VO。',
+                '明确开发职责边界，支持后续真实项目按模块拆分。'
+            ]
+        },
+        {
+            category: '代码实现交付',
+            items: [
+                '实现通用后端入口，支持 JSON 数据持久化与静态资源访问。',
+                '实现用户认证与授权：注册、登录、JWT 校验、角色鉴权。',
+                '实现普通买家功能：浏览、搜索、收藏、购物车、下单、支付、评价。',
+                '实现非遗手艺人商家功能：入驻、商品发布、库存管理、订单处理、发货、售后审核。',
+                '实现平台通用功能：客服会话、投诉处理、数据查询与统计。'
+            ]
+        },
+        {
+            category: '模块级成果',
+            items: [
+                '商品基础管理：分类、属性、价格、库存、上下架。',
+                '商品内容管理：详情、图片、视频、富文本描述。',
+                '商品展示与检索：筛选、搜索、推荐、详情页。',
+                '购物车模块：添加、删除、数量调整、选中结算。',
+                '订单模块：创建订单、状态流转、订单查询、订单管理。',
+                '支付模块：支付方式选择、支付记录、回调验证。',
+                '售后模块：退换货、退款、物流信息、审核流程。',
+                '评价模块：评价提交、回复、查询、好评率统计。',
+                '商家后台模块：商品管理、订单管理、售后客服、数据统计。'
+            ]
+        }
+    ],
+    completion_status: '已完成当前阶段设计与基础实现，适合用于汇报、评审和后续真实工程落地。',
+    next_stage: [
+        '将 JSON 持久化升级为真实 MySQL/PostgreSQL 数据库。',
+        '拆分为 Controller / Service / Mapper 真实项目目录结构。',
+        '补充前端页面与后端联调脚本。',
+        '完善支付网关、物流接口和第三方商品抓取模块。'
+    ]
+};
+
 // ============ 中间件 ============
 app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
+
+app.get('/api/business-flow', (req, res) => {
+    res.json(BUSINESS_FLOW);
+});
+
+app.get('/api/business-flow/mermaid', (req, res) => {
+    res.type('text/plain');
+    res.send(BUSINESS_FLOW.mermaid);
+});
+
+app.get('/api/database-er', (req, res) => {
+    res.json(DATABASE_ER_SCHEMA);
+});
+
+app.get('/api/design/restful-spec', (req, res) => {
+    res.json(API_RESTFUL_SPEC);
+});
+
+app.get('/api/design/project-architecture', (req, res) => {
+    res.json(PROJECT_LAYER_ARCHITECTURE);
+});
+
+app.get('/api/design/delivery-checklist', (req, res) => {
+    res.json(STAGE_DELIVERY_CHECKLIST);
+});
 
 // 确保上传目录存在
 const uploadsDir = path.join(__dirname, 'uploads');
@@ -3357,6 +4113,19 @@ app.get('/api/stats/hot-products', authMiddleware, requireRole([ROLE_TYPES.ARTIS
 // ============ 静态文件服务（上传目录） ============
 app.use('/uploads', express.static(uploadsDir));
 
+// ============ 商城（非遗器物商城）静态托管 ============
+// 商城前端（feiyi-ecommerce）构建产物部署到 /shop/ 路径下，
+// 与主平台同源（localhost:3000），从而共享 localStorage 实现单点登录。
+const shopDist = path.join(__dirname, 'feiyi-ecommerce', 'dist');
+if (fs.existsSync(shopDist)) {
+    // 静态资源：/shop/assets/xxx → dist/assets/xxx
+    app.use('/shop', express.static(shopDist));
+    // SPA history 路由回退：/shop/* 非静态文件请求一律返回 index.html
+    app.get('/shop/*', (req, res) => {
+        res.sendFile(path.join(shopDist, 'index.html'));
+    });
+}
+
 // ============ 启动服务器 ============
 module.exports = {
     app,
@@ -3382,6 +4151,7 @@ if (require.main === module) {
         console.log(`  🔐 登录注册:    http://localhost:${PORT}/login.html`);
         console.log(`  👤 用户中心:    http://localhost:${PORT}/user-dashboard.html`);
         console.log(`  👨‍💻 开发者中心:  http://localhost:${PORT}/developer-dashboard.html`);
+        console.log(`  🛍️ 商城:        http://localhost:${PORT}/shop/`);
         console.log('========================================');
     });
 }
