@@ -16,10 +16,11 @@ export default defineConfig({
   server: {
     port: 5173, // 本地开发服务器端口
     open: true, // 启动后自动打开浏览器
-    // 跨域代理：后端接口联调时启用（当前使用前端假数据，仅作模板保留）
+    // 跨域代理：开发模式下将 /api 请求转发到主站 Express 后端（server.js，端口 3000）
+    // 注意：商城与主平台需同源共享登录态，正式使用请通过 http://localhost:3000/shop/ 访问构建产物
     proxy: {
       '/api': {
-        target: 'http://localhost:8080', // 后端服务地址（由后端同学提供后修改）
+        target: 'http://localhost:3000', // 主站后端地址（server.js）
         changeOrigin: true
         // rewrite: (path) => path.replace(/^\/api/, '') // 如后端无 /api 前缀可启用
       }

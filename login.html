@@ -330,6 +330,22 @@
             localStorage.setItem('user', JSON.stringify(data.user));
         }
 
+        // 读取 ?redirect= 回跳地址（仅允许站内相对路径，防止开放重定向）
+        function getRedirect() {
+            try {
+                const r = new URLSearchParams(window.location.search).get('redirect');
+                if (r && r.startsWith('/')) return r;
+            } catch (e) {}
+            return null;
+        }
+
+        // 登录/注册成功后的跳转目标：优先回跳（如商城登录后返回商城），否则进角色仪表盘
+        function successDestination(user) {
+            const redirect = getRedirect();
+            if (redirect) return redirect;
+            return user.role === 'user' ? 'user-dashboard.html' : 'developer-dashboard.html';
+        }
+
         // 登录
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -359,11 +375,7 @@
                 showSuccess('登录成功！正在跳转...');
 
                 setTimeout(() => {
-                    if (data.user.role === 'user') {
-                        window.location.href = 'user-dashboard.html';
-                    } else {
-                        window.location.href = 'developer-dashboard.html';
-                    }
+                    window.location.href = successDestination(data.user);
                 }, 800);
             } catch (err) {
                 showError('网络错误，请检查服务器是否启动');
@@ -403,11 +415,7 @@
                 showSuccess('注册成功！正在跳转...');
 
                 setTimeout(() => {
-                    if (data.user.role === 'user') {
-                        window.location.href = 'user-dashboard.html';
-                    } else {
-                        window.location.href = 'developer-dashboard.html';
-                    }
+                    window.location.href = successDestination(data.user);
                 }, 800);
             } catch (err) {
                 showError('网络错误，请检查服务器是否启动');

@@ -48,18 +48,49 @@ export const useAuthStore = defineStore('auth', {
       this.user = loadUser()
     },
 
-    // 登出：清除共享登录态，跳回主平台登录页
-    logout() {
+    // 仅清除登录态（不跳转），供后端验证失败时使用
+    clearAuth() {
       localStorage.removeItem(TOKEN_KEY)
       localStorage.removeItem(USER_KEY)
       this.token = ''
       this.user = null
+    },
+
+    // 用后端 /api/me 验证 token 并刷新用户信息，实现真正的「后端用户对接」
+    // 返回 true=已通过后端验证；false=未登录 / token 失效 / 网络异常
+    async fetchMe() {
+      if (!this.token) return false
+      try {
+        const res = await fetch('/api/me', {
+          headers: { Authorization: 'Bearer ' + this.token }
+        })
+        if (res.status === 401) {
+          // token 失效：清除本地登录态，让页面显示未登录
+          this.clearAuth()
+          return false
+        }
+        if (!res.ok) return false
+        const data = await res.json()
+        // 用后端返回的最新用户信息覆盖本地缓存，保持商城与主平台一致
+        this.user = data
+        localStorage.setItem(USER_KEY, JSON.stringify(data))
+        return true
+      } catch (e) {
+        // 网络异常（如后端未启动）：保留现有状态，不强退
+        return false
+      }
+    },
+
+    // 登出：清除共享登录态，跳回主平台登录页
+    logout() {
+      this.clearAuth()
       window.location.href = LOGIN_PAGE
     },
 
-    // 跳转到主平台登录页
+    // 跳转到主平台登录页，并携带回跳地址（登录成功后回到当前商城页面）
     goLogin() {
-      window.location.href = LOGIN_PAGE
+      const redirect = encodeURIComponent(window.location.href)
+      window.location.href = `${LOGIN_PAGE}?redirect=${redirect}`
     }
   }
 })

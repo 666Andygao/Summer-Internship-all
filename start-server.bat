@@ -1,12 +1,18 @@
 @echo off
-echo ========================================
-echo   华夏风物 · 非遗传承 后端服务
-echo ========================================
+rem ============================================
+rem   Huaxia Fengwu - Heritage Backend Server
+rem ============================================
 echo.
-echo   正在启动服务器...
+echo   Starting server...
+echo   Homepage:  http://localhost:3000/MainPage.html
+echo   Login:     http://localhost:3000/login.html
+echo   Shop:      http://localhost:3000/shop/
 echo.
+rem Switch to the script's directory so relative paths work
+cd /d "%~dp0"
+rem Start the Node.js server
 "C:\Program Files\nodejs\node.exe" "%~dp0server.js"
 
 echo.
-echo   服务器已关闭。
+echo   Server stopped.
 pause

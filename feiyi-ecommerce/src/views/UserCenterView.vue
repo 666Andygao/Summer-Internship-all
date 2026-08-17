@@ -1,9 +1,21 @@
 <script setup>
 // 个人中心：与主平台共享登录态，展示当前账号信息
-import { computed } from 'vue'
+// 进入页面时调用后端 /api/me 验证 token 并拉取最新用户数据，
+// 确保商城展示的是真实的后端账号（而非仅依赖本地缓存）。
+import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/store/auth'
 
 const auth = useAuthStore()
+
+// 是否正在向后端验证登录态（首屏先显示加载，避免闪现错误状态）
+const checking = ref(true)
+
+onMounted(async () => {
+  if (auth.isLoggedIn) {
+    await auth.fetchMe()
+  }
+  checking.value = false
+})
 
 // 角色中文名
 const roleName = computed(() => {
@@ -31,15 +43,22 @@ function goToDashboard() {
 <template>
   <div class="user-center">
     <div class="container">
-      <!-- 未登录态 -->
-      <div v-if="!auth.isLoggedIn" class="uc-card uc-empty">
+      <!-- 后端验证中 -->
+      <div v-if="checking" class="uc-card uc-empty">
+        <el-icon :size="56" color="#c0392b" class="is-loading"><Loading /></el-icon>
+        <h2>正在验证登录状态...</h2>
+        <p>正在连接后端服务器，请稍候。</p>
+      </div>
+
+      <!-- 未登录态（本地无 token 或后端验证失败） -->
+      <div v-else-if="!auth.isLoggedIn" class="uc-card uc-empty">
         <el-icon :size="56" color="#c0392b"><User /></el-icon>
         <h2>尚未登录</h2>
         <p>登录「华夏风物志」首页后，即可在此查看您的账号信息。</p>
         <el-button type="primary" size="large" @click="auth.goLogin">前往登录</el-button>
       </div>
 
-      <!-- 已登录态 -->
+      <!-- 已登录态（后端验证通过） -->
       <div v-else class="uc-grid">
         <!-- 左侧：账号信息卡片 -->
         <div class="uc-card uc-profile">
@@ -56,14 +75,15 @@ function goToDashboard() {
           </div>
         </div>
 
-        <!-- 右侧：账号详情 -->
+        <!-- 右侧：账号详情（数据来自后端 /api/me） -->
         <div class="uc-card uc-detail">
           <h3>账号信息</h3>
           <div class="uc-row"><span>用户 ID</span><b>{{ auth.user?.id }}</b></div>
           <div class="uc-row"><span>用户名</span><b>{{ auth.user?.username }}</b></div>
           <div class="uc-row"><span>昵称</span><b>{{ auth.displayName }}</b></div>
           <div class="uc-row"><span>角色</span><b>{{ roleName }}</b></div>
-          <p class="uc-tip">该账号由「华夏风物志」平台统一管理，商城与主平台共享同一账号体系。</p>
+          <div class="uc-row"><span>手机号</span><b>{{ auth.user?.phone || '—' }}</b></div>
+          <p class="uc-tip">该账号由「华夏风物志」平台统一管理，商城与主平台共享同一账号体系。以上信息由后端实时返回。</p>
         </div>
       </div>
     </div>
