@@ -27,6 +27,9 @@ const PORT = 3000;
 // ⚠️ 开发占位符：生产环境请改用环境变量 process.env.JWT_SECRET / PAYMENT_CALLBACK_TOKEN
 const JWT_SECRET = 'dev-placeholder-jwt';
 const PAYMENT_CALLBACK_TOKEN = 'dev-placeholder-payment';
+
+const ALLOWED_PAYMENT_METHODS = ['alipay', 'wechat', 'bank'];
+
 const ROLE_TYPES = {
     BUYER: 'buyer',
     ARTISAN: 'artisan',
@@ -4219,12 +4222,15 @@ app.get('/api/stats/hot-products', authMiddleware, requireRole([ROLE_TYPES.ARTIS
 // ============ 静态文件服务（上传目录） ============
 app.use('/uploads', express.static(uploadsDir));
 
+
 // ============ 全局错误处理 ============
 // 404 处理（仅拦截 /api/ 前缀的未匹配路由）
 app.use(notFoundHandler);
 
 // 全局异常处理
 app.use(globalErrorHandler);
+
+
 
 // ============ 商城（非遗器物商城）静态托管 ============
 // 商城前端（feiyi-ecommerce）构建产物部署到 /shop/ 路径下，
