@@ -3,11 +3,16 @@
 import { ref, computed, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useCartStore } from '@/store/cart'
+import { useAuthStore } from '@/store/auth'
 import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 const route = useRoute()
 const cartStore = useCartStore()
+const authStore = useAuthStore()
+
+// 登录态展示：已登录显示昵称，未登录显示「登录」
+const loginLabel = computed(() => (authStore.isLoggedIn ? authStore.displayName : '登录'))
 
 // 搜索关键词
 const keyword = ref('')
@@ -42,9 +47,10 @@ function onSearch() {
 // 移动端抽屉菜单开关
 const drawerVisible = ref(false)
 
-// 个人中心（前端占位提示，不涉及登录鉴权）
+// 个人中心：跳转到个人中心页（与主平台共享账号）
 function onUserCenter() {
-  ElMessage.info('个人中心功能由后端账户体系对接后开放')
+  authStore.refresh()
+  router.push('/user')
 }
 </script>
 
@@ -86,7 +92,7 @@ function onUserCenter() {
         <!-- 个人中心 -->
         <div class="action-item" @click="onUserCenter">
           <el-icon :size="22"><User /></el-icon>
-          <span class="action-label">个人中心</span>
+          <span class="action-label">{{ loginLabel }}</span>
         </div>
         <!-- 移动端菜单按钮 -->
         <div class="action-item menu-btn" @click="drawerVisible = true">
@@ -125,6 +131,7 @@ function onUserCenter() {
           <router-link :to="item.path" @click="drawerVisible = false; onNavClick(item)">{{ item.name }}</router-link>
         </li>
         <li><router-link to="/cart" @click="drawerVisible = false">购物车（{{ cartCount }}）</router-link></li>
+        <li><router-link to="/user" @click="drawerVisible = false">个人中心</router-link></li>
       </ul>
     </el-drawer>
   </header>

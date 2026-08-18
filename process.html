@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>制作流程 - 模型一</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'KaiTi', 'STKaiti', 'SimSun', 'Noto Serif SC', 'PingFang SC', 'Microsoft YaHei', serif;
+            background: linear-gradient(160deg, #f5ecd7 0%, #ede0c8 30%, #e2d4b8 70%, #d4c4a0 100%);
+            min-height: 100vh;
+            color: #3e2723;
+            overflow: hidden;
+            display: flex;
+            align-items: stretch;
+        }
+
+        .image-panel {
+            flex: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2%;
+            position: relative;
+            min-width: 0;
+        }
+
+        .image-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 250, 240, 0.92);
+            border-radius: 8px;
+            border: 2px solid #a08868;
+            box-shadow: 0 4px 24px rgba(62, 39, 35, 0.12), inset 0 0 60px rgba(160, 136, 104, 0.06);
+            backdrop-filter: blur(8px);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .image-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            color: rgba(93, 64, 55, 0.25);
+            transition: opacity 0.3s ease;
+        }
+
+        .image-placeholder .icon {
+            font-size: 5em;
+            line-height: 1;
+        }
+
+        .image-placeholder .text {
+            font-size: 1.1em;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .process-image {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 4px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .process-image.visible {
+            opacity: 1;
+        }
+
+        .step-label {
+            position: absolute;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(93, 64, 55, 0.06);
+            color: #5d4037;
+            padding: 8px 24px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-weight: 600;
+            letter-spacing: 2px;
+            border: 1px solid rgba(93, 64, 55, 0.15);
+            transition: all 0.4s ease;
+            z-index: 5;
+        }
+
+        .back-link {
+            position: absolute;
+            top: 24px;
+            left: 24px;
+            z-index: 10;
+            padding: 8px 18px;
+            background: linear-gradient(135deg, #8d6e63 0%, #5d4037 100%);
+            color: #f5ecd7;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 0.82em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 14px rgba(62, 39, 35, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            letter-spacing: 0.5px;
+        }
+
+        .back-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(62, 39, 35, 0.45);
+        }
+
+        .tree-panel {
+            flex: 1;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            background: rgba(255, 250, 240, 0.85);
+            border-left: 2px solid #a08868;
+            box-shadow: -2px 0 20px rgba(62, 39, 35, 0.06);
+            overflow: hidden;
+            min-width: 260px;
+            position: relative;
+        }
+
+        .toc-view {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            padding: 0;
+            transition: transform 0.45s ease, opacity 0.45s ease;
+        }
+
+        .toc-view.hidden {
+            display: none;
+        }
+
+        .toc-header {
+            padding: 24px 20px 16px;
+            border-bottom: 1px solid rgba(160, 136, 104, 0.25);
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .toc-header .toc-icon {
+            font-size: 2em;
+            line-height: 1;
+            margin-bottom: 4px;
+            opacity: 0.6;
+        }
+
+        .toc-header .toc-title {
+            font-size: 1.15em;
+            font-weight: 700;
+            color: #3e2723;
+            letter-spacing: 3px;
+        }
+
+        .toc-header .toc-subtitle {
+            font-size: 0.7em;
+            color: #8d6e63;
+            letter-spacing: 1px;
+            margin-top: 2px;
+        }
+
+        .toc-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 0;
+        }
+
+        .toc-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .toc-list::-webkit-scrollbar-thumb {
+            background: rgba(160, 136, 104, 0.3);
+            border-radius: 2px;
+        }
+
+        .toc-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 1px solid rgba(160, 136, 104, 0.1);
+            position: relative;
+            gap: 14px;
+        }
+
+        .toc-item:hover {
+            background: rgba(160, 136, 104, 0.08);
+        }
+
+        .toc-item:last-child {
+            border-bottom: none;
+        }
+
+        .toc-item .toc-num {
+            width: 32px;
+            height: 32px;
+            border-radius: 2px;
+            background: rgba(160, 136, 104, 0.12);
+            color: #8d6e63;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85em;
+            font-weight: 700;
+            flex-shrink: 0;
+            border: 1px solid rgba(160, 136, 104, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .toc-item:hover .toc-num {
+            background: #5d4037;
+            color: #f5ecd7;
+            border-color: #5d4037;
+        }
+
+        .toc-item .toc-name {
+            font-size: 0.95em;
+            color: #5d4037;
+            font-weight: 600;
+            letter-spacing: 1px;
+            transition: color 0.3s ease;
+        }
+
+        .toc-item:hover .toc-name {
+            color: #3e2723;
+        }
+
+        .toc-item .toc-arrow {
+            margin-left: auto;
+            color: #a08868;
+            font-size: 0.8em;
+            transition: transform 0.3s ease;
+        }
+
+        .toc-item:hover .toc-arrow {
+            transform: translateX(4px);
+            color: #5d4037;
+        }
+
+        .detail-view {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            padding: 0;
+        }
+
+        .detail-view.visible {
+            display: flex;
+        }
+
+        .detail-back {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 12px 16px;
+            color: #8d6e63;
+            cursor: pointer;
+            font-size: 0.82em;
+            font-weight: 600;
+            letter-spacing: 1px;
+            transition: all 0.25s ease;
+            border-bottom: 1px solid rgba(160, 136, 104, 0.15);
+            flex-shrink: 0;
+            user-select: none;
+        }
+
+        .detail-back:hover {
+            color: #3e2723;
+            background: rgba(160, 136, 104, 0.06);
+        }
+
+        .detail-back .back-arrow {
+            font-size: 1.1em;
+            transition: transform 0.25s ease;
+        }
+
+        .detail-back:hover .back-arrow {
+            transform: translateX(-3px);
+        }
+
+        .detail-body {
+            flex: 1;
+            overflow-y: hidden;
+            overflow-x: auto;
+            padding: 28px 18px;
+            writing-mode: vertical-rl;
+            font-family: 'STXingkai', 'STLiti', 'Ma Shan Zheng', 'KaiTi', 'STKaiti', 'SimSun', serif;
+        }
+
+        .detail-body::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .detail-body::-webkit-scrollbar-track {
+            background: rgba(160, 136, 104, 0.12);
+            border-radius: 3px;
+        }
+
+        .detail-body::-webkit-scrollbar-thumb {
+            background: rgba(120, 80, 40, 0.35);
+            border-radius: 3px;
+        }
+
+        .detail-step-num {
+            font-size: 1.1em;
+            color: #8b5a2b;
+            letter-spacing: 4px;
+            margin-left: 16px;
+            padding: 4px 8px;
+            background: rgba(139, 90, 43, 0.06);
+            border: 1px solid rgba(139, 90, 43, 0.15);
+        }
+
+        .detail-title {
+            font-size: 2.0em;
+            font-weight: 700;
+            color: #3e2723;
+            letter-spacing: 6px;
+            line-height: 1.6;
+            margin-left: 22px;
+            padding-left: 16px;
+            border-left: 3px solid rgba(139, 90, 43, 0.3);
+        }
+
+        .detail-subtitle {
+            font-size: 1.0em;
+            color: #8b5a2b;
+            letter-spacing: 3px;
+            margin-left: 22px;
+            padding-left: 16px;
+            border-left: 3px solid rgba(139, 90, 43, 0.18);
+            font-style: italic;
+        }
+
+        .detail-desc {
+            font-size: 1.35em;
+            color: #4a3020;
+            line-height: 2.8;
+            letter-spacing: 2px;
+            margin-left: 20px;
+        }
+
+        .detail-desc p {
+            margin: 0;
+            text-indent: 0;
+        }
+
+        .detail-nav {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-top: 1px solid rgba(160, 136, 104, 0.2);
+            flex-shrink: 0;
+            gap: 10px;
+        }
+
+        .detail-nav-btn {
+            flex: 1;
+            padding: 8px 0;
+            text-align: center;
+            background: rgba(160, 136, 104, 0.08);
+            border: 1px solid rgba(160, 136, 104, 0.2);
+            color: #5d4037;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: 600;
+            letter-spacing: 1px;
+            transition: all 0.25s ease;
+            font-family: inherit;
+            user-select: none;
+        }
+
+        .detail-nav-btn:hover {
+            background: #5d4037;
+            color: #f5ecd7;
+            border-color: #5d4037;
+        }
+
+        .detail-nav-btn:active {
+            transform: scale(0.97);
+        }
+
+        .fullscreen-btn {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            z-index: 10;
+            padding: 8px 18px;
+            background: linear-gradient(135deg, #8d6e63 0%, #5d4037 100%);
+            color: #f5ecd7;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.82em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 14px rgba(62, 39, 35, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            letter-spacing: 0.5px;
+            font-family: inherit;
+        }
+
+        .fullscreen-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(62, 39, 35, 0.45);
+        }
+
+        .fullscreen-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.92);
+            z-index: 9999;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .fullscreen-overlay.visible {
+            display: flex;
+        }
+
+        .fullscreen-close {
+            position: absolute;
+            top: 24px;
+            right: 32px;
+            z-index: 10000;
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 50%;
+            color: #fff;
+            font-size: 1.4em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .fullscreen-close:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: rotate(90deg);
+        }
+
+        .fullscreen-image {
+            max-width: 92vw;
+            max-height: 85vh;
+            object-fit: contain;
+            border-radius: 4px;
+            box-shadow: 0 8px 48px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .fullscreen-image.visible {
+            opacity: 1;
+        }
+
+        .fullscreen-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 52px;
+            height: 52px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            color: #fff;
+            font-size: 1.3em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 10000;
+        }
+
+        .fullscreen-nav:hover {
+            background: rgba(255, 255, 255, 0.22);
+        }
+
+        .fullscreen-nav.disabled {
+            opacity: 0.25;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .fullscreen-prev {
+            left: 32px;
+        }
+
+        .fullscreen-next {
+            right: 32px;
+        }
+
+        .fullscreen-label {
+            position: absolute;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1em;
+            font-weight: 600;
+            letter-spacing: 3px;
+            z-index: 10000;
+        }
+
+        .detail-nav-btn.disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column-reverse;
+            }
+
+            .image-panel {
+                flex: 3;
+                padding: 2%;
+            }
+
+            .tree-panel {
+                flex: none;
+                height: auto;
+                max-height: 45vh;
+                min-width: 0;
+                border-left: none;
+                border-top: 2px solid #a08868;
+                box-shadow: 0 -2px 20px rgba(62, 39, 35, 0.06);
+            }
+
+            .toc-list {
+                max-height: 40vh;
+            }
+
+            .detail-body {
+                max-height: 35vh;
+                overflow-y: hidden;
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="image-panel" id="imagePanel">
+        <a class="back-link" href="model.html" title="返回模型展示中心">◀ 返回</a>
+        <button class="fullscreen-btn" id="fullscreenBtn" title="全屏查看">⛶ 全屏</button>
+        <div class="image-container" id="imageContainer">
+            <div class="image-placeholder" id="imagePlaceholder">
+                <span class="icon">🔧</span>
+            </div>
+            <img class="process-image" id="processImage" src="" alt="制作流程">
+            <div class="step-label" id="stepLabel">熔银</div>
+        </div>
+    </div>
+
+    <div class="tree-panel">
+        <div class="toc-view" id="tocView">
+            <div class="toc-header">
+                <div class="toc-icon">📖</div>
+                <div class="toc-title">制 作 流 程</div>
+                <div class="toc-subtitle">PROCESS</div>
+            </div>
+            <div class="toc-list" id="tocList">
+                <div class="toc-item" data-index="0">
+                    <span class="toc-num">壹</span>
+                    <span class="toc-name">熔银</span>
+                    <span class="toc-arrow">▶</span>
+                </div>
+                <div class="toc-item" data-index="1">
+                    <span class="toc-num">贰</span>
+                    <span class="toc-name">锤揲</span>
+                    <span class="toc-arrow">▶</span>
+                </div>
+                <div class="toc-item" data-index="2">
+                    <span class="toc-num">叁</span>
+                    <span class="toc-name">拉丝与搓丝</span>
+                    <span class="toc-arrow">▶</span>
+                </div>
+                <div class="toc-item" data-index="3">
+                    <span class="toc-num">肆</span>
+                    <span class="toc-name">錾花</span>
+                    <span class="toc-arrow">▶</span>
+                </div>
+                <div class="toc-item" data-index="4">
+                    <span class="toc-num">伍</span>
+                    <span class="toc-name">焊接</span>
+                    <span class="toc-arrow">▶</span>
+                </div>
+                <div class="toc-item" data-index="5">
+                    <span class="toc-num">陆</span>
+                    <span class="toc-name">酸洗</span>
+                    <span class="toc-arrow">▶</span>
+                </div>
+                <div class="toc-item" data-index="6">
+                    <span class="toc-num">柒</span>
+                    <span class="toc-name">抛光</span>
+                    <span class="toc-arrow">▶</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-view" id="detailView">
+            <div class="detail-back" id="detailBack">
+                <span class="back-arrow">◀</span> 返回目录
+            </div>
+            <div class="detail-body">
+                <span class="detail-step-num" id="detailStepNum">第壹步</span>
+                <div class="detail-title" id="detailTitle">熔银</div>
+                <div class="detail-subtitle" id="detailSubtitle">烈火熔银，时光始醒</div>
+                <div class="detail-desc" id="detailDesc">碎银投入坩埚，烈火自底部腾起。初时沉默，像山雨前的寂静；须臾之间，银块在烈焰中酥软、坍缩，最终化为一汪流动的月光。杂质在高温中化作青烟散去，只留下最纯粹的银水，澄澈如泪，灼热如心跳。匠人持钳倾注，银水如丝坠入槽中，遇冷凝形，一根银条便在此刻降生。熔炼这一步，是银器漫长生命中的第一次死去，也是第一次醒来——在烈焰中舍弃旧我，在冷却后重塑新生。没有这场粉身碎骨的熔炼，便没有日后千万次锻打中渐渐绽放的光华。</div>
+            </div>
+            <div class="detail-nav">
+                <button class="detail-nav-btn" id="prevBtn">◀ 上一步</button>
+                <button class="detail-nav-btn" id="nextBtn">下一步 ▶</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="fullscreen-overlay" id="fullscreenOverlay">
+        <button class="fullscreen-close" id="fullscreenClose" title="关闭全屏">✕</button>
+        <img class="fullscreen-image" id="fullscreenImage" src="" alt="全屏展示">
+        <button class="fullscreen-nav fullscreen-prev" id="fullscreenPrev" title="上一张">◀</button>
+        <button class="fullscreen-nav fullscreen-next" id="fullscreenNext" title="下一张">▶</button>
+        <div class="fullscreen-label" id="fullscreenLabel"></div>
+    </div>
+
+    <script>
+        (function() {
+            var tocView = document.getElementById('tocView');
+            var detailView = document.getElementById('detailView');
+            var tocItems = document.querySelectorAll('.toc-item');
+            var detailBack = document.getElementById('detailBack');
+            var prevBtn = document.getElementById('prevBtn');
+            var nextBtn = document.getElementById('nextBtn');
+            var stepLabel = document.getElementById('stepLabel');
+            var processImage = document.getElementById('processImage');
+            var imagePlaceholder = document.getElementById('imagePlaceholder');
+            var detailTitle = document.getElementById('detailTitle');
+            var detailSubtitle = document.getElementById('detailSubtitle');
+            var detailDesc = document.getElementById('detailDesc');
+            var detailStepNum = document.getElementById('detailStepNum');
+            var currentIndex = 0;
+            var isAnimating = false;
+
+            var chineseNums = ['壹', '贰', '叁', '肆', '伍', '陆', '柒'];
+
+            var steps = [
+                {
+                    name: '熔银',
+                    file: '模型一图片/熔炼.png',
+                    fullscreenFile: '模型一全屏展示/融银.png',
+                    subtitle: '烈火熔银，时光始醒',
+                    desc: '碎银投入坩埚，烈火自底部腾起。初时沉默，像山雨前的寂静；须臾之间，银块在烈焰中酥软、坍缩，最终化为一汪流动的月光。杂质在高温中化作青烟散去，只留下最纯粹的银水，澄澈如泪，灼热如心跳。匠人持钳倾注，银水如丝坠入槽中，遇冷凝形，一根银条便在此刻降生。熔炼这一步，是银器漫长生命中的第一次死去，也是第一次醒来——在烈焰中舍弃旧我，在冷却后重塑新生。没有这场粉身碎骨的熔炼，便没有日后千万次锻打中渐渐绽放的光华。'
+                },
+                {
+                    name: '锤揲',
+                    file: '模型一图片/锤揲.png',
+                    fullscreenFile: '模型一全屏展示/锤揲.png',
+                    subtitle: '赋予冰冷的银料以最初的雏形与生命',
+                    desc: '银料在千锤百炼中褪去粗粝，于万次锻打间渐生光华。匠人握锤如执笔，每一记起落皆有章法——轻则如风拂水面，延展银的柔韧；重则似雨打芭蕉，铸就骨的刚劲。寒暑交替，银条在叮当韵律中舒展身姿，或成薄片承托图腾，或化银丝缠绕流光。那回荡在吊脚楼间的清脆锤音，是苗族匠人与白银的对话，一锤一凿间，岁月被敲打进纹路，匠心在火花中涅槃。'
+                },
+                {
+                    name: '拉丝与搓丝',
+                    file: '模型一图片/拉丝与搓丝.png',
+                    fullscreenFile: '模型一全屏展示/拉丝与搓丝.png',
+                    subtitle: '千抽万捻，终成绕指柔',
+                    desc: '银条在拉丝板孔洞间穿行，一抽一送间，粗粝的银料被时光细细揉碎，终化作一绺银丝，细得能听见风的叹息。然而细还不够——匠人将数根银丝合拢，以木滚轻捻，指尖游走处，原本光滑的银线泛起涟漪般的纹理，柔韧如藤，缠绵如歌。拉丝是减，将厚重剥至纤细；搓丝是加，于纤细中注入筋骨。一拉一搓之间，银丝褪尽火气，有了自己的性格——可弯而不折，可绕而不乱，只待匠人将它们编结盘绕，在银饰上写下苗族千年迁徙的纹路。一条银丝的诞生，原是时间与指尖合力完成的诗。'
+                },
+                {
+                    name: '錾花',
+                    file: '模型一图片/錾花.png',
+                    fullscreenFile: '模型一全屏展示/錾花.png',
+                    subtitle: '一錾一花，皆成史诗',
+                    desc: '银胎已在锻打中延展出薄而韧的肌肤，只待匠人以錾为笔，为其注入灵魂。錾子尖端抵住银面，木槌轻叩，一记起落，便是一道深浅有致的刻痕。匠人指腕游移，錾锋随之流转——时如行云，勾勒蜿蜒的江河纹路；时如骤雨，凿出细密的星辰光点。银屑在槌声中簌簌散落，如时光剥落的碎屑，纹样则在每一次叩击里缓慢地浮现。錾花从无草稿，银面便是匠人信手挥洒的宣纸，每一凿皆为心之所至，既不可追悔，亦无法重来。待到最后一锤落下，银器之上已然铺开一阙无言的史诗——那纹路深处镌刻的，或许是苗人迁徙的山川记忆，或许是山间草木的摇曳姿态，又或者，只是匠人那一刻的呼吸与心跳。银在錾下不语，却记住了所有。'
+                },
+                {
+                    name: '焊接',
+                    file: '模型一图片/焊接.png',
+                    fullscreenFile: '模型一全屏展示/焊接.png',
+                    subtitle: '火为媒，银相生',
+                    desc: '银片与银丝各自成器，却尚需一处相拥。匠人以焊药为引，以炭火为媒，将两枚银件轻轻并拢。火焰舔舐接口，焊药在高温中苏醒，化作透明的细流，渗入每一道微不可见的缝隙。火候需拿捏得恰到好处——欠一分，银件貌合神离；过一分，纹路消融殆尽。就在那转瞬即逝的恰到好处的暖意里，分离的银融为一体，接痕如雾消散，仿佛它们本就该是完整的一件。这是一场银与银的联姻，借一把火的成全，将匠人拆解的心事重新缝合，从此不再分离。'
+                },
+                {
+                    name: '酸洗',
+                    file: '模型一图片/酸洗.png',
+                    fullscreenFile: '模型一全屏展示/酸洗.png',
+                    subtitle: '酸中濯银，清白还身',
+                    desc: '千锤万錾之后，银饰早已不堪——铜绿的锈斑、火药的焦痕、汗渍的浊气，层层覆在纹路深处，像岁月蒙上的灰。银匠将银件浸入酸液中，嗤的一声轻响，细密的气泡自錾刻的沟壑间浮起，裹挟着杂质浮向液面。酸是严厉的清洗者，不伤银的筋骨，只涤尽不属于它的一切。片刻后取出，清水冲净，银器褪去所有污浊，露出最初的白——那不是刚熔炼时的生白，而是历尽千锤后沉淀下来的素净，清冷如霜，沉静如雪。酸洗之于银器，如同回望之于人生——不必重塑什么，只是还给本来的自己。'
+                },
+                {
+                    name: '抛光',
+                    file: '模型一图片/抛光.png',
+                    fullscreenFile: '模型一全屏展示/抛光.png',
+                    subtitle: '以柔刚，唤醒银魂',
+                    desc: '玛瑙是银器最后的知己。刀锋未至，银面已感知那温润的凉意。匠人以指腹试刀，旋即轻轻抵上银胎，顺着纹路徐徐推碾。玛瑙的硬，原是另一种软——它不切割，只抚平；不夺走，只唤醒。每一道刮拭都如月光拂过水面，将錾刻留下的锋芒化作绕指柔光。银屑如细雪簌簌落下，银面渐次苏醒，由哑转亮，由亮生辉，直至能照见匠人眉间的专注。这最后一道工序，是刚与柔的和解，也是银器对自己身世的最后回望——千锤百炼之后，只需一柄玛瑙刀的温柔，便足以照亮前世今生。'
+                }
+            ];
+
+            function loadImage(index) {
+                processImage.classList.remove('visible');
+                if (imagePlaceholder) {
+                    imagePlaceholder.style.display = 'flex';
+                }
+
+                var img = new Image();
+                img.onload = function() {
+                    processImage.src = steps[index].file;
+                    if (imagePlaceholder) {
+                        imagePlaceholder.style.display = 'none';
+                    }
+                    processImage.classList.add('visible');
+                };
+                img.onerror = function() {
+                    processImage.classList.remove('visible');
+                    if (imagePlaceholder) {
+                        imagePlaceholder.style.display = 'flex';
+                    }
+                };
+                img.src = steps[index].file;
+            }
+
+            function showDetail(index) {
+                if (isAnimating) return;
+                isAnimating = true;
+
+                currentIndex = index;
+
+                stepLabel.textContent = steps[index].name;
+                detailTitle.textContent = steps[index].name;
+                detailSubtitle.textContent = steps[index].subtitle || '';
+                detailDesc.innerHTML = steps[index].desc;
+                detailStepNum.textContent = '第' + chineseNums[index] + '步';
+
+                updateNavButtons();
+
+                tocView.classList.add('hidden');
+                detailView.classList.add('visible');
+
+                loadImage(index);
+
+                setTimeout(function() {
+                    isAnimating = false;
+                }, 500);
+            }
+
+            function showToc() {
+                if (isAnimating) return;
+                isAnimating = true;
+
+                detailView.classList.remove('visible');
+                tocView.classList.remove('hidden');
+
+                setTimeout(function() {
+                    isAnimating = false;
+                }, 450);
+            }
+
+            function updateNavButtons() {
+                if (currentIndex === 0) {
+                    prevBtn.classList.add('disabled');
+                } else {
+                    prevBtn.classList.remove('disabled');
+                }
+
+                if (currentIndex === steps.length - 1) {
+                    nextBtn.classList.add('disabled');
+                } else {
+                    nextBtn.classList.remove('disabled');
+                }
+            }
+
+            tocItems.forEach(function(item) {
+                item.addEventListener('click', function() {
+                    var index = parseInt(item.dataset.index);
+                    showDetail(index);
+                });
+            });
+
+            detailBack.addEventListener('click', function() {
+                showToc();
+            });
+
+            prevBtn.addEventListener('click', function() {
+                if (currentIndex > 0) {
+                    showDetail(currentIndex - 1);
+                }
+            });
+
+            nextBtn.addEventListener('click', function() {
+                if (currentIndex < steps.length - 1) {
+                    showDetail(currentIndex + 1);
+                }
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (fullscreenOverlay.classList.contains('visible')) {
+                    if (e.key === 'Escape') {
+                        e.preventDefault();
+                        closeFullscreen();
+                    } else if (e.key === 'ArrowLeft') {
+                        e.preventDefault();
+                        if (fullscreenIndex > 0) {
+                            openFullscreen(fullscreenIndex - 1);
+                        }
+                    } else if (e.key === 'ArrowRight') {
+                        e.preventDefault();
+                        if (fullscreenIndex < steps.length - 1) {
+                            openFullscreen(fullscreenIndex + 1);
+                        }
+                    }
+                    return;
+                }
+
+                if (detailView.classList.contains('visible')) {
+                    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        if (currentIndex < steps.length - 1) {
+                            showDetail(currentIndex + 1);
+                        }
+                    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        if (currentIndex > 0) {
+                            showDetail(currentIndex - 1);
+                        }
+                    } else if (e.key === 'Escape') {
+                        e.preventDefault();
+                        showToc();
+                    }
+                }
+            });
+
+            stepLabel.textContent = steps[0].name;
+            loadImage(0);
+
+            var fullscreenBtn = document.getElementById('fullscreenBtn');
+            var fullscreenOverlay = document.getElementById('fullscreenOverlay');
+            var fullscreenImage = document.getElementById('fullscreenImage');
+            var fullscreenClose = document.getElementById('fullscreenClose');
+            var fullscreenPrev = document.getElementById('fullscreenPrev');
+            var fullscreenNext = document.getElementById('fullscreenNext');
+            var fullscreenLabel = document.getElementById('fullscreenLabel');
+            var fullscreenIndex = 0;
+
+            function openFullscreen(index) {
+                fullscreenIndex = index;
+                fullscreenImage.classList.remove('visible');
+                fullscreenOverlay.classList.add('visible');
+                fullscreenLabel.textContent = steps[index].name;
+                updateFullscreenNav();
+
+                var img = new Image();
+                img.onload = function() {
+                    fullscreenImage.src = steps[fullscreenIndex].fullscreenFile;
+                    fullscreenImage.classList.add('visible');
+                };
+                img.onerror = function() {
+                    fullscreenImage.classList.remove('visible');
+                };
+                img.src = steps[fullscreenIndex].fullscreenFile;
+            }
+
+            function closeFullscreen() {
+                fullscreenOverlay.classList.remove('visible');
+                fullscreenImage.classList.remove('visible');
+                fullscreenImage.src = '';
+            }
+
+            function updateFullscreenNav() {
+                if (fullscreenIndex === 0) {
+                    fullscreenPrev.classList.add('disabled');
+                } else {
+                    fullscreenPrev.classList.remove('disabled');
+                }
+                if (fullscreenIndex === steps.length - 1) {
+                    fullscreenNext.classList.add('disabled');
+                } else {
+                    fullscreenNext.classList.remove('disabled');
+                }
+            }
+
+            fullscreenBtn.addEventListener('click', function() {
+                openFullscreen(currentIndex);
+            });
+
+            fullscreenClose.addEventListener('click', function() {
+                closeFullscreen();
+            });
+
+            fullscreenOverlay.addEventListener('click', function(e) {
+                if (e.target === fullscreenOverlay) {
+                    closeFullscreen();
+                }
+            });
+
+            fullscreenPrev.addEventListener('click', function() {
+                if (fullscreenIndex > 0) {
+                    openFullscreen(fullscreenIndex - 1);
+                }
+            });
+
+            fullscreenNext.addEventListener('click', function() {
+                if (fullscreenIndex < steps.length - 1) {
+                    openFullscreen(fullscreenIndex + 1);
+                }
+            });
+        })();
+    </script>
+</body>
+</html>

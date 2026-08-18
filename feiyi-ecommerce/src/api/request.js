@@ -17,9 +17,9 @@ const request = axios.create({
 // ===== 请求拦截器 =====
 request.interceptors.request.use(
   (config) => {
-    // TODO(后端对接): 如需登录鉴权，在此注入 Token
-    // const token = localStorage.getItem('token')
-    // if (token) config.headers.Authorization = `Bearer ${token}`
+    // 注入登录态：读取主平台共享的 token（与 MainPage.html 同源共享 localStorage）
+    const token = localStorage.getItem('token')
+    if (token) config.headers.Authorization = `Bearer ${token}`
     return config
   },
   (error) => Promise.reject(error)
