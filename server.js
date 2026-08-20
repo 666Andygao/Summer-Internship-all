@@ -4124,6 +4124,11 @@ if (fs.existsSync(shopDist)) {
     app.get('/shop/*', (req, res) => {
         res.sendFile(path.join(shopDist, 'index.html'));
     });
+} else {
+    // 构建产物（dist）不入库，需先在 feiyi-ecommerce 目录执行 npm run build
+    console.log('⚠️  商城未构建：找不到 feiyi-ecommerce/dist');
+    console.log('    请运行 build-shop.bat（或手动执行 cd feiyi-ecommerce && npm install && npm run build）后重启服务器');
+    console.log('    在此之前访问 /shop/ 会返回 404');
 }
 
 // ============ 启动服务器 ============
