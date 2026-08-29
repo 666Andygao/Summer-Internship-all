@@ -193,7 +193,51 @@ onMounted(() => loadDetail(route.params.id))
             </div>
           </el-tab-pane>
 
-          <!-- ③ 游客评价 -->
+          <!-- ③ 数字模型 / 工艺流程 -->
+          <el-tab-pane
+            v-if="goods.processImages?.length || goods.modelAssets?.length"
+            label="数字模型/工艺流程"
+            name="digital"
+          >
+            <div class="digital-section">
+              <div class="digital-intro">
+                <h3>{{ goods.name }} · 数字化采集成果</h3>
+                <p>
+                  本页接入团队补充的模型贴图与工艺过程图，将器物从原料、手作到成品的关键步骤可视化，
+                  既服务商品展示，也用于非遗数字化保护档案建设。
+                </p>
+              </div>
+
+              <div v-if="goods.modelAssets?.length" class="model-assets">
+                <div class="sub-title">三维模型贴图预览</div>
+                <div class="model-grid">
+                  <article v-for="asset in goods.modelAssets" :key="asset.image" class="model-card">
+                    <img :src="asset.image" :alt="asset.title" loading="lazy" />
+                    <div class="model-info">
+                      <h4>{{ asset.title }}</h4>
+                      <p>{{ asset.desc }}</p>
+                    </div>
+                  </article>
+                </div>
+              </div>
+
+              <div v-if="goods.processImages?.length" class="process-flow">
+                <div class="sub-title">传统工艺流程</div>
+                <div class="process-grid">
+                  <article v-for="(step, index) in goods.processImages" :key="step.image" class="process-card">
+                    <div class="process-image">
+                      <img :src="step.image" :alt="step.title" loading="lazy" />
+                      <span class="step-index">{{ String(index + 1).padStart(2, '0') }}</span>
+                    </div>
+                    <h4>{{ step.title }}</h4>
+                    <p>{{ step.desc }}</p>
+                  </article>
+                </div>
+              </div>
+            </div>
+          </el-tab-pane>
+
+          <!-- ④ 游客评价 -->
           <el-tab-pane name="reviews">
             <template #label>
               游客评价<span class="tab-count">（{{ reviews.length }}）</span>
@@ -250,6 +294,10 @@ onMounted(() => loadDetail(route.params.id))
   border-radius: var(--radius-md);
   padding: 28px;
 }
+.gallery,
+.info {
+  min-width: 0;
+}
 .main-image {
   position: relative;
   aspect-ratio: 1 / 1;
@@ -276,8 +324,11 @@ onMounted(() => loadDetail(route.params.id))
   display: flex;
   gap: 10px;
   margin-top: 12px;
+  overflow-x: auto;
+  padding-bottom: 4px;
 }
 .thumb {
+  flex: 0 0 72px;
   width: 72px;
   height: 72px;
   border: 2px solid var(--color-border);
@@ -470,6 +521,104 @@ onMounted(() => loadDetail(route.params.id))
   line-height: 2;
   font-size: 15px;
 }
+/* 数字模型 / 工艺流程 */
+.digital-section {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.digital-intro {
+  padding: 18px 20px;
+  background: linear-gradient(135deg, rgba(31, 78, 74, 0.08), rgba(156, 90, 52, 0.08));
+  border-left: 3px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+}
+.digital-intro h3 {
+  font-size: 19px;
+  margin-bottom: 8px;
+}
+.digital-intro p {
+  color: var(--color-text-light);
+  line-height: 1.9;
+  font-size: 14px;
+}
+.sub-title {
+  margin-bottom: 14px;
+  font-family: var(--font-title);
+  font-size: 18px;
+  color: var(--color-text);
+}
+.model-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+}
+.model-card {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 18px;
+  align-items: center;
+  padding: 16px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+.model-card img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+}
+.model-info h4,
+.process-card h4 {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+.model-info p,
+.process-card p {
+  color: var(--color-text-light);
+  line-height: 1.8;
+  font-size: 13px;
+}
+.process-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+.process-card {
+  padding: 12px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+.process-image {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  margin-bottom: 10px;
+}
+.process-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s;
+}
+.process-card:hover .process-image img {
+  transform: scale(1.04);
+}
+.step-index {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  padding: 2px 8px;
+  color: #fff;
+  background: rgba(31, 78, 74, 0.86);
+  border-radius: 999px;
+  font-size: 12px;
+  letter-spacing: 1px;
+}
 /* 评价 */
 .reviews-summary {
   display: flex;
@@ -529,6 +678,8 @@ onMounted(() => loadDetail(route.params.id))
     gap: 24px;
     padding: 20px;
   }
+  .model-grid,
+  .process-grid,
   .related-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -547,7 +698,12 @@ onMounted(() => loadDetail(route.params.id))
     width: 100%;
     margin-left: 0;
   }
-  .archive-facts {
+  .archive-facts,
+  .model-grid,
+  .process-grid {
+    grid-template-columns: 1fr;
+  }
+  .model-card {
     grid-template-columns: 1fr;
   }
   .related-grid {

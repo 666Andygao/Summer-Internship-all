@@ -19,7 +19,7 @@
 | 样式 | CSS3 + 响应式设计（同时适配 PC 端与手机移动端） |
 
 > **数据策略**：全部商品、分类、评价数据均为**前端模拟假数据**，脱离后端服务页面也可完整运行展示。
-> 图片使用纯前端生成的 SVG 占位图，无需任何图片资源、无需联网即可显示。
+> 图片已接入 `public/images/goods/` 下的真实模型贴图与工艺过程图；无匹配素材的商品继续使用纯前端生成的 SVG 占位图兜底，无需联网即可显示。
 
 ---
 
@@ -43,7 +43,8 @@ feiyi-ecommerce/
 ├── vite.config.js             # Vite 配置（含 @ 别名、后端代理模板）
 ├── README.md                  # 本文档
 ├── public/
-│   └── favicon.svg            # 站点图标
+│   ├── favicon.svg            # 站点图标
+│   └── images/goods/          # 商品真实模型贴图 / 工艺过程静态图
 └── src/
     ├── main.js                # 应用入口（注册 Vue/Router/Pinia/Element Plus）
     ├── App.vue                # 根组件（Header + 路由视图 + Footer）
@@ -121,6 +122,7 @@ npm run preview
 
 - 所有网络请求已在 `src/api/goods.js` 中封装，**每个函数都标注了「对应后端业务点」**（如 `GET /api/goods`）。
 - 对接时：取消函数内 `request.xxx(...)` 的注释，注释掉 / 删除下方的 mock 假数据返回即可，字段结构保持一致。
+- 当前前端商品字段已包含 `cover`、`gallery`、`processImages`、`modelAssets`，后端上线后可直接返回同名图片 URL 字段替换静态资源路径。
 - 统一约定后端返回结构：`{ code, message, data }`，`code === 0 或 200` 视为成功（见 `src/api/request.js` 响应拦截器）。
 - 跨域代理已在 `vite.config.js` 的 `server.proxy` 中预留（`/api` → `http://localhost:8080`），联调时修改 `target` 即可。
 - 登录鉴权 Token 注入位置已在请求拦截器中以 `TODO` 注释标出。
@@ -132,5 +134,5 @@ npm run preview
 
 - **配色**：主色深青 `#1f4e4a`、辅色赭石 `#9c5a34`、背景米白 `#f6f2ea`，价格点缀朱砂红 `#a5372f`，见 `src/styles/variables.css`。
 - **字体**：标题用厚重宋体系，正文用清晰黑体系，契合非遗官方网站庄重气质。
-- **纹样**：页面背景、Banner、占位图均以纯 CSS / SVG 生成少数民族简约织纹，无需图片资源。
+- **纹样与图片**：页面背景、Banner、占位图以纯 CSS / SVG 生成少数民族简约织纹；重点商品已接入模型贴图与工艺流程静态图，增强数字化展示效果。
 - **响应式**：PC 端多栏布局，移动端自动切换为单列 / 抽屉导航 / 卡片化列表。

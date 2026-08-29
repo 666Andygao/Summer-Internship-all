@@ -268,12 +268,114 @@ const rawGoods = [
   }
 ]
 
-// 统一补全图片字段：封面图 + 详情图集
-export const goodsList = rawGoods.map((g) => ({
-  ...g,
-  cover: placeholderImage(g.name, g.id), // 卡片封面图
-  gallery: makeGallery(g.name, g.id)     // 详情页轮播图集
-}))
+// public 下的资源会部署到 Vite BASE_URL（主站环境为 /shop/）
+const GOODS_IMAGE_BASE = `${import.meta.env.BASE_URL}images/goods`
+function asset(path) {
+  return `${GOODS_IMAGE_BASE}/${path}`
+}
+
+const silverProcessImages = [
+  { title: '熔炼', image: asset('model-1-silver/process/melting.png'), desc: '以火炼银，为银饰锻制准备纯净银料。' },
+  { title: '拉丝与搓丝', image: asset('model-1-silver/process/wire-drawing.png'), desc: '将银料拉制成细丝，再搓出纹样骨架。' },
+  { title: '焊接', image: asset('model-1-silver/process/welding.png'), desc: '连接银片与银丝，形成器物基本结构。' },
+  { title: '锤揲', image: asset('model-1-silver/process/hammering.png'), desc: '反复敲击塑形，使银面呈现立体起伏。' },
+  { title: '錾花', image: asset('model-1-silver/process/chasing.png'), desc: '以錾刻工具刻画纹样，是银饰最具辨识度的工序。' },
+  { title: '酸洗', image: asset('model-1-silver/process/pickling.png'), desc: '清理焊接与锻制痕迹，让银面恢复洁净。' },
+  { title: '抛光', image: asset('model-1-silver/process/polishing.png'), desc: '最后打磨抛光，使银饰呈现温润光泽。' }
+]
+
+const ceramicProcessImages = [
+  { title: '采生泥', image: asset('model-2-ceramic/process/clay-collecting.png'), desc: '采集适合制陶的天然泥料。' },
+  { title: '泥浆制作', image: asset('model-2-ceramic/process/slip-making.png'), desc: '淘洗、沉淀与调和泥浆，保证泥性稳定。' },
+  { title: '拉坯', image: asset('model-2-ceramic/process/throwing.png'), desc: '在转盘上拉出器型，奠定陶罐轮廓。' },
+  { title: '修坯', image: asset('model-2-ceramic/process/trimming.png'), desc: '修整坯体厚薄与口沿底足。' },
+  { title: '花纹制作', image: asset('model-2-ceramic/process/pattern-making.png'), desc: '在半干坯体上制作纹样装饰。' },
+  { title: '晾晒', image: asset('model-2-ceramic/process/drying.png'), desc: '自然阴干，减少入窑开裂风险。' },
+  { title: '上釉', image: asset('model-2-ceramic/process/glazing.png'), desc: '施釉形成色泽与保护层。' },
+  { title: '入窑', image: asset('model-2-ceramic/process/kiln-loading.png'), desc: '将坯体装入窑中等待烧制。' },
+  { title: '出窑', image: asset('model-2-ceramic/process/kiln-unloading.png'), desc: '开窑取器，完成从泥到器的转化。' }
+]
+
+const textileProcessImages = [
+  { title: '采火草', image: asset('model-5-textile/process/firegrass-collecting.png'), desc: '采集纤维原料，为织造备料。' },
+  { title: '剥麻', image: asset('model-5-textile/process/fiber-peeling.png'), desc: '剥离植物韧皮纤维。' },
+  { title: '煮麻', image: asset('model-5-textile/process/fiber-boiling.png'), desc: '煮制软化纤维，去除杂质。' },
+  { title: '撕绒捻线', image: asset('model-5-textile/process/spinning.png'), desc: '分纤成绒，再手工捻成织线。' },
+  { title: '排线上机', image: asset('model-5-textile/process/loom-warping.png'), desc: '排布经线并上机，为织造定序。' },
+  { title: '纺织', image: asset('model-5-textile/process/weaving.png'), desc: '经纬交织，形成土布纹理。' },
+  { title: '成布', image: asset('model-5-textile/process/finished-cloth.png'), desc: '织成布料后整理收边，保留手作质感。' }
+]
+
+const crownModel = asset('model-1-silver/model/crown-basecolor.jpg')
+const braceletModel = asset('model-1-silver/model/bracelet-basecolor.jpg')
+const necklaceModel = asset('model-1-silver/model/necklace-basecolor.jpg')
+const vaseModel = asset('model-2-ceramic/model/vase-basecolor.jpg')
+const fabricRollModel = asset('model-5-textile/model/fabric-roll-basecolor.jpg')
+const dressModel = asset('model-5-textile/model/traditional-dress-basecolor.jpg')
+
+// 与现有商品强相关的真实模型图映射；未命中的商品继续使用 SVG 占位图兜底
+const goodsImageMap = {
+  1: {
+    cover: crownModel,
+    gallery: [crownModel, ...silverProcessImages.slice(0, 5).map((item) => item.image)],
+    processImages: silverProcessImages,
+    modelAssets: [
+      { title: '银冠数字模型贴图', image: crownModel, desc: '用于展示银冠三维模型表面纹样与金属质感。' }
+    ]
+  },
+  7: {
+    cover: fabricRollModel,
+    gallery: [fabricRollModel, ...textileProcessImages.slice(0, 5).map((item) => item.image)],
+    processImages: textileProcessImages,
+    modelAssets: [
+      { title: '织物卷数字模型贴图', image: fabricRollModel, desc: '用于展示织物肌理、经纬组织与布面质感。' }
+    ]
+  },
+  10: {
+    cover: vaseModel,
+    gallery: [vaseModel, ...ceramicProcessImages.slice(0, 5).map((item) => item.image)],
+    processImages: ceramicProcessImages,
+    modelAssets: [
+      { title: '陶器数字模型贴图', image: vaseModel, desc: '用于展示陶器器型、釉色与表面纹理。' }
+    ]
+  },
+  11: {
+    cover: necklaceModel,
+    gallery: [necklaceModel, ...silverProcessImages.slice(1, 6).map((item) => item.image)],
+    processImages: silverProcessImages,
+    modelAssets: [
+      { title: '银项圈数字模型贴图', image: necklaceModel, desc: '用于展示项圈三维模型的银质纹理。' }
+    ]
+  },
+  13: {
+    cover: dressModel,
+    gallery: [dressModel, ...textileProcessImages.slice(2, 7).map((item) => item.image)],
+    processImages: textileProcessImages,
+    modelAssets: [
+      { title: '传统服饰数字模型贴图', image: dressModel, desc: '用于展示服饰类模型的织物纹样与整体廓形。' }
+    ]
+  },
+  16: {
+    cover: braceletModel,
+    gallery: [braceletModel, ...silverProcessImages.slice(2, 7).map((item) => item.image)],
+    processImages: silverProcessImages,
+    modelAssets: [
+      { title: '银手镯数字模型贴图', image: braceletModel, desc: '用于展示手镯三维模型的錾刻纹样。' }
+    ]
+  }
+}
+
+// 统一补全图片字段：真实静态素材优先，未匹配商品使用占位图兜底
+export const goodsList = rawGoods.map((g) => {
+  const images = goodsImageMap[g.id]
+  return {
+    ...g,
+    cover: images?.cover || placeholderImage(g.name, g.id), // 卡片封面图
+    gallery: images?.gallery || makeGallery(g.name, g.id),  // 详情页轮播图集
+    processImages: images?.processImages || [],             // 工艺流程图（后端可返回同名字段）
+    modelAssets: images?.modelAssets || []                  // 数字模型/贴图预览（后端可返回同名字段）
+  }
+})
 
 // 根据 id 查找单个商品（供详情页使用）
 export function findGoodsById(id) {
