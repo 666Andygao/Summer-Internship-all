@@ -8,8 +8,8 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f5f2ef;
+            font-family: var(--font-kai), var(--font-song), serif;
+            background: #f6f0e4;
             color: #1a1a1a;
             min-height: 100vh;
         }
@@ -17,7 +17,7 @@
         /* 顶部导航 */
         .top-nav {
             background: white;
-            border-bottom: 1px solid #e0d8d1;
+            border-bottom: 1px solid #e6dcc8;
             padding: 12px 32px;
             display: flex;
             align-items: center;
@@ -34,7 +34,7 @@
             gap: 10px;
             font-size: 18px;
             font-weight: 600;
-            color: #c0392b;
+            color: #a5372f;
         }
 
         .nav-user {
@@ -45,7 +45,7 @@
 
         .nav-user .user-badge {
             background: #f0e3dd;
-            color: #c0392b;
+            color: #a5372f;
             padding: 6px 14px;
             border-radius: 20px;
             font-size: 13px;
@@ -55,7 +55,7 @@
         .logout-btn {
             padding: 8px 18px;
             background: transparent;
-            border: 1px solid #ddd;
+            border: 1px solid #d8cdb8;
             border-radius: 20px;
             cursor: pointer;
             font-size: 13px;
@@ -65,8 +65,8 @@
 
         .logout-btn:hover {
             background: #fef2f2;
-            border-color: #c0392b;
-            color: #c0392b;
+            border-color: #a5372f;
+            color: #a5372f;
         }
 
         /* 主体布局 */
@@ -79,7 +79,7 @@
         .sidebar {
             width: 340px;
             background: white;
-            border-right: 1px solid #e0d8d1;
+            border-right: 1px solid #e6dcc8;
             display: flex;
             flex-direction: column;
             flex-shrink: 0;
@@ -87,7 +87,7 @@
 
         .sidebar-header {
             padding: 20px 20px 14px;
-            border-bottom: 1px solid #f0ebe7;
+            border-bottom: 1px solid #f1e8d8;
         }
 
         .sidebar-header h2 {
@@ -100,16 +100,16 @@
         .search-box {
             width: 100%;
             padding: 10px 14px;
-            border: 2px solid #e0d8d1;
+            border: 2px solid #e6dcc8;
             border-radius: 10px;
             font-size: 14px;
             outline: none;
             transition: border-color 0.2s;
-            background: #faf8f6;
+            background: #fffdf7;
         }
 
         .search-box:focus {
-            border-color: #c0392b;
+            border-color: #a5372f;
         }
 
         .contact-list {
@@ -130,7 +130,7 @@
         }
 
         .contact-item:hover {
-            background: #faf8f6;
+            background: #fffdf7;
         }
 
         .contact-item.active {
@@ -142,7 +142,7 @@
             width: 44px;
             height: 44px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #4a69bd, #2d3436);
+            background: linear-gradient(135deg, #2f4f4f, #243f3f);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -169,7 +169,7 @@
         }
 
         .contact-badge {
-            background: #c0392b;
+            background: #a5372f;
             color: white;
             font-size: 11px;
             padding: 2px 8px;
@@ -194,8 +194,8 @@
         }
 
         .delete-conv-btn:hover {
-            background: #fee2e2;
-            color: #ef4444;
+            background: #f2e3df;
+            color: #a5372f;
         }
 
         /* 右侧聊天区域 */
@@ -203,7 +203,7 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            background: #faf8f6;
+            background: #fffdf7;
         }
 
         .chat-empty {
@@ -228,7 +228,7 @@
         .chat-header {
             padding: 16px 24px;
             background: white;
-            border-bottom: 1px solid #e0d8d1;
+            border-bottom: 1px solid #e6dcc8;
             display: none;
         }
 
@@ -268,7 +268,7 @@
 
         .msg-mine {
             align-self: flex-end;
-            background: linear-gradient(135deg, #c0392b, #a83226);
+            background: linear-gradient(135deg, #a5372f, #8f2f28);
             color: white;
             border-bottom-right-radius: 4px;
         }
@@ -315,7 +315,7 @@
         .chat-input-area {
             padding: 16px 24px;
             background: white;
-            border-top: 1px solid #e0d8d1;
+            border-top: 1px solid #e6dcc8;
             display: none;
             gap: 10px;
             align-items: flex-end;
@@ -326,27 +326,27 @@
         .chat-input-area textarea {
             flex: 1;
             padding: 12px 16px;
-            border: 2px solid #e0d8d1;
+            border: 2px solid #e6dcc8;
             border-radius: 14px;
             font-size: 14px;
             resize: none;
             outline: none;
-            font-family: inherit;
+            font-family: var(--font-kai), var(--font-song), serif;
             max-height: 100px;
-            background: #faf8f6;
+            background: #fffdf7;
             transition: border-color 0.2s;
         }
 
         .chat-input-area textarea:focus {
-            border-color: #c0392b;
+            border-color: #a5372f;
         }
 
         .file-upload-btn {
             width: 42px;
             height: 42px;
             border-radius: 50%;
-            background: #f5f2ef;
-            border: 1px solid #e0d8d1;
+            background: #f6f0e4;
+            border: 1px solid #e6dcc8;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -359,8 +359,8 @@
         }
 
         .file-upload-btn:hover {
-            background: #ede7e1;
-            border-color: #c0392b;
+            background: #f1e8d8;
+            border-color: #a5372f;
         }
 
         .file-upload-btn input[type="file"] {
@@ -375,7 +375,7 @@
             width: 42px;
             height: 42px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #c0392b, #a83226);
+            background: linear-gradient(135deg, #a5372f, #8f2f28);
             border: none;
             cursor: pointer;
             display: flex;
@@ -409,8 +409,8 @@
             flex: 1;
             padding: 7px 10px;
             border-radius: 8px;
-            border: 1px solid #e0d8d1;
-            background: #faf8f6;
+            border: 1px solid #e6dcc8;
+            background: #fffdf7;
             cursor: pointer;
             font-size: 12px;
             color: #666;
@@ -419,9 +419,9 @@
         }
 
         .tab-btn.active {
-            background: #c0392b;
+            background: #a5372f;
             color: white;
-            border-color: #c0392b;
+            border-color: #a5372f;
         }
 
         .request-item {
@@ -429,7 +429,7 @@
             align-items: center;
             gap: 10px;
             padding: 12px 14px;
-            border-bottom: 1px solid #f0ebe7;
+            border-bottom: 1px solid #f1e8d8;
         }
 
         .request-info {
@@ -454,7 +454,7 @@
 
         .accept-btn {
             padding: 6px 14px;
-            background: #27ae60;
+            background: #3a6b5f;
             color: white;
             border: none;
             border-radius: 6px;
@@ -464,7 +464,7 @@
 
         .reject-btn {
             padding: 6px 14px;
-            background: #e0d8d1;
+            background: #e6dcc8;
             color: #666;
             border: none;
             border-radius: 6px;
@@ -507,6 +507,7 @@
             cursor: pointer;
         }
     </style>
+  <link rel="stylesheet" href="theme/gufeng.css">
 </head>
 <body>
     <nav class="top-nav">
@@ -531,10 +532,10 @@
                 <input type="text" class="search-box" id="searchBox" placeholder="🔍 搜索好友..." oninput="renderFriends()">
             </div>
             <!-- 添加好友面板 -->
-            <div class="add-friend-panel" id="addFriendPanel" style="display:none; padding:12px 20px; border-bottom:1px solid #f0ebe7;">
+            <div class="add-friend-panel" id="addFriendPanel" style="display:none; padding:12px 20px; border-bottom:1px solid #f1e8d8;">
                 <div style="display:flex; gap:8px;">
-                    <input type="text" id="friendUsername" placeholder="输入对方用户名..." style="flex:1; padding:9px 12px; border:2px solid #e0d8d1; border-radius:8px; font-size:13px; outline:none;">
-                    <button onclick="sendFriendRequest()" style="padding:9px 16px; background:linear-gradient(135deg,#c0392b,#a83226); color:white; border:none; border-radius:8px; cursor:pointer; font-size:13px; white-space:nowrap;">➕ 添加</button>
+                    <input type="text" id="friendUsername" placeholder="输入对方用户名..." style="flex:1; padding:9px 12px; border:2px solid #e6dcc8; border-radius:8px; font-size:13px; outline:none;">
+                    <button onclick="sendFriendRequest()" style="padding:9px 16px; background:linear-gradient(135deg,#a5372f,#8f2f28); color:white; border:none; border-radius:8px; cursor:pointer; font-size:13px; white-space:nowrap;">➕ 添加</button>
                 </div>
                 <div id="addFriendMsg" style="margin-top:8px; font-size:12px;"></div>
             </div>
@@ -645,7 +646,7 @@
             const count = friendRequests.length;
             btn.textContent = count > 0 ? '好友请求(' + count + ')' : '好友请求';
             if (count > 0) {
-                btn.style.color = '#c0392b';
+                btn.style.color = '#a5372f';
                 btn.style.fontWeight = '600';
             } else {
                 btn.style.color = '';
@@ -683,7 +684,7 @@
         async function sendFriendRequest() {
             const username = document.getElementById('friendUsername').value.trim();
             const msg = document.getElementById('addFriendMsg');
-            if (!username) { msg.innerHTML = '<span style="color:#e74c3c;">请输入用户名</span>'; return; }
+            if (!username) { msg.innerHTML = '<span style="color:#a5372f;">请输入用户名</span>'; return; }
 
             // 先查找用户
             try {
@@ -691,15 +692,15 @@
                 const user = await findRes.json();
                 if (findRes.ok) {
                     if (user.is_friend) {
-                        msg.innerHTML = '<span style="color:#27ae60;">✅ 已经是好友了</span>';
+                        msg.innerHTML = '<span style="color:#3a6b5f;">✅ 已经是好友了</span>';
                         return;
                     }
                     if (user.request_status === 'sent') {
-                        msg.innerHTML = '<span style="color:#f39c12;">⏳ 已发送过请求，请等待对方处理</span>';
+                        msg.innerHTML = '<span style="color:#b5853f;">⏳ 已发送过请求，请等待对方处理</span>';
                         return;
                     }
                     if (user.request_status === 'received') {
-                        msg.innerHTML = '<span style="color:#27ae60;">📩 对方已向你发送好友请求，请在"好友请求"中接受</span>';
+                        msg.innerHTML = '<span style="color:#3a6b5f;">📩 对方已向你发送好友请求，请在"好友请求"中接受</span>';
                         return;
                     }
 
@@ -710,16 +711,16 @@
                     });
                     const result = await reqRes.json();
                     if (reqRes.ok) {
-                        msg.innerHTML = '<span style="color:#27ae60;">✅ ' + result.message + '</span>';
+                        msg.innerHTML = '<span style="color:#3a6b5f;">✅ ' + result.message + '</span>';
                         document.getElementById('friendUsername').value = '';
                     } else {
-                        msg.innerHTML = '<span style="color:#e74c3c;">' + result.error + '</span>';
+                        msg.innerHTML = '<span style="color:#a5372f;">' + result.error + '</span>';
                     }
                 } else {
-                    msg.innerHTML = '<span style="color:#e74c3c;">未找到用户: ' + user.error + '</span>';
+                    msg.innerHTML = '<span style="color:#a5372f;">未找到用户: ' + user.error + '</span>';
                 }
             } catch (e) {
-                msg.innerHTML = '<span style="color:#e74c3c;">网络错误</span>';
+                msg.innerHTML = '<span style="color:#a5372f;">网络错误</span>';
             }
         }
 
@@ -773,7 +774,7 @@
                 if (!user) return '';
                 return `
                 <div class="request-item">
-                    <div class="contact-avatar" style="width:36px;height:36px;font-size:14px;background:linear-gradient(135deg,#2d3436,#4a69bd)">
+                    <div class="contact-avatar" style="width:36px;height:36px;font-size:14px;background:linear-gradient(135deg,#243f3f,#2f4f4f)">
                         ${user.display_name[0] || '?'}
                     </div>
                     <div class="request-info">
@@ -808,8 +809,8 @@
                 const name = friend.display_name || friend.username;
                 const roleBadge = (friend.role === 'developer' || friend.role === 'artisan') ? '开发者' : '用户';
                 const avatarBg = (friend.role === 'developer' || friend.role === 'artisan')
-                    ? 'linear-gradient(135deg, #2d3436, #4a69bd)'
-                    : 'linear-gradient(135deg, #c0392b, #e74c3c)';
+                    ? 'linear-gradient(135deg, #243f3f, #2f4f4f)'
+                    : 'linear-gradient(135deg, #a5372f, #a5372f)';
 
                 return `
                 <div class="contact-item ${activeConversation?.target_id === friend.id ? 'active' : ''}"

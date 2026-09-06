@@ -20,8 +20,8 @@
         }
 
         body {
-            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif;
-            background: linear-gradient(160deg, #fef2f2 0%, #fee2e2 30%, #fecaca 70%, #fca5a5 100%);
+            font-family: var(--font-kai), var(--font-song), serif;
+            background: linear-gradient(160deg, #fef2f2 0%, #f2e3df 30%, #ecd2cb 70%, #d0a49b 100%);
             min-height: 100vh;
             overflow: hidden;
             position: relative;
@@ -63,7 +63,7 @@
             align-items: center;
             justify-content: space-between;
             padding: 16px 32px;
-            background: rgba(255, 255, 255, 0.92);
+            background: rgba(255, 253, 247, 0.92);
             backdrop-filter: blur(14px);
             border-bottom: 2px solid rgba(239, 68, 68, 0.15);
             box-shadow: 0 4px 20px rgba(239, 68, 68, 0.1);
@@ -74,7 +74,7 @@
             align-items: center;
             gap: 8px;
             padding: 10px 24px;
-            background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+            background: linear-gradient(135deg, #b06052 0%, #a5372f 100%);
             color: #fff;
             text-decoration: none;
             border-radius: 10px;
@@ -92,7 +92,7 @@
 
         .title-text {
             font-size: 1.3em;
-            color: #dc2626;
+            color: #a5372f;
             font-weight: 700;
             letter-spacing: 1px;
         }
@@ -111,12 +111,12 @@
             width: 50px;
             height: 50px;
             border: none;
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 253, 247, 0.95);
             border-radius: 50%;
             cursor: pointer;
             font-size: 22px;
             font-weight: bold;
-            color: #dc2626;
+            color: #a5372f;
             box-shadow: 0 4px 16px rgba(239, 68, 68, 0.25);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
@@ -135,11 +135,11 @@
             bottom: 40px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(255, 255, 255, 0.92);
+            background: rgba(255, 253, 247, 0.92);
             padding: 12px 36px;
             border-radius: 28px;
             font-size: 0.95em;
-            color: #dc2626;
+            color: #a5372f;
             font-weight: 600;
             backdrop-filter: blur(10px);
             border: 2px solid rgba(239, 68, 68, 0.2);
@@ -158,7 +158,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            background: rgba(255, 255, 255, 0.98);
+            background: rgba(255, 253, 247, 0.98);
             z-index: 200;
             transition: opacity 0.6s ease;
         }
@@ -172,7 +172,7 @@
             width: 60px;
             height: 60px;
             border: 5px solid rgba(239, 68, 68, 0.15);
-            border-top-color: #dc2626;
+            border-top-color: #a5372f;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
@@ -183,11 +183,12 @@
 
         .loading-text {
             margin-top: 20px;
-            color: #dc2626;
+            color: #a5372f;
             font-size: 1.05em;
             font-weight: 600;
         }
     </style>
+  <link rel="stylesheet" href="theme/gufeng.css">
 </head>
 <body>
     <div class="top-bar">

@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>火草纺织工艺 - 3D模型展示</title>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-kai), var(--font-song), serif;
+            background: linear-gradient(160deg, #f7efed 0%, #ecd8d3 30%, #c98a80 70%, #b06052 100%);
+            min-height: 100vh;
+            color: #3a3226;
+            overflow: hidden;
+        }
+
+        .top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 24px;
+            background: rgba(255, 253, 247, 0.92);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid rgba(225, 29, 72, 0.15);
+            box-shadow: 0 4px 20px rgba(225, 29, 72, 0.08);
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .nav-back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 18px;
+            background: linear-gradient(135deg, #b06052 0%, #a5372f 100%);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.88em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 12px rgba(225, 29, 72, 0.25);
+            letter-spacing: 0.5px;
+        }
+
+        .nav-back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(225, 29, 72, 0.4);
+        }
+
+        .nav-center {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 22px;
+            background: transparent;
+            color: #8f2f28;
+            text-decoration: none;
+            border-radius: 10px;
+            font-size: 0.92em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(225, 29, 72, 0.2);
+            letter-spacing: 0.5px;
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(135deg, #b06052 0%, #a5372f 100%);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 4px 14px rgba(225, 29, 72, 0.35);
+        }
+
+        .nav-tab:not(.active):hover {
+            background: rgba(225, 29, 72, 0.08);
+            border-color: rgba(225, 29, 72, 0.35);
+            transform: translateY(-1px);
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .fullscreen-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: linear-gradient(135deg, #ecd8d3 0%, #c98a80 100%);
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.2em;
+            color: #8f2f28;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(225, 29, 72, 0.15);
+        }
+
+        .fullscreen-btn:hover {
+            transform: scale(1.08);
+            background: linear-gradient(135deg, #c98a80 0%, #b06052 100%);
+            box-shadow: 0 4px 14px rgba(225, 29, 72, 0.3);
+        }
+
+        header {
+            text-align: center;
+            padding: 24px 20px 20px;
+            background: rgba(255, 253, 247, 0.75);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(225, 29, 72, 0.12);
+            box-shadow: 0 2px 16px rgba(225, 29, 72, 0.06);
+            margin-top: 65px;
+        }
+
+        header h1 {
+            font-size: 1.6em;
+            font-weight: 700;
+            color: #a5372f;
+            letter-spacing: 1px;
+        }
+
+        header p {
+            color: #9a3a4a;
+            font-size: 0.85em;
+            margin-top: 4px;
+        }
+
+        .main-container {
+            display: flex;
+            height: calc(100vh - 145px);
+            margin-top: 0;
+            gap: 0;
+        }
+
+        .model-display-section {
+            flex: 6;
+            position: relative;
+            background: linear-gradient(135deg, rgba(251, 113, 133, 0.15) 0%, rgba(244, 63, 94, 0.08) 50%, rgba(225, 29, 72, 0.12) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .model-3d-wrapper {
+            width: 90%;
+            height: 90%;
+            background: rgba(255, 253, 247, 0.9);
+            border-radius: 20px;
+            box-shadow: 0 8px 40px rgba(225, 29, 72, 0.2), 0 2px 8px rgba(0, 0, 0, 0.04);
+            border: 2px solid rgba(225, 29, 72, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .model-3d-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .model-switcher-container {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: rgba(255, 253, 247, 0.95);
+            padding: 10px 24px;
+            border-radius: 25px;
+            box-shadow: 0 4px 20px rgba(225, 29, 72, 0.2);
+            z-index: 15;
+            border: 2px solid rgba(225, 29, 72, 0.15);
+        }
+
+        .switch-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: linear-gradient(135deg, #b06052 0%, #a5372f 100%);
+            color: white;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(225, 29, 72, 0.3);
+        }
+
+        .switch-btn:hover {
+            transform: scale(1.15);
+            box-shadow: 0 4px 14px rgba(225, 29, 72, 0.45);
+        }
+
+        .switch-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .model-indicator-dots {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .indicator-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(225, 29, 72, 0.25);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .indicator-dot.active {
+            background: linear-gradient(135deg, #b06052 0%, #a5372f 100%);
+            transform: scale(1.2);
+            box-shadow: 0 2px 8px rgba(225, 29, 72, 0.4);
+            border-color: rgba(254, 205, 211, 0.6);
+        }
+
+        .indicator-dot:hover:not(.active) {
+            background: rgba(225, 29, 72, 0.45);
+            transform: scale(1.1);
+        }
+
+        .current-model-label {
+            font-size: 0.88em;
+            color: #8f2f28;
+            font-weight: 600;
+            min-width: 110px;
+            text-align: center;
+            letter-spacing: 0.5px;
+        }
+
+        .model-loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 253, 247, 0.95);
+            z-index: 10;
+            transition: opacity 0.5s ease;
+        }
+
+        .model-loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid rgba(225, 29, 72, 0.15);
+            border-top-color: #a5372f;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            margin-top: 16px;
+            color: #a5372f;
+            font-size: 0.95em;
+            font-weight: 500;
+        }
+
+        .model-switch-hint {
+            position: absolute;
+            bottom: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, rgba(251, 113, 133, 0.95) 0%, rgba(225, 29, 72, 0.9) 100%);
+            padding: 10px 28px;
+            border-radius: 22px;
+            font-size: 0.88em;
+            color: white;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 16px rgba(225, 29, 72, 0.35);
+            z-index: 12;
+            animation: pulse-hint 2s infinite;
+            white-space: nowrap;
+            letter-spacing: 0.5px;
+        }
+
+        @keyframes pulse-hint {
+            0%, 100% { 
+                opacity: 1; 
+                transform: translateX(-50%) translateY(0); 
+            }
+            50% { 
+                opacity: 0.85; 
+                transform: translateX(-50%) translateY(-3px); 
+            }
+        }
+
+        .model-controls-hint {
+            position: absolute;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(225, 29, 72, 0.08);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.82em;
+            color: #a5372f;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(225, 29, 72, 0.15);
+            white-space: nowrap;
+        }
+
+        .zoom-controls {
+            position: absolute;
+            bottom: 60px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 5;
+        }
+
+        .zoom-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: rgba(255, 253, 247, 0.9);
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            color: #a5372f;
+            box-shadow: 0 2px 8px rgba(225, 29, 72, 0.2);
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .zoom-btn:hover {
+            transform: scale(1.1);
+            background: #fff;
+            box-shadow: 0 4px 12px rgba(225, 29, 72, 0.35);
+        }
+
+        .info-section {
+            flex: 4;
+            background: rgba(255, 253, 247, 0.75);
+            backdrop-filter: blur(12px);
+            border-left: 1px solid rgba(225, 29, 72, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .info-header {
+            padding: 28px 32px 20px;
+            border-bottom: 1px solid rgba(225, 29, 72, 0.1);
+            background: rgba(255, 253, 247, 0.5);
+        }
+
+        .info-header h2 {
+            font-size: 1.5em;
+            color: #8f2f28;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .info-header .subtitle {
+            font-size: 0.92em;
+            color: #9a3a4a;
+            font-weight: 500;
+        }
+
+        .info-content-scrollable {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 28px 32px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(225, 29, 72, 0.3) transparent;
+        }
+
+        .info-content-scrollable::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .info-content-scrollable::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .info-content-scrollable::-webkit-scrollbar-thumb {
+            background: rgba(225, 29, 72, 0.3);
+            border-radius: 3px;
+        }
+
+        .info-content-scrollable::-webkit-scrollbar-thumb:hover {
+            background: rgba(225, 29, 72, 0.5);
+        }
+
+        .info-block {
+            margin-bottom: 22px;
+        }
+
+        .info-block-title {
+            font-size: 1.05em;
+            font-weight: 600;
+            color: #8f2f28;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-text {
+            line-height: 1.75;
+            color: #3a3226;
+            font-size: 0.93em;
+        }
+
+        .info-text strong {
+            color: #8f2f28;
+            font-weight: 600;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        .feature-item {
+            background: rgba(225, 29, 72, 0.06);
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 0.88em;
+            color: #8f2f28;
+            text-align: center;
+            font-weight: 600;
+            border: 1px solid rgba(225, 29, 72, 0.12);
+            transition: all 0.25s ease;
+        }
+
+        .feature-item:hover {
+            background: rgba(225, 29, 72, 0.12);
+            transform: translateY(-2px);
+        }
+
+        .process-link-section {
+            padding: 24px 32px;
+            background: linear-gradient(135deg, rgba(251, 113, 133, 0.2) 0%, rgba(225, 29, 72, 0.15) 100%);
+            border-top: 1px solid rgba(225, 29, 72, 0.15);
+        }
+
+        .process-link-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 16px 24px;
+            background: linear-gradient(135deg, #b06052 0%, #a5372f 100%);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 14px;
+            font-size: 1.05em;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 16px rgba(225, 29, 72, 0.35);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: none;
+            cursor: pointer;
+        }
+
+        .process-link-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 28px rgba(225, 29, 72, 0.5);
+            background: linear-gradient(135deg, #b06052 0%, #8f2f28 100%);
+        }
+
+        .process-link-button:active {
+            transform: translateY(-1px);
+        }
+
+        .process-icon {
+            font-size: 1.3em;
+        }
+
+        @media (max-width: 1024px) {
+            .top-nav {
+                flex-wrap: wrap;
+                padding: 10px 16px;
+                gap: 10px;
+            }
+
+            .nav-center {
+                order: 3;
+                width: 100%;
+                justify-content: center;
+            }
+
+            header {
+                margin-top: 120px;
+            }
+
+            .main-container {
+                flex-direction: column;
+                height: calc(100vh - 200px);
+            }
+
+            .model-display-section {
+                flex: 1;
+                min-height: 45vh;
+            }
+
+            .info-section {
+                flex: 1;
+                border-left: none;
+                border-top: 1px solid rgba(225, 29, 72, 0.1);
+            }
+        }
+    </style>
+  <link rel="stylesheet" href="theme/gufeng.css">
+</head>
+<body>
+    <nav class="top-nav">
+        <div class="nav-left">
+            <a href="index.html" class="nav-back-btn">← 返回首页</a>
+        </div>
+
+        <div class="nav-center">
+            <a href="#" class="nav-tab active">🧵 模型展示</a>
+            <a href="process5.html" class="nav-tab">🔧 制作流程</a>
+        </div>
+
+        <div class="nav-right">
+            <button class="fullscreen-btn" id="fullscreenBtn" title="全屏展示">⛶</button>
+        </div>
+    </nav>
+
+    <header>
+        <h1>🧵 火草纺织工艺 - 传统非遗文化</h1>
+        <p>3D数字模型展示 · 交互式浏览体验</p>
+    </header>
+
+    <div class="main-container">
+        <div class="model-display-section" id="modelDisplaySection">
+            <div class="model-3d-wrapper" id="model3DWrapper">
+                <canvas id="threeCanvas" class="model-3d-canvas"></canvas>
+
+                <div class="model-switcher-container" id="modelSwitcherContainer">
+                    <button class="switch-btn" id="prevModelBtn" title="上一个模型">◀</button>
+                    
+                    <div class="current-model-label" id="currentModelLabel">🧵 1/2 火草布卷</div>
+                    
+                    <div class="model-indicator-dots">
+                        <div class="indicator-dot active" data-model-index="0" title="火草布卷"></div>
+                        <div class="indicator-dot" data-model-index="1" title="火草衣物"></div>
+                    </div>
+                    
+                    <button class="switch-btn" id="nextModelBtn" title="下一个模型">▶</button>
+                </div>
+
+                <div class="model-loading-overlay" id="loadingOverlay">
+                    <div class="loading-spinner"></div>
+                    <div class="loading-text">正在加载3D火草纺织模型...</div>
+                </div>
+
+                <div class="model-switch-hint" id="modelSwitchHint">
+                    ⬅️ 切换查看火草布卷 / 火草衣物 ➡️
+                </div>
+
+                <div class="model-controls-hint">
+                    🖱 拖拽旋转 · 滚轮缩放 · 右键平移
+                </div>
+
+                <div class="zoom-controls">
+                    <button class="zoom-btn" id="zoomInBtn" title="放大">+</button>
+                    <button class="zoom-btn" id="zoomOutBtn" title="缩小">−</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <div class="info-header">
+                <h2>模型五 · 火草纺织工艺</h2>
+                <div class="subtitle">国家级非物质文化遗产</div>
+            </div>
+
+            <div class="info-content-scrollable" id="infoContentScrollable">
+                <div class="info-block">
+                    <div class="info-block-title">🏛️ 地区分布</div>
+                    <div class="info-text">
+                        四川省凉山彝族自治州<strong>德昌县、会理县、普格县</strong>等地，是彝族传统手工纺织技艺的珍贵遗存
+                    </div>
+                </div>
+
+                <div class="info-block">
+                    <div class="info-block-title">📜 非遗等级</div>
+                    <div class="info-text">
+                        国家级非物质文化遗产（2014年入选第四批国家级非遗名录）。<br><br>
+                        火草纺织是<strong>中国唯一以植物纤维进行传统纺织</strong>的非物质文化遗产，具有极高的历史价值和科学价值。
+                    </div>
+                </div>
+
+                <div class="info-block">
+                    <div class="info-block-title">🧵 文化简介</div>
+                    <div class="info-text">
+                        火草纺织工艺历史悠久，距今已有<strong>数百年历史</strong>。火草是一种生长在高山地区的野生植物，其叶片背面有一层白色绒毛，可纺成线织布。这种独特的纺织技艺是彝族人民智慧的结晶。<br><br>
+
+                        <strong>主要工艺流程包括：</strong><br>
+                        • <strong>采火草：</strong>在夏末秋初采集成熟的火草叶片<br>
+• <strong>剥麻：</strong>将火草背面的白色绒毛剥离下来<br>
+                        • <strong>捻线：</strong>将火草纤维搓捻成细线<br>
+                        • <strong>纺织：</strong>用传统织布机编织成布<br>
+                        • <strong>染色与后处理：</strong>天然染料染色，固色处理<br><br>
+
+                        火草织物具有<strong>透气性好、吸湿性强、质地轻盈、穿着舒适</strong>等特点，被誉为"会呼吸的织物"。火草纺织不仅是实用的生活技能，更是彝族文化传承的重要载体。
+                    </div>
+                </div>
+
+                <div class="features-grid">
+                    <div class="feature-item">✨ 唯一植物纺织</div>
+                    <div class="feature-item">🌿 天然环保</div>
+                    <div class="feature-item">💨 透气舒适</div>
+                    <div class="feature-item">🎭 民族瑰宝</div>
+                </div>
+            </div>
+
+            <div class="process-link-section">
+                <a href="process5.html" class="process-link-button" id="processLinkButton">
+                    <span class="process-icon">🔧</span>
+                    <span>查看火草纺织制作流程</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+        import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
+
+        const canvas = document.getElementById('threeCanvas');
+        const wrapper = document.getElementById('model3DWrapper');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const zoomInBtn = document.getElementById('zoomInBtn');
+        const zoomOutBtn = document.getElementById('zoomOutBtn');
+        const prevModelBtn = document.getElementById('prevModelBtn');
+        const nextModelBtn = document.getElementById('nextModelBtn');
+        const currentModelLabel = document.getElementById('currentModelLabel');
+        const indicatorDots = document.querySelectorAll('.indicator-dot');
+
+        let scene, camera, renderer, controls;
+        let currentModelIndex = 0;
+        let currentModel = null;
+        let isInitialized = false;
+
+        const modelConfigs = [
+            {
+                title: '🧵 1/2 火草布卷',
+                label: '🧵 火草布卷',
+                mtlPath: encodeURI('模型五模型/fabric roll 3d model/fabric+roll+3d+model.mtl'),
+                objPath: encodeURI('模型五模型/fabric roll 3d model/fabric+roll+3d+model.obj'),
+                loadingText: '正在加载火草布卷模型...'
+            },
+            {
+                title: '👗 2/2 火草衣物',
+                label: '👗 火草衣物',
+                mtlPath: encodeURI('模型五模型/traditional dress 3d model/traditional+dress+3d+model.mtl'),
+                objPath: encodeURI('模型五模型/traditional dress 3d model/traditional+dress+3d+model.obj'),
+                loadingText: '正在加载火草衣物模型...'
+            }
+        ];
+
+        function updateUI() {
+            currentModelLabel.textContent = modelConfigs[currentModelIndex].title;
+
+            indicatorDots.forEach((dot, index) => {
+                dot.classList.toggle('active', index === currentModelIndex);
+            });
+
+            prevModelBtn.disabled = currentModelIndex === 0;
+            nextModelBtn.disabled = currentModelIndex === modelConfigs.length - 1;
+        }
+
+        function switchModel(index) {
+            if (index < 0 || index >= modelConfigs.length || index === currentModelIndex) return;
+
+            currentModelIndex = index;
+            updateUI();
+
+            if (currentModel) {
+                scene.remove(currentModel);
+                currentModel = null;
+            }
+
+            loadCurrentModel();
+        }
+
+        function initThreeJS() {
+            if (isInitialized) return;
+            isInitialized = true;
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xffffff);
+
+            const aspect = canvas.clientWidth / canvas.clientHeight;
+            camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
+            camera.position.set(5, 3, 5);
+
+            renderer = new THREE.WebGLRenderer({
+                canvas: canvas,
+                antialias: true,
+                alpha: true
+            });
+            renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.2;
+
+            const ambientLight = new THREE.AmbientLight(0xfff5e0, 1.5);
+            scene.add(ambientLight);
+
+            const keyLight = new THREE.DirectionalLight(0xffffff, 4);
+            keyLight.position.set(5, 8, 5);
+            keyLight.castShadow = true;
+            keyLight.shadow.mapSize.width = 2048;
+            keyLight.shadow.mapSize.height = 2048;
+            keyLight.shadow.camera.near = 0.5;
+            keyLight.shadow.camera.far = 50;
+            keyLight.shadow.camera.left = -10;
+            keyLight.shadow.camera.right = 10;
+            keyLight.shadow.camera.top = 10;
+            keyLight.shadow.camera.bottom = -10;
+            keyLight.shadow.bias = -0.0001;
+            scene.add(keyLight);
+
+            const fillLight = new THREE.DirectionalLight(0xffe0b0, 2);
+            fillLight.position.set(-3, 2, -3);
+            scene.add(fillLight);
+
+            const rimLight = new THREE.DirectionalLight(0xffffff, 1.5);
+            rimLight.position.set(0, 1, -5);
+            scene.add(rimLight);
+
+            const groundGeometry = new THREE.PlaneGeometry(20, 20);
+            const groundMaterial = new THREE.ShadowMaterial({ opacity: 0.3 });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.position.y = -2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.target.set(0, 0.5, 0);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.08;
+            controls.minDistance = 2.5;
+            controls.maxDistance = 12;
+            controls.maxPolarAngle = Math.PI * 0.75;
+            controls.minPolarAngle = 0.2;
+            controls.autoRotate = true;
+            controls.autoRotateSpeed = 0.5;
+            controls.enableZoom = false;
+
+            wrapper.addEventListener('wheel', handleWheelZoom, { passive: false });
+
+            controls.update();
+            
+            prevModelBtn.addEventListener('click', () => switchModel(currentModelIndex - 1));
+            nextModelBtn.addEventListener('click', () => switchModel(currentModelIndex + 1));
+
+            indicatorDots.forEach((dot, index) => {
+                dot.addEventListener('click', () => switchModel(index));
+            });
+
+            updateUI();
+            loadCurrentModel();
+
+            animate();
+        }
+
+        function loadCurrentModel() {
+            loadingOverlay.classList.remove('hidden');
+            const config = modelConfigs[currentModelIndex];
+            const textEl = loadingOverlay.querySelector('.loading-text');
+            textEl.textContent = config.loadingText;
+
+            const mtlLoader = new MTLLoader();
+            const objLoader = new OBJLoader();
+
+            mtlLoader.load(config.mtlPath, (materials) => {
+                materials.preload();
+                objLoader.setMaterials(materials);
+
+                objLoader.load(config.objPath,
+                    (object) => {
+                        console.log(`${config.label}模型加载成功`);
+
+                        currentModel = object;
+
+                        object.traverse((child) => {
+                            if (child.isMesh) {
+                                child.castShadow = true;
+                                child.receiveShadow = true;
+                            }
+                        });
+
+                        const box = new THREE.Box3().setFromObject(currentModel);
+                        const size = box.getSize(new THREE.Vector3());
+                        const maxDim = Math.max(size.x, size.y, size.z);
+                        const scale = 4 / maxDim;
+                        currentModel.scale.multiplyScalar(scale);
+
+                        box.setFromObject(currentModel);
+                        const center = box.getCenter(new THREE.Vector3());
+                        currentModel.position.sub(center);
+
+                        scene.add(currentModel);
+
+                        setTimeout(() => {
+                            loadingOverlay.classList.add('hidden');
+                        }, 800);
+                    },
+                    (xhr) => {
+                        if (xhr.lengthComputable) {
+                            const percent = Math.round((xhr.loaded / xhr.total) * 100);
+                            const loadedMB = (xhr.loaded / 1024 / 1024).toFixed(2);
+                            const totalMB = (xhr.total / 1024 / 1024).toFixed(2);
+                            textEl.textContent = `${config.loadingText} ${percent}% (${loadedMB}MB / ${totalMB}MB)`;
+                        }
+                    },
+                    (error) => {
+                        console.error(`${config.label}模型加载错误:`, error);
+                        textEl.innerHTML = `⚠️ ${config.label}加载失败<br><span style="font-size: 0.85em; color: #666;">请检查文件路径或刷新页面重试</span>`;
+                        loadingOverlay.querySelector('.loading-spinner').style.borderTopColor = '#a5372f';
+                    }
+                );
+            }, undefined, () => {
+
+                objLoader.load(config.objPath,
+                    (object) => {
+                        console.log(`${config.label}模型加载成功（无材质）`);
+
+                        currentModel = object;
+
+                        object.traverse((child) => {
+                            if (child.isMesh) {
+                                child.castShadow = true;
+                                child.receiveShadow = true;
+                                child.material = new THREE.MeshStandardMaterial({
+                                    color: 0xf5deb3,
+                                    roughness: 0.8,
+                                    metalness: 0.05
+                                });
+                            }
+                        });
+
+                        const box = new THREE.Box3().setFromObject(object);
+                        const size = box.getSize(new THREE.Vector3());
+                        const maxDim = Math.max(size.x, size.y, size.z);
+                        const scale = 4 / maxDim;
+                        currentModel.scale.multiplyScalar(scale);
+
+                        box.setFromObject(currentModel);
+                        const center = box.getCenter(new THREE.Vector3());
+                        currentModel.position.sub(center);
+
+                        scene.add(currentModel);
+
+                        setTimeout(() => {
+                            loadingOverlay.classList.add('hidden');
+                        }, 800);
+                    },
+                    (xhr) => {
+                        if (xhr.lengthComputable) {
+                            const percent = Math.round((xhr.loaded / xhr.total) * 100);
+                            const loadedMB = (xhr.loaded / 1024 / 1024).toFixed(2);
+                            const totalMB = (xhr.total / 1024 / 1024).toFixed(2);
+                            textEl.textContent = `${config.loadingText} ${percent}% (${loadedMB}MB / ${totalMB}MB)`;
+                        }
+                    },
+                    (error) => {
+                        console.error(`${config.label}模型加载完全失败:`, error);
+                        textEl.innerHTML = `⚠️ ${config.label}加载失败<br><span style="font-size: 0.85em; color: #666;">请检查文件路径或刷新页面重试</span>`;
+                        loadingOverlay.querySelector('.loading-spinner').style.borderTopColor = '#a5372f';
+                    }
+                );
+            });
+        }
+
+        function animate() {
+            if (!isInitialized) return;
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        function handleWheelZoom(event) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const delta = event.deltaY * 0.001;
+            const direction = new THREE.Vector3().subVectors(camera.position, controls.target).normalize();
+            const distance = camera.position.distanceTo(controls.target);
+            let newDistance;
+
+            if (delta > 0) {
+                newDistance = Math.min(distance * 1.15, controls.maxDistance);
+            } else {
+                newDistance = Math.max(distance * 0.85, controls.minDistance);
+            }
+
+            camera.position.copy(controls.target).add(direction.multiplyScalar(newDistance));
+            controls.update();
+        }
+
+        function handleResize() {
+            if (!camera || !renderer || !canvas) return;
+
+            const width = canvas.clientWidth || window.innerWidth;
+            const height = canvas.clientHeight || window.innerHeight;
+
+            if (width <= 0 || height <= 0) return;
+
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height, false);
+
+            if (controls) {
+                controls.update();
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('resize', () => {
+            handleResize();
+        });
+
+        zoomInBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (controls && camera) {
+                const direction = new THREE.Vector3().subVectors(camera.position, controls.target).normalize();
+                const distance = camera.position.distanceTo(controls.target);
+                const newDistance = Math.max(distance * 0.8, controls.minDistance);
+                camera.position.copy(controls.target).add(direction.multiplyScalar(newDistance));
+                controls.update();
+            }
+        });
+
+        zoomOutBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (controls && camera) {
+                const direction = new THREE.Vector3().subVectors(camera.position, controls.target).normalize();
+                const distance = camera.position.distanceTo(controls.target);
+                const newDistance = Math.min(distance * 1.25, controls.maxDistance);
+                camera.position.copy(controls.target).add(direction.multiplyScalar(newDistance));
+                controls.update();
+            }
+        });
+
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+
+        fullscreenBtn.addEventListener('click', () => {
+            window.location.href = 'model5_fullscreen.html';
+        });
+
+        initThreeJS();
+    </script>
+</body>
+</html>
