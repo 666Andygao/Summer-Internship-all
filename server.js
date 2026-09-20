@@ -1,3 +1,6 @@
+// 读取 .env 配置（零依赖实现，见 lib/env.js；部署时可用真实环境变量覆盖）
+require('./lib/env').load();
+
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
@@ -6,12 +9,25 @@ const cors = require('cors');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
+const { accessLogger } = require('./lib/logger');
 
 const app = express();
-const PORT = 3000;
-// ⚠️ 开发占位符：生产环境请改用环境变量 process.env.JWT_SECRET / PAYMENT_CALLBACK_TOKEN
-const JWT_SECRET = 'dev-placeholder-jwt';
-const PAYMENT_CALLBACK_TOKEN = 'dev-placeholder-payment';
+
+// ============ 服务配置（全部支持环境变量，便于部署到服务器）============
+const PORT = Number(process.env.PORT) || 3000;
+// 监听所有网卡，外部才能访问；本地开发同样适用
+const HOST = process.env.HOST || '0.0.0.0';
+
+// JWT 签名密钥：生产必须通过 .env 注入，否则给出告警（不硬编码真实密钥）
+const DEV_JWT_SECRET = 'dev-only-insecure-secret-change-me';
+const JWT_SECRET = process.env.JWT_SECRET || DEV_JWT_SECRET;
+const PAYMENT_CALLBACK_TOKEN = process.env.PAYMENT_CALLBACK_TOKEN || 'dev-placeholder-payment';
+
+// 允许跨域的来源白名单（逗号分隔）。留空 = 不开放跨域（同源部署无需跨域，最安全）
+const CORS_ORIGINS = (process.env.CORS_ORIGIN || '')
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean);
 const ALLOWED_PAYMENT_METHODS = ['alipay', 'wechat', 'bank'];
 const ROLE_TYPES = {
     BUYER: 'buyer',
@@ -781,9 +797,86 @@ const STAGE_DELIVERY_CHECKLIST = {
 };
 
 // ============ 中间件 ============
-app.use(cors());
-app.use(express.json());
-app.use(express.static(__dirname));
+// CORS：仅放行白名单来源；未配置则关闭跨域（同源部署无需跨域，避免任意站点调用 API）
+app.use(cors(CORS_ORIGINS.length
+    ? { origin: CORS_ORIGINS, credentials: true }
+    : { origin: false }));
+// 访问日志：记录时间/IP/方法/路径/状态码/耗时（经反向代理时读取真实 IP）
+app.use(accessLogger({
+    enabled: process.env.LOG_ACCESS !== 'off',
+    trustProxy: process.env.TRUST_PROXY === '1'
+}));
+app.use(express.json({ limit: '2mb' }));
+app.use(express.urlencoded({ extended: true, limit: '2mb' }));
+
+// ============ 静态资源安全策略 ============
+// 背景：原先直接 express.static(__dirname) 会把整个项目目录暴露，
+//       导致 /database.json（全部密码哈希、私信）与 /server.js 源码可被任何人下载。
+// 策略：① 敏感路径黑名单（源码/配置/数据/依赖/内部目录）→ 404
+//       ② 扩展名白名单兜底（只放行前端真正需要的资源类型，含 3D 模型）
+const ALLOWED_EXT = new Set([
+    // 页面与样式脚本
+    '.html', '.htm', '.css', '.js', '.mjs',
+    // 图片
+    '.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp', '.svg', '.ico',
+    // 字体
+    '.woff', '.woff2', '.ttf', '.eot', '.otf',
+    // 音视频（消息中心上传的图片/视频）
+    '.mp4', '.webm', '.ogg', '.mp3', '.wav',
+    // 3D 模型（非遗器物展示页使用）
+    '.glb', '.gltf', '.obj', '.mtl', '.fbx', '.stl', '.bin'
+]);
+
+// 敏感路径黑名单（即使扩展名合法也一律拒绝）
+const SENSITIVE_PATTERNS = [
+    /^\/database\.json$/i,              // 数据库（含密码哈希、私信、订单）
+    /^\/package(-lock)?\.json$/i,       // 依赖清单
+    /^\/server\.js$/i,                  // 后端源码
+    /^\/vite\.config\.js$/i,
+    /^\/ecosystem\.config\.js$/i,
+    /^\/docker-compose\.ya?ml$/i,
+    /^\/nginx\.conf/i,
+    /^\/(start-server|build-shop)\.bat$/i,
+    /^\/\.env/i,                        // 环境变量（密钥）
+    /^\/\.git/i,                        // .git / .gitignore / .gitattributes
+    /^\/\.claude/i,
+    /^\/node_modules(\/|$)/i,
+    /^\/db(\/|$)/i,                     // 数据库连接配置与 schema
+    /^\/docs(\/|$)/i,                   // 内部文档
+    /^\/tests(\/|$)/i,
+    /^\/report-gen(\/|$)/i,             // 报告生成脚本
+    /^\/heritage-ecommerce-springboot(\/|$)/i,  // 队友的 Java 工程
+    /^\/feiyi-ecommerce\/(src|node_modules|package|vite\.config|\.env)/i,
+    /^\/uploads\/.*\.(js|json|env|html)$/i      // 上传目录不应存在可执行/配置文件
+];
+
+app.use((req, res, next) => {
+    let decoded;
+    try {
+        decoded = decodeURIComponent(req.path);
+    } catch (e) {
+        return res.status(400).end();   // 非法 URL 编码
+    }
+    // 阻断路径穿越（.. 与反斜杠）
+    if (decoded.includes('..') || decoded.includes('\\')) {
+        return res.status(400).end();
+    }
+    const normalized = decoded.replace(/\/+/g, '/').toLowerCase();
+
+    // ① 敏感路径：伪装成不存在，避免暴露"这里有东西"
+    if (SENSITIVE_PATTERNS.some(re => re.test(normalized))) {
+        return res.status(404).end();
+    }
+    // ② 扩展名白名单：带扩展名但不在白名单内（如 .json/.yml/.log/.sql）一律 404
+    const ext = path.extname(normalized);
+    if (ext && !ALLOWED_EXT.has(ext)) {
+        return res.status(404).end();
+    }
+    next();
+});
+
+// 仅托管前端静态资源（dotfiles:'deny' 额外拒绝所有点开头的文件）
+app.use(express.static(__dirname, { dotfiles: 'deny' }));
 
 app.get('/api/business-flow', (req, res) => {
     res.json(BUSINESS_FLOW);
@@ -838,83 +931,26 @@ const upload = multer({
     }
 });
 
-// ============ JSON 文件数据库 ============
-const DB_PATH = path.join(__dirname, 'database.json');
+// ============ 数据层（MySQL）============
+// 数据持久化已从 database.json 迁移到 MySQL：
+//   - 启动时 db/store.js 把全量数据载入内存（await store.init()）
+//   - loadDB() 同步返回内存数据，保持原有同步语义
+//   - saveDB() 更新内存并按表差异同步到 MySQL（串行队列，保证写入顺序）
+// 这样业务端点代码无需改动，而数据真正落在数据库中，支持备份与 SQL 查询。
+const store = require('./db/store');
 
+// 兼容原有调用：获取内存中的数据对象
 function loadDB() {
-    if (!fs.existsSync(DB_PATH)) {
-        return {
-            users: [],
-            conversations: [],
-            messages: [],
-            addresses: [],
-            favorites: [],
-            reviews: [],
-            orders: [],
-            carts: [],
-            friends: [],
-            nextId: { user: 1, conversation: 1, message: 1, address: 1, favorite: 1, review: 1, order: 1, cart: 1, friend: 1 }
-        };
-    }
-    try {
-        const data = JSON.parse(fs.readFileSync(DB_PATH, 'utf-8'));
-        data.addresses = data.addresses || [];
-        data.favorites = data.favorites || [];
-        data.reviews = data.reviews || [];
-        data.orders = data.orders || [];
-        data.carts = data.carts || [];
-        data.merchants = data.merchants || [];
-        data.products = data.products || [];
-        data.after_sales = data.after_sales || [];
-        data.friends = data.friends || [];
-        data.nextId = data.nextId || { user: 1, conversation: 1, message: 1, address: 1, favorite: 1, review: 1, order: 1, merchant: 1, product: 1, cart: 1, complaint: 1, friend: 1 };
-        data.nextId.address = data.nextId.address || 1;
-        data.nextId.favorite = data.nextId.favorite || 1;
-        data.nextId.review = data.nextId.review || 1;
-        data.nextId.order = data.nextId.order || 1;
-        data.nextId.merchant = data.nextId.merchant || 1;
-        data.nextId.product = data.nextId.product || 1;
-        data.nextId.cart = data.nextId.cart || 1;
-        data.nextId.complaint = data.nextId.complaint || 1;
-        data.nextId.friend = data.nextId.friend || 1;
-        data.complaints = data.complaints || [];
-        return data;
-    } catch (e) {
-        console.error('数据库文件损坏，创建新数据库');
-        return {
-            users: [],
-            conversations: [],
-            messages: [],
-            addresses: [],
-            favorites: [],
-            reviews: [],
-            orders: [],
-            carts: [],
-            nextId: { user: 1, conversation: 1, message: 1, address: 1, favorite: 1, review: 1, order: 1, cart: 1 }
-        };
-    }
+    return store.loadDB();
 }
 
-function saveDB(db) {
-    fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2), 'utf-8');
+// 兼容原有调用：保存数据到内存并同步至 MySQL
+function saveDB(data) {
+    return store.saveDB(data);
 }
 
-// 初始化数据库
-let db = loadDB();
-// 确保 nextId 存在（兼容旧数据）
-if (!db.nextId) db.nextId = { user: 1, conversation: 1, message: 1, address: 1, favorite: 1, review: 1, order: 1, cart: 1, complaint: 1 };
-if (!Array.isArray(db.messages)) db.messages = [];
-if (!Array.isArray(db.addresses)) db.addresses = [];
-if (!Array.isArray(db.favorites)) db.favorites = [];
-if (!Array.isArray(db.reviews)) db.reviews = [];
-if (!Array.isArray(db.orders)) db.orders = [];
-if (!Array.isArray(db.carts)) db.carts = [];
-if (!Array.isArray(db.merchants)) db.merchants = [];
-if (!Array.isArray(db.products)) db.products = [];
-if (!Array.isArray(db.after_sales)) db.after_sales = [];
-if (!Array.isArray(db.complaints)) db.complaints = [];
-if (!db.nextId.cart) db.nextId.cart = 1;
-if (!db.nextId.complaint) db.nextId.complaint = 1;
+// 内存数据对象，由 store.init() 在服务启动时填充
+let db = null;
 
 // ============ 认证中间件 ============
 function authMiddleware(req, res, next) {
@@ -4147,16 +4183,96 @@ module.exports = {
 };
 
 if (require.main === module) {
-    app.listen(PORT, () => {
+    // ---------- 启动前安全自查 ----------
+    if (JWT_SECRET === DEV_JWT_SECRET) {
+        console.warn('⚠️  未配置 JWT_SECRET，正在使用不安全的开发默认密钥。');
+        console.warn('    部署到服务器前请在 .env 中设置 JWT_SECRET（随机长字符串），否则令牌可被伪造。');
+    }
+    if (!fs.existsSync(path.join(__dirname, '.env'))) {
+        console.warn('⚠️  未找到 .env 文件，将使用默认配置。可复制 .env.example 为 .env 后按需修改。');
+    }
+    if (!CORS_ORIGINS.length) {
+        console.log('ℹ️  未配置 CORS_ORIGIN：仅允许同源访问（同域部署无需配置，最安全）。');
+    }
+
+    startServer();
+}
+
+/**
+ * 启动服务：先连接 MySQL 载入数据，成功后再监听端口。
+ * 数据库不可用时直接报错退出，避免出现「以为在连数据库、其实没数据」的假象。
+ */
+async function startServer() {
+    try {
+        const { ping } = require('./db/pool');
+        const status = await ping();
+        if (!status.ok) throw new Error(status.error);
+
+        db = await store.init();
+        console.log(`✅ 已连接 MySQL（${process.env.DB_NAME || 'heritage'}，${status.version}），` +
+            `载入用户 ${db.users.length} · 会话 ${db.conversations.length} · 消息 ${db.messages.length} 条`);
+    } catch (e) {
+        console.error('');
+        console.error('❌ 无法连接 MySQL，服务启动中止：', e.message);
+        console.error('   请检查：');
+        console.error('     1) MySQL 服务是否已启动（Windows 服务名通常为 MySQL90）');
+        console.error('     2) .env 中的 DB_HOST / DB_PORT / DB_USER / DB_PASSWORD / DB_NAME 是否正确');
+        console.error('     3) 是否已执行 node db/init.js 建表、node db/migrate.js 导入数据');
+        process.exit(1);
+    }
+
+    const server = app.listen(PORT, HOST, () => {
         console.log('========================================');
         console.log('  华夏风物 · 非遗传承 后端服务');
         console.log('========================================');
-        console.log(`  ✅ 服务器运行在: http://localhost:${PORT}`);
+        console.log(`  ✅ 服务已启动，监听 ${HOST}:${PORT}`);
         console.log(`  🏠 主页:        http://localhost:${PORT}/MainPage.html`);
         console.log(`  🔐 登录注册:    http://localhost:${PORT}/login.html`);
         console.log(`  👤 用户中心:    http://localhost:${PORT}/user-dashboard.html`);
         console.log(`  👨‍💻 开发者中心:  http://localhost:${PORT}/developer-dashboard.html`);
         console.log(`  🛍️ 商城:        http://localhost:${PORT}/shop/`);
+        if (HOST === '0.0.0.0') {
+            console.log('  🌐 局域网/公网可通过本机 IP 访问（如 http://<服务器IP>:' + PORT + '/）');
+        }
         console.log('========================================');
     });
+
+    // 端口占用等启动错误：给出可操作的提示，而不是抛一堆堆栈
+    server.on('error', (err) => {
+        if (err.code === 'EADDRINUSE') {
+            console.error(`❌ 端口 ${PORT} 已被占用。请关闭占用该端口的程序，或用 PORT=其他端口 启动。`);
+            console.error('   （Windows 可执行 netstat -ano | findstr :' + PORT + ' 查看占用进程）');
+        } else {
+            console.error('❌ 服务启动失败:', err.message);
+        }
+        process.exit(1);
+    });
+
+    // ---------- 优雅关闭：停止接收新请求后再退出，避免写操作被截断 ----------
+    let shuttingDown = false;
+    const shutdown = (signal) => {
+        if (shuttingDown) return;
+        shuttingDown = true;
+        console.log(`\n收到 ${signal}，正在优雅关闭服务...`);
+        server.close(async () => {
+            try {
+                // 等待内存中的变更全部写入 MySQL，避免丢数据
+                await store.flush();
+                console.log('✅ 数据已同步到 MySQL');
+                const pool = require('./db/pool');
+                if (pool && typeof pool.closePool === 'function') await pool.closePool();
+            } catch (e) {
+                console.error('⚠️  关闭时同步数据出错：', e.message);
+            }
+            console.log('✅ 服务已安全关闭');
+            process.exit(0);
+        });
+        // 兜底：10 秒内未能正常关闭则强制退出
+        setTimeout(() => {
+            console.warn('⚠️  关闭超时，强制退出');
+            process.exit(1);
+        }, 10000).unref();
+    };
+    process.on('SIGINT', () => shutdown('SIGINT'));
+    process.on('SIGTERM', () => shutdown('SIGTERM'));
 }
