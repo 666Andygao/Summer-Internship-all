@@ -23,6 +23,57 @@ const DEV_JWT_SECRET = 'dev-only-insecure-secret-change-me';
 const JWT_SECRET = process.env.JWT_SECRET || DEV_JWT_SECRET;
 const PAYMENT_CALLBACK_TOKEN = process.env.PAYMENT_CALLBACK_TOKEN || 'dev-placeholder-payment';
 
+// bcrypt 强度因子（cost）：每 +1 计算耗时翻倍。10 为旧值，12 为当前推荐值。
+// 老用户的哈希会在下次成功登录时自动升级（见 /api/login 的惰性重哈希）。
+const BCRYPT_COST = Number(process.env.BCRYPT_COST) || 12;
+
+// 登录防爆破：按「用户名|IP」统计失败次数
+const LOGIN_MAX_FAILURES = 5;              // 窗口内允许的最大失败次数
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;    // 统计窗口 15 分钟
+const LOGIN_LOCK_MS = 15 * 60 * 1000;      // 触发后锁定 15 分钟
+const loginFailures = new Map();           // key -> { count, firstAt, lockedUntil }
+
+// 取「用户名|IP」作为限流键（同时按账号与来源 IP 限制，避免仅换账号或仅换 IP 即绕过）
+function loginKey(username, req) {
+    const ip = (req.ip || req.connection?.remoteAddress || 'unknown').toString();
+    return `${String(username || '').toLowerCase()}|${ip}`;
+}
+
+/**
+ * 检查是否处于锁定状态
+ * @returns {number} 剩余锁定秒数；0 表示未锁定
+ */
+function loginLockRemaining(key) {
+    const rec = loginFailures.get(key);
+    if (!rec || !rec.lockedUntil) return 0;
+    const remain = rec.lockedUntil - Date.now();
+    if (remain <= 0) {
+        loginFailures.delete(key);   // 锁定期已过，清零重新计数
+        return 0;
+    }
+    return Math.ceil(remain / 1000);
+}
+
+/** 记录一次登录失败，必要时进入锁定 */
+function recordLoginFailure(key) {
+    const now = Date.now();
+    const rec = loginFailures.get(key);
+    // 超出统计窗口则重新计数
+    if (!rec || now - rec.firstAt > LOGIN_WINDOW_MS) {
+        loginFailures.set(key, { count: 1, firstAt: now, lockedUntil: 0 });
+        return;
+    }
+    rec.count += 1;
+    if (rec.count >= LOGIN_MAX_FAILURES) {
+        rec.lockedUntil = now + LOGIN_LOCK_MS;
+    }
+}
+
+/** 登录成功：清除失败记录 */
+function clearLoginFailures(key) {
+    loginFailures.delete(key);
+}
+
 // 允许跨域的来源白名单（逗号分隔）。留空 = 不开放跨域（同源部署无需跨域，最安全）
 const CORS_ORIGINS = (process.env.CORS_ORIGIN || '')
     .split(',')
@@ -801,6 +852,16 @@ const STAGE_DELIVERY_CHECKLIST = {
 app.use(cors(CORS_ORIGINS.length
     ? { origin: CORS_ORIGINS, credentials: true }
     : { origin: false }));
+// 安全响应头（零依赖，等价于 helmet 的最小子集）：
+//   nosniff         —— 禁止浏览器按内容猜测类型（防 MIME 混淆攻击）
+//   SAMEORIGIN      —— 禁止被第三方站点以 iframe 嵌入（防点击劫持）
+//   Referrer-Policy —— 跨站请求不泄露完整 URL
+app.use((req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    next();
+});
 // 访问日志：记录时间/IP/方法/路径/状态码/耗时（经反向代理时读取真实 IP）
 app.use(accessLogger({
     enabled: process.env.LOG_ACCESS !== 'off',
@@ -922,12 +983,19 @@ const storage = multer.diskStorage({
         cb(null, uuidv4() + ext);
     }
 });
+// 允许上传的扩展名白名单（mime 由客户端提供不可全信，双重要求更稳）
+// 注意：不包含 .svg —— 内联 SVG 可携带脚本，存在存储型 XSS 风险
+const ALLOWED_UPLOAD_EXT = new Set([
+    '.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp',
+    '.mp4', '.webm', '.ogg', '.mov'
+]);
 const upload = multer({
     storage,
     limits: { fileSize: 200 * 1024 * 1024 }, // 200MB
     fileFilter: (req, file, cb) => {
-        const allowed = /^(video\/|image\/)/;
-        cb(null, allowed.test(file.mimetype));
+        const mimeOk = /^(video\/|image\/)/.test(file.mimetype);
+        const ext = path.extname(file.originalname || '').toLowerCase();
+        cb(null, mimeOk && ALLOWED_UPLOAD_EXT.has(ext));
     }
 });
 
@@ -938,6 +1006,7 @@ const upload = multer({
 //   - saveDB() 更新内存并按表差异同步到 MySQL（串行队列，保证写入顺序）
 // 这样业务端点代码无需改动，而数据真正落在数据库中，支持备份与 SQL 查询。
 const store = require('./db/store');
+const dbPool = require('./db/pool');
 
 // 兼容原有调用：获取内存中的数据对象
 function loadDB() {
@@ -952,6 +1021,47 @@ function saveDB(data) {
 // 内存数据对象，由 store.init() 在服务启动时填充
 let db = null;
 
+// ============ 健康检查 ============
+// 供 PM2 / Nginx / 负载均衡探活：无需鉴权，返回服务与数据库状态
+app.get('/api/health', async (req, res) => {
+    const ping = await dbPool.ping();
+    const lastErr = store.getLastError();
+    // 仅以数据库连通性判定健康；持久化错误作为诊断信息返回（避免一次性错误永久置为不健康）
+    const healthy = ping.ok;
+    res.status(healthy ? 200 : 503).json({
+        status: healthy ? 'ok' : 'degraded',
+        uptime_seconds: Math.round(process.uptime()),
+        db: ping.ok ? 'connected' : 'error',
+        db_version: ping.version || null,
+        last_persist_error: lastErr ? lastErr.message : null,
+        time: new Date().toISOString()
+    });
+});
+
+// ============ 在线状态（presence）============
+// 说明：用户活跃时间保存在内存中，属于「实时状态」而非持久数据，
+//       因此服务重启后清空是符合预期的语义（与 store.js 的单进程内存模型一致）。
+const presence = new Map();                 // userId -> 最近活跃时间戳(ms)
+const ONLINE_THRESHOLD_MS = 60 * 1000;      // 60 秒内有心跳/请求即视为「在线」
+
+/** 刷新某用户的活跃时间 */
+function touchPresence(userId) {
+    if (userId === undefined || userId === null) return;
+    presence.set(Number(userId), Date.now());
+}
+
+/**
+ * 计算用户的在线状态
+ * @returns {{is_online:boolean, last_seen:string|null}}
+ */
+function userStatus(user) {
+    const last = presence.get(Number(user.id));
+    return {
+        is_online: !!last && (Date.now() - last) <= ONLINE_THRESHOLD_MS,
+        last_seen: last ? new Date(last).toISOString() : null
+    };
+}
+
 // ============ 认证中间件 ============
 function authMiddleware(req, res, next) {
     const token = req.headers.authorization?.replace('Bearer ', '');
@@ -960,6 +1070,7 @@ function authMiddleware(req, res, next) {
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
         req.user = decoded;
+        touchPresence(decoded.id);   // 任意携带有效令牌的请求都刷新在线状态
         next();
     } catch (e) {
         return res.status(401).json({ error: '登录已过期，请重新登录' });
@@ -1475,7 +1586,7 @@ app.post('/api/register', async (req, res) => {
             return res.status(400).json({ error: '用户名已存在' });
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(password, BCRYPT_COST);
         const id = db.nextId.user++;
         const now = new Date().toISOString();
 
@@ -1492,6 +1603,7 @@ app.post('/api/register', async (req, res) => {
         };
         db.users.push(newUser);
         saveDB(db);
+        touchPresence(id);   // 注册即视为在线
 
         const token = jwt.sign(
             { id, username, role: normalizedRole, display_name },
@@ -1517,17 +1629,44 @@ app.post('/api/login', async (req, res) => {
             return res.status(400).json({ error: '请填写所有必填字段' });
         }
 
+        // ---- 防爆破：同一「用户名|IP」连续失败达上限则暂时锁定 ----
+        const failKey = loginKey(username, req);
+        const lockRemain = loginLockRemaining(failKey);
+        if (lockRemain > 0) {
+            return res.status(429).json({
+                error: `登录失败次数过多，请在 ${Math.ceil(lockRemain / 60)} 分钟后重试`
+            });
+        }
+
         const normalizedRole = normalizeRole(role);
         db = loadDB();
         const user = db.users.find(u => u.username === username && normalizeRole(u.role) === normalizedRole);
 
         if (!user) {
+            recordLoginFailure(failKey);
             return res.status(400).json({ error: '用户名或密码错误，或角色不匹配' });
         }
 
         const valid = await bcrypt.compare(password, user.password);
         if (!valid) {
+            recordLoginFailure(failKey);
             return res.status(400).json({ error: '用户名或密码错误' });
+        }
+
+        // 登录成功，清除失败计数，并立即标记为在线
+        clearLoginFailures(failKey);
+        touchPresence(user.id);
+
+        // ---- 惰性重哈希：老用户哈希强度低于当前标准时，借本次已校验的明文密码升级 ----
+        try {
+            if (bcrypt.getRounds(user.password) < BCRYPT_COST) {
+                user.password = await bcrypt.hash(password, BCRYPT_COST);
+                saveDB(db);
+                console.log(`🔐 已升级用户 ${user.username} 的密码哈希强度至 bcrypt cost=${BCRYPT_COST}`);
+            }
+        } catch (e) {
+            // 重哈希失败不影响本次登录，下次登录会再尝试
+            console.warn('密码哈希升级失败（不影响登录）：', e.message);
         }
 
         const token = jwt.sign(
@@ -1565,6 +1704,43 @@ app.get('/api/users', authMiddleware, requireRole([ROLE_TYPES.ADMIN]), (req, res
     db = loadDB();
     const users = db.users.map(({ password, ...user }) => user);
     res.json(users);
+});
+
+// 心跳：用户端页面定时调用，用于刷新「在线」状态
+app.post('/api/heartbeat', authMiddleware, (req, res) => {
+    touchPresence(req.user.id);            // 显式刷新（authMiddleware 已刷新，这里保证语义清晰）
+    res.json({ ok: true, ts: Date.now() });
+});
+
+// 开发者「管理用户」：查看非开发者（普通用户）的账号与在线状态
+// 注意：必须定义在 /api/users/:id 之前，否则 "manage" 会被当作 :id 匹配
+app.get('/api/users/manage', authMiddleware, requireRole([ROLE_TYPES.ARTISAN, ROLE_TYPES.ADMIN]), (req, res) => {
+    db = loadDB();
+    const list = db.users
+        .filter(u => isBuyerRole(u.role))          // 仅普通用户，排除开发者/匠人/管理员
+        .map(u => {
+            const { password, addresses, ...safe } = u;   // 剔除密码与无关字段
+            return {
+                id: safe.id,
+                username: safe.username,
+                display_name: safe.display_name,
+                phone: safe.phone || '',
+                role: normalizeRole(safe.role),
+                created_at: safe.created_at || null,
+                ...userStatus(u)                            // is_online / last_seen
+            };
+        })
+        .sort((a, b) => {
+            // 在线优先，其次按注册时间倒序
+            if (a.is_online !== b.is_online) return a.is_online ? -1 : 1;
+            return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+        });
+
+    res.json({
+        total: list.length,
+        online: list.filter(u => u.is_online).length,
+        users: list
+    });
 });
 
 // 查询单个用户信息
@@ -3749,7 +3925,7 @@ app.post('/api/password', authMiddleware, async (req, res) => {
 
     if (new_password.length < 6) return res.status(400).json({ error: '新密码至少6位' });
 
-    user.password = await bcrypt.hash(new_password, 10);
+    user.password = await bcrypt.hash(new_password, BCRYPT_COST);
     saveDB(db);
     res.json({ success: true });
 });

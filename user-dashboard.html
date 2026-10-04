@@ -594,7 +594,8 @@
             }
 
             currentUser = JSON.parse(userStr);
-            if (currentUser.role !== 'user') {
+            // 兼容两种写法：注册接口会把 user 规范化为 buyer，历史数据里可能是 user
+            if (currentUser.role !== 'user' && currentUser.role !== 'buyer') {
                 window.location.href = 'developer-dashboard.html';
                 return;
             }
@@ -603,6 +604,20 @@
             loadFriends();
             loadFriendRequests();
             startPolling();
+            startHeartbeat();   // 定时上报在线状态
+        }
+
+        // 每 30 秒上报一次心跳，让开发者端能看到「在线」状态
+        function startHeartbeat() {
+            const ping = () => {
+                if (!localStorage.getItem('token')) return;
+                fetch(API + '/heartbeat', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                }).catch(() => {});
+            };
+            ping();
+            setInterval(ping, 30000);
         }
 
         async function api(path, options = {}) {

@@ -3,276 +3,552 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>登录 - 华夏风物 · 非遗传承</title>
+    <title>统一身份认证 - 华夏风物 · 非遗传承</title>
     <style>
+        /* ============================================================
+           统一身份认证 —— 全屏水墨底图 · 右侧认证卡 · 左上角艺术字
+           说明：gufeng.css 用 !important 锁定了 body 背景，
+                因此底图放在独立的 .bg-layer 上，不受级联影响。
+           ============================================================ */
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
+        html, body { height: 100%; }
+
         body {
-            font-family: var(--font-kai), var(--font-song), serif;
-            background: linear-gradient(135deg, #f6efe2 0%, #e8dcc6 50%, #f6f0e4 100%);
+            color: #1f2328;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ---------------- 全屏底图（首页主视觉） ----------------
+           画面按 1:8:1 三段切分：上下两个「1」是与绢本底色同源的纯色平涂，
+           中间「8」是原图，且原图上下边缘做虚化，溶进色带里。 */
+        .bg-layer {
+            /* 两色分别取自原图上/下边缘 10% 条带实测均值，保证接缝无色差 */
+            --band-top: #6b5730;      /* 原图 0–10%  平均色 */
+            --band-bottom: #554728;   /* 原图 90–100% 平均色 */
+            position: fixed;
+            inset: 0;
+            /* 不能用负 z-index：gufeng.css 给 body 的不透明渐变会盖住它 */
+            z-index: 0;
+            background-color: #584929;   /* 图片加载失败时的兜底：画面整体底色 */
+            background-image: linear-gradient(180deg,
+                var(--band-top)    0 10%,     /* 上 1 */
+                transparent       10% 90%,    /* 中 8 —— 透出下面的图片层 */
+                var(--band-bottom) 90% 100%); /* 下 1 */
+        }
+
+        /* 图片层：上虚化层在下、清晰层在上，两层叠出「中间清楚、上下边缘糊开」 */
+        .bg-soft,
+        .bg-crisp {
+            position: absolute;
+            inset: 0;
+            background-image: url('uploads/images/hero-inkwash-bg.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        /* 清晰层：10%–90% 为实，向 10% 与 90% 两条带线渐隐，正好落在色带内侧 */
+        .bg-crisp {
+            -webkit-mask-image: linear-gradient(180deg,
+                transparent 0 10%, #000 16%, #000 84%, transparent 90% 100%);
+            mask-image: linear-gradient(180deg,
+                transparent 0 10%, #000 16%, #000 84%, transparent 90% 100%);
+        }
+
+        /* 虚化层：整层高斯模糊；掩膜把它的可见范围压在上下渐隐区，
+           于是只有边缘糊开，画面中央仍由清晰层盖住、保持锐利 */
+        .bg-soft {
+            filter: blur(18px);
+            -webkit-mask-image: linear-gradient(180deg,
+                transparent 0 10%, #000 12.5%, #000 15%, transparent 19%,
+                transparent 81%, #000 85%, #000 87.5%, transparent 90% 100%);
+            mask-image: linear-gradient(180deg,
+                transparent 0 10%, #000 12.5%, #000 15%, transparent 19%,
+                transparent 81%, #000 85%, #000 87.5%, transparent 90% 100%);
+        }
+
+        /* ---------------- 版面 ---------------- */
+        .auth-shell {
+            position: relative;
+            z-index: 1;              /* 压在底图之上 */
             min-height: 100vh;
             display: flex;
             align-items: center;
-            justify-content: center;
-            padding: 20px;
+            justify-content: flex-end;   /* 认证卡靠右 */
+            padding: 108px 6.5vw 92px 5vw;
         }
 
-        .login-container {
-            background: #ffffff;
-            border-radius: 28px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.06);
-            width: 100%;
-            max-width: 440px;
-            overflow: hidden;
+        /* ---------------- 左上角艺术字 ---------------- */
+        .brand-corner {
+            position: absolute;
+            top: 40px;
+            left: 48px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            z-index: 2;
         }
 
-        .login-header {
-            background: linear-gradient(135deg, #a5372f 0%, #8f2f28 100%);
-            color: white;
-            padding: 36px 36px 28px;
-            text-align: center;
+        .brand-bar {
+            flex: none;
+            width: 3px;
+            height: 1.8em;
+            border-radius: 1px;
+            background: linear-gradient(180deg, #d8ab55 0%, #a97c2c 100%);
+            box-shadow: 0 1px 3px rgba(72, 50, 16, .3);
         }
 
-        .login-header .logo {
-            font-size: 28px;
+        .brand-title {
+            font-family: var(--font-song, 'Songti SC'), 'Songti SC', 'SimSun', '宋体', serif;
+            font-size: clamp(21px, 2.5vw, 34px);
             font-weight: 700;
-            letter-spacing: -0.5px;
-            margin-bottom: 4px;
+            letter-spacing: .16em;
+            line-height: 1.2;
+            white-space: nowrap;
+            /* 棕黄渐变描金 */
+            background-image: linear-gradient(180deg, #e6c273 0%, #c9963c 46%, #8a5f20 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: #b5853f;   /* 不支持 background-clip 时的回退色 */
+            filter: drop-shadow(0 2px 6px rgba(72, 50, 16, .38));
         }
 
-        .login-header .subtitle {
-            font-size: 13px;
-            opacity: 0.85;
-            letter-spacing: 1px;
+        /* ---------------- 页脚 ---------------- */
+        .foot {
+            position: absolute;
+            left: 48px;
+            bottom: 30px;
+            z-index: 2;
+            font-size: 12px;
+            letter-spacing: .06em;
+            line-height: 1.9;
+            /* 与左上角艺术字同色：同一套棕金渐变描金 */
+            background-image: linear-gradient(180deg, #e6c273 0%, #c9963c 46%, #8a5f20 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: #b5853f;   /* 不支持 background-clip 时的回退色 */
+            /* 字号小又压在深色绢本上，加一圈极淡的暖色描边保证可读 */
+            filter: drop-shadow(0 0 3px rgba(255, 240, 214, .5));
         }
 
-        .login-body {
-            padding: 32px 36px 36px;
+        /* ---------------- 认证卡 ---------------- */
+        .auth-panel {
+            position: relative;
+            z-index: 3;
+            width: 100%;
+            max-width: 400px;
+            background: rgba(255, 255, 255, .97);
+            border: 1px solid rgba(226, 214, 189, .95);
+            border-radius: 6px;
+            box-shadow: 0 18px 48px rgba(60, 42, 18, .18), 0 2px 8px rgba(60, 42, 18, .07);
+            overflow: hidden;
+            -webkit-backdrop-filter: blur(4px);
+            backdrop-filter: blur(4px);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                         "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
         }
 
+        .auth-panel-head {
+            padding: 24px 30px 20px;
+            text-align: center;
+            background: #faf6ee;
+            border-bottom: 1px solid #ece3d3;
+        }
+
+        .auth-panel-head h1 {
+            font-family: var(--font-song, serif), 'Songti SC', 'SimSun', serif;
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            color: #a5372f;      /* 朱砂：与站点主色一致 */
+        }
+
+        .auth-panel-head p {
+            margin-top: 6px;
+            font-size: 12px;
+            letter-spacing: .5px;
+            color: #8a7c68;
+        }
+
+        .auth-panel-body { padding: 24px 30px 26px; }
+
+        /* ---------------- 角色切换 ---------------- */
         .role-tabs {
             display: flex;
-            background: #f6f0e4;
-            border-radius: 14px;
-            padding: 4px;
-            margin-bottom: 28px;
-            gap: 4px;
+            gap: 3px;
+            padding: 3px;
+            margin-bottom: 20px;
+            background: #f5f1e8;
+            border: 1px solid #e8dfcd;
+            border-radius: 4px;
         }
 
         .role-tab {
             flex: 1;
-            padding: 12px 16px;
+            padding: 9px 8px;
             border: none;
-            border-radius: 11px;
-            cursor: pointer;
-            font-size: 15px;
-            font-weight: 500;
-            transition: all 0.3s ease;
+            border-radius: 3px;
             background: transparent;
-            color: #7a6b61;
-            text-align: center;
+            color: #7a6b5c;
+            font-family: inherit;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background .15s ease, color .15s ease;
         }
+
+        .role-tab:hover:not(.active) { color: #3f3529; }
 
         .role-tab.active {
-            background: white;
-            color: #a5372f;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-
-        .role-tab:hover:not(.active) {
-            color: #4d3e36;
-        }
-
-        .role-tab .role-icon {
-            display: block;
-            font-size: 20px;
-            margin-bottom: 2px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 13px;
-            font-weight: 500;
-            color: #4d3e36;
-            margin-bottom: 6px;
-            letter-spacing: 0.3px;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 14px 16px;
-            border: 2px solid #e6dcc8;
-            border-radius: 12px;
-            font-size: 15px;
-            transition: all 0.3s ease;
-            background: #fffdf7;
-            color: #1a1a1a;
-            outline: none;
-        }
-
-        .form-group input:focus {
-            border-color: #a5372f;
             background: #fff;
-            box-shadow: 0 0 0 4px rgba(192, 57, 43, 0.08);
-        }
-
-        .submit-btn {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #a5372f 0%, #8f2f28 100%);
-            color: white;
-            border: none;
-            border-radius: 14px;
-            font-size: 16px;
+            color: #a5372f;
             font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            letter-spacing: 0.5px;
-            margin-top: 4px;
+            box-shadow: 0 1px 3px rgba(60, 42, 18, .14);
         }
 
-        .submit-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 8px 24px rgba(192, 57, 43, 0.3);
+        /* ---------------- 表单 ---------------- */
+        .field { margin-bottom: 15px; }
+
+        .field > label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            color: #6b6255;
         }
 
-        .submit-btn:active {
-            transform: translateY(0);
+        .input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: #fff;
+            border: 1px solid #dfd5c2;
+            border-radius: 4px;
+            transition: border-color .15s ease, box-shadow .15s ease;
         }
 
-        .switch-mode {
-            text-align: center;
-            margin-top: 20px;
+        .input-wrap:focus-within {
+            border-color: #a5372f;
+            box-shadow: 0 0 0 3px rgba(165, 55, 47, .09);
+        }
+
+        .input-wrap .icon {
+            flex: none;
+            width: 42px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #b3a894;
+        }
+
+        .input-wrap:focus-within .icon { color: #a5372f; }
+
+        .input-wrap input {
+            flex: 1;
+            min-width: 0;
+            height: 44px;
+            padding: 0 12px 0 0;
+            border: none;
+            outline: none;
+            background: transparent;
+            font-family: inherit;
             font-size: 14px;
-            color: #7a6b61;
+            color: #1f2328;
+        }
+
+        .input-wrap input::placeholder { color: #b3a894; }
+
+        .input-wrap input:-webkit-autofill {
+            -webkit-box-shadow: 0 0 0 40px #fff inset;
+        }
+
+        .eye {
+            flex: none;
+            width: 40px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            background: transparent;
+            color: #b3a894;
+            cursor: pointer;
+        }
+
+        .eye:hover { color: #7a6b5c; }
+
+        .field-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 4px 0 18px;
+            font-size: 13px;
+        }
+
+        .remember {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #6b6255;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .remember input { accent-color: #a5372f; cursor: pointer; }
+
+        .link { color: #a5372f; text-decoration: none; cursor: pointer; }
+        .link:hover { text-decoration: underline; }
+
+        .auth-submit {
+            width: 100%;
+            height: 44px;
+            border: none;
+            border-radius: 4px;
+            background: #a5372f;
+            color: #fff;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: 4px;
+            text-indent: 4px;
+            cursor: pointer;
+            transition: background .15s ease;
+        }
+
+        .auth-submit:hover { background: #8f2f28; }
+        .auth-submit:active { transform: translateY(1px); }
+
+        .auth-submit:disabled {
+            background: #cbb4ae;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ---------------- 提示 ---------------- */
+        .error-msg, .success-msg {
+            display: none;
+            margin-bottom: 15px;
+            padding: 10px 14px;
+            border-radius: 4px;
+            border-left: 3px solid;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .error-msg { background: #fdf3f2; color: #c0392b; border-color: #c0392b; }
+        .success-msg { background: #f1faf5; color: #1a9e5c; border-color: #1a9e5c; }
+        .error-msg.show, .success-msg.show { display: block; }
+
+        .hint {
+            display: none;
+            margin: -6px 0 15px;
+            padding: 9px 12px;
+            background: #f5f1e8;
+            border-radius: 4px;
+            font-size: 12px;
+            line-height: 1.6;
+            color: #6b6255;
+        }
+
+        .hint.show { display: block; }
+
+        /* ---------------- 底部切换 ---------------- */
+        .switch-mode {
+            margin-top: 18px;
+            padding-top: 16px;
+            border-top: 1px solid #efe8d9;
+            text-align: center;
+            font-size: 13px;
+            color: #6b6255;
         }
 
         .switch-mode a {
             color: #a5372f;
+            font-weight: 600;
             text-decoration: none;
-            font-weight: 500;
             cursor: pointer;
         }
 
-        .switch-mode a:hover {
-            text-decoration: underline;
+        .switch-mode a:hover { text-decoration: underline; }
+
+        /* ---------------- 响应式 ---------------- */
+
+        /* 桌面：认证卡水平中心正好落在视口 80% 处 —— 画面 80% / 登录区 20% 二八分屏
+           min() 兜底：窄桌面自动左移，保证右侧始终留出边距 */
+        @media (min-width: 1000px) {
+            .auth-panel {
+                position: absolute;
+                top: 50%;
+                left: min(80%, calc(100% - 216px));
+                transform: translate(-50%, -50%);
+            }
         }
 
-        .error-msg {
-            background: #fef2f2;
-            color: #a5372f;
-            padding: 12px 16px;
-            border-radius: 10px;
-            font-size: 13px;
-            margin-bottom: 16px;
-            display: none;
-            border: 1px solid #ecd2cb;
+        /* 窄屏：回到居中单列 */
+        @media (max-width: 999px) {
+            .auth-shell {
+                justify-content: center;
+                padding: 130px 22px 96px;
+            }
         }
 
-        .error-msg.show { display: block; }
-
-        .success-msg {
-            background: #f7f2e7;
-            color: #16a34a;
-            padding: 12px 16px;
-            border-radius: 10px;
-            font-size: 13px;
-            margin-bottom: 16px;
-            display: none;
-            border: 1px solid #e6d6ba;
-        }
-
-        .success-msg.show { display: block; }
-
-        .back-home {
-            display: block;
-            text-align: center;
-            margin-top: 16px;
-            font-size: 13px;
-            color: #7a6b61;
-            text-decoration: none;
-        }
-
-        .back-home:hover { color: #a5372f; }
-
-        .btn-secondary {
-            background: #f6f0e4;
-            color: #4d3e36;
-        }
-        .btn-secondary:hover {
-            background: #f1e8d8;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            transform: translateY(-1px);
+        @media (max-width: 560px) {
+            .brand-corner { top: 24px; left: 20px; gap: 10px; }
+            .brand-title { font-size: 20px; letter-spacing: .1em; white-space: normal; }
+            .brand-bar { height: 1.5em; }
+            .foot { left: 20px; bottom: 16px; font-size: 11px; }
+            .auth-shell { padding: 118px 16px 86px; }
+            .auth-panel-head { padding: 20px 20px 16px; }
+            .auth-panel-body { padding: 20px 20px 22px; }
         }
     </style>
-  <link rel="stylesheet" href="theme/gufeng.css">
+    <link rel="stylesheet" href="theme/gufeng.css">
 </head>
 <body>
     <!-- 协议检测提示 -->
-    <div id="protocolWarning" style="display:none; position:fixed; top:0; left:0; right:0; background:#fff3cd; color:#b5853f; padding:14px 20px; text-align:center; z-index:9999; font-size:14px; border-bottom:2px solid #b5853f;">
-        ⚠️ 请使用 <b>http://localhost:3000/login.html</b> 访问，而不是直接双击打开文件！
+    <div id="protocolWarning" style="display:none; position:fixed; top:0; left:0; right:0; background:#fff8e1; color:#8a6d1f; padding:12px 20px; text-align:center; z-index:9999; font-size:13px; border-bottom:1px solid #e6d18a;">
+        ⚠️ 请通过 <b>http://localhost:3000/login.html</b> 访问，不要直接双击打开文件
     </div>
-    <div class="login-container">
-        <div class="login-header">
-            <div class="logo">🎋 华夏风物</div>
-            <div class="subtitle">非遗传承 · 数字平台</div>
+
+    <!-- 全屏水墨底图（首页主视觉） -->
+    <div class="bg-layer">
+        <div class="bg-soft"></div>
+        <div class="bg-crisp"></div>
+    </div>
+
+    <div class="auth-shell">
+        <!-- 左上角艺术字 -->
+        <div class="brand-corner">
+            <span class="brand-bar" aria-hidden="true"></span>
+            <span class="brand-title">华夏风物，非遗传承</span>
         </div>
-        <div class="login-body">
-            <div id="errorMsg" class="error-msg"></div>
-            <div id="successMsg" class="success-msg"></div>
 
-            <!-- 角色选择 -->
-            <div class="role-tabs" id="roleTabs">
-                <button class="role-tab active" data-role="user">
-                    <span class="role-icon">👤</span> 用户
-                </button>
-                <button class="role-tab" data-role="developer">
-                    <span class="role-icon">👨‍💻</span> 开发者
-                </button>
+        <!-- 右侧统一身份认证卡 -->
+        <main class="auth-panel">
+            <div class="auth-panel-head">
+                <h1 id="cardTitle">统一身份认证</h1>
+                <p id="cardSub">请使用平台账号登录</p>
             </div>
 
-            <!-- 登录表单 -->
-            <form id="loginForm">
-                <div class="form-group">
-                    <label>用户名</label>
-                    <input type="text" id="loginUsername" placeholder="请输入用户名" required autocomplete="username">
-                </div>
-                <div class="form-group">
-                    <label>密码</label>
-                    <input type="password" id="loginPassword" placeholder="请输入密码" required autocomplete="current-password">
-                </div>
-                <input type="hidden" id="loginRole" value="user">
-                <button type="submit" class="submit-btn">登 录</button>
-            </form>
+            <div class="auth-panel-body">
+                <div id="errorMsg" class="error-msg"></div>
+                <div id="successMsg" class="success-msg"></div>
 
-            <!-- 注册表单 -->
-            <form id="registerForm" style="display:none;">
-                <div class="form-group">
-                    <label>显示名称</label>
-                    <input type="text" id="regDisplayName" placeholder="请输入您的显示名称" required>
+                <!-- 登录身份 -->
+                <div class="role-tabs" id="roleTabs">
+                    <button type="button" class="role-tab active" data-role="user">用户</button>
+                    <button type="button" class="role-tab" data-role="developer">开发者</button>
                 </div>
-                <div class="form-group">
-                    <label>用户名</label>
-                    <input type="text" id="regUsername" placeholder="请输入用户名" required autocomplete="username">
-                </div>
-                <div class="form-group">
-                    <label>密码</label>
-                    <input type="password" id="regPassword" placeholder="密码至少6位" required minlength="6" autocomplete="new-password">
-                </div>
-                <input type="hidden" id="regRole" value="user">
-                <button type="submit" class="submit-btn">注 册</button>
-            </form>
 
-            <div class="switch-mode">
-                <span id="switchText">还没有账号？</span>
-                <a id="switchLink" onclick="toggleMode()">立即注册</a>
+                <!-- 登录表单 -->
+                <form id="loginForm">
+                    <div class="field">
+                        <label for="loginUsername">用户名</label>
+                        <div class="input-wrap">
+                            <span class="icon" aria-hidden="true">
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                            </span>
+                            <input type="text" id="loginUsername" placeholder="请输入用户名" required autocomplete="username">
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label for="loginPassword">密码</label>
+                        <div class="input-wrap">
+                            <span class="icon" aria-hidden="true">
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="11" width="18" height="11" rx="2"></rect>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                </svg>
+                            </span>
+                            <input type="password" id="loginPassword" placeholder="请输入密码" required autocomplete="current-password">
+                            <button type="button" class="eye" id="togglePwd" aria-label="显示密码">
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <input type="hidden" id="loginRole" value="user">
+
+                    <div class="field-row">
+                        <label class="remember" for="rememberMe">
+                            <input type="checkbox" id="rememberMe"> 记住用户名
+                        </label>
+                        <a class="link" id="forgotLink">忘记密码？</a>
+                    </div>
+
+                    <div id="forgotHint" class="hint">
+                        平台暂未开放自助重置。请联系管理员核验身份后重置密码，或使用其他账号登录。
+                    </div>
+
+                    <button type="submit" class="auth-submit">登 录</button>
+                </form>
+
+                <!-- 注册表单 -->
+                <form id="registerForm" style="display:none;">
+                    <div class="field">
+                        <label for="regDisplayName">显示名称</label>
+                        <div class="input-wrap">
+                            <span class="icon" aria-hidden="true">
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 2 3 7v6c0 5 3.8 8.4 9 9 5.2-.6 9-4 9-9V7z"></path>
+                                </svg>
+                            </span>
+                            <input type="text" id="regDisplayName" placeholder="请输入您的显示名称" required>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label for="regUsername">用户名</label>
+                        <div class="input-wrap">
+                            <span class="icon" aria-hidden="true">
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                            </span>
+                            <input type="text" id="regUsername" placeholder="请输入用户名" required autocomplete="username">
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label for="regPassword">密码</label>
+                        <div class="input-wrap">
+                            <span class="icon" aria-hidden="true">
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="11" width="18" height="11" rx="2"></rect>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                </svg>
+                            </span>
+                            <input type="password" id="regPassword" placeholder="密码至少 6 位" required minlength="6" autocomplete="new-password">
+                        </div>
+                    </div>
+
+                    <input type="hidden" id="regRole" value="user">
+
+                    <button type="submit" class="auth-submit" style="margin-top:4px;">注 册</button>
+                </form>
+
+                <div class="switch-mode">
+                    <span id="switchText">还没有账号？</span>
+                    <a id="switchLink" onclick="toggleMode()">立即注册</a>
+                </div>
             </div>
+        </main>
 
-            <a href="MainPage.html" class="back-home">← 返回首页</a>
+        <!-- 页脚 -->
+        <div class="foot">
+            华夏风物 · 非遗传承数字平台 &nbsp;|&nbsp; 统一身份认证服务
         </div>
     </div>
 
@@ -283,6 +559,7 @@
         }
 
         const API = '/api';
+        const REMEMBER_KEY = 'remember_username';
         let isLoginMode = true;
         let selectedRole = 'user';
 
@@ -297,14 +574,32 @@
             });
         });
 
-        // 登录/注册切换
+        // 登录 / 注册切换
         function toggleMode() {
             isLoginMode = !isLoginMode;
             document.getElementById('loginForm').style.display = isLoginMode ? 'block' : 'none';
             document.getElementById('registerForm').style.display = isLoginMode ? 'none' : 'block';
             document.getElementById('switchText').textContent = isLoginMode ? '还没有账号？' : '已有账号？';
             document.getElementById('switchLink').textContent = isLoginMode ? '立即注册' : '立即登录';
+            document.getElementById('cardTitle').textContent = isLoginMode ? '统一身份认证' : '账号注册';
+            document.getElementById('cardSub').textContent = isLoginMode ? '请使用平台账号登录' : '创建您的平台账号';
             hideMessages();
+            hideForgotHint();
+        }
+
+        // 密码可见性切换
+        document.getElementById('togglePwd').addEventListener('click', () => {
+            const input = document.getElementById('loginPassword');
+            input.type = input.type === 'password' ? 'text' : 'password';
+        });
+
+        // 忘记密码提示（平台未开放自助重置，仅给出指引）
+        document.getElementById('forgotLink').addEventListener('click', () => {
+            document.getElementById('forgotHint').classList.toggle('show');
+        });
+
+        function hideForgotHint() {
+            document.getElementById('forgotHint').classList.remove('show');
         }
 
         function showError(msg) {
@@ -331,6 +626,23 @@
             localStorage.setItem('user', JSON.stringify(data.user));
         }
 
+        // 记住用户名（仅存用户名，绝不保存密码）
+        function rememberUsername(username) {
+            if (document.getElementById('rememberMe').checked) {
+                localStorage.setItem(REMEMBER_KEY, username);
+            } else {
+                localStorage.removeItem(REMEMBER_KEY);
+            }
+        }
+
+        (function restoreUsername() {
+            const saved = localStorage.getItem(REMEMBER_KEY);
+            if (saved) {
+                document.getElementById('loginUsername').value = saved;
+                document.getElementById('rememberMe').checked = true;
+            }
+        })();
+
         // 读取 ?redirect= 回跳地址（仅允许站内相对路径，防止开放重定向）
         function getRedirect() {
             try {
@@ -344,13 +656,16 @@
         function successDestination(user) {
             const redirect = getRedirect();
             if (redirect) return redirect;
-            return user.role === 'user' ? 'user-dashboard.html' : 'developer-dashboard.html';
+            // 后端会把 user 归一化为 buyer、developer 归一化为 artisan，两种写法都要认
+            const isBuyer = user.role === 'user' || user.role === 'buyer';
+            return isBuyer ? 'user-dashboard.html' : 'developer-dashboard.html';
         }
 
         // 登录
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             hideMessages();
+            hideForgotHint();
 
             const username = document.getElementById('loginUsername').value.trim();
             const password = document.getElementById('loginPassword').value;
@@ -359,6 +674,10 @@
             if (!username || !password) {
                 return showError('请填写用户名和密码');
             }
+
+            const btn = e.target.querySelector('.auth-submit');
+            btn.disabled = true;
+            btn.textContent = '登录中...';
 
             try {
                 const res = await fetch(API + '/login', {
@@ -369,9 +688,13 @@
                 const data = await res.json();
 
                 if (!res.ok) {
-                    return showError(data.error || '登录失败');
+                    showError(data.error || '登录失败');
+                    btn.disabled = false;
+                    btn.textContent = '登 录';
+                    return;
                 }
 
+                rememberUsername(username);
                 saveAuth(data);
                 showSuccess('登录成功！正在跳转...');
 
@@ -380,6 +703,8 @@
                 }, 800);
             } catch (err) {
                 showError('网络错误，请检查服务器是否启动');
+                btn.disabled = false;
+                btn.textContent = '登 录';
             }
         });
 
@@ -387,6 +712,7 @@
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             hideMessages();
+            hideForgotHint();
 
             const display_name = document.getElementById('regDisplayName').value.trim();
             const username = document.getElementById('regUsername').value.trim();
@@ -400,6 +726,10 @@
                 return showError('密码至少6位');
             }
 
+            const btn = e.target.querySelector('.auth-submit');
+            btn.disabled = true;
+            btn.textContent = '注册中...';
+
             try {
                 const res = await fetch(API + '/register', {
                     method: 'POST',
@@ -409,9 +739,13 @@
                 const data = await res.json();
 
                 if (!res.ok) {
-                    return showError(data.error || '注册失败');
+                    showError(data.error || '注册失败');
+                    btn.disabled = false;
+                    btn.textContent = '注 册';
+                    return;
                 }
 
+                rememberUsername(username);
                 saveAuth(data);
                 showSuccess('注册成功！正在跳转...');
 
@@ -420,6 +754,8 @@
                 }, 800);
             } catch (err) {
                 showError('网络错误，请检查服务器是否启动');
+                btn.disabled = false;
+                btn.textContent = '注 册';
             }
         });
     </script>

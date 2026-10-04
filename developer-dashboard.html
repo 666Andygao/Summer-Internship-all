@@ -508,6 +508,7 @@
         <div class="nav-brand">🎋 华夏风物 · 开发者中心</div>
         <div class="nav-user">
             <span class="user-badge">👨‍💻 开发者：<span id="displayName"></span></span>
+            <a href="manage-users.html" style="text-decoration:none;color:#666;font-size:13px;">管理用户</a>
             <a href="MainPage.html" style="text-decoration:none;color:#666;font-size:13px;">返回首页</a>
             <button class="logout-btn" onclick="logout()">退出登录</button>
         </div>
@@ -587,7 +588,8 @@
             }
 
             currentUser = JSON.parse(userStr);
-            if (currentUser.role !== 'developer') {
+            // 兼容两种写法：注册接口会把 developer 规范化为 artisan，历史数据里可能是 developer
+            if (currentUser.role !== 'developer' && currentUser.role !== 'artisan') {
                 window.location.href = 'user-dashboard.html';
                 return;
             }

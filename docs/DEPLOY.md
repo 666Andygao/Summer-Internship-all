@@ -93,6 +93,10 @@ PAYMENT_CALLBACK_TOKEN=<随机字符串>
 # 前后端同域名部署时留空（最安全）
 CORS_ORIGIN=
 
+# 密码哈希强度与反向代理
+BCRYPT_COST=12
+TRUST_PROXY=1
+
 # 数据库
 DB_HOST=localhost
 DB_PORT=3306
@@ -190,16 +194,20 @@ mysql -u heritage -p heritage < backup_2026-08-20.sql
 
 ## 五、上线前检查清单
 
-- [ ] `.env` 中 `JWT_SECRET` 已改为随机长字符串（**不是**默认值）
+- [ ] `.env` 中 `JWT_SECRET` 已改为随机长字符串（**不是**默认值，且**不要复用开发机 `.env` 里的值**）
 - [ ] `.env` 中 `DB_PASSWORD` 已设置，且数据库账号不是 root
 - [ ] `.env` 已被 `.gitignore` 忽略，**未提交到仓库**
 - [ ] `NODE_ENV=production`
+- [ ] 经 Nginx 部署时 `TRUST_PROXY=1`（否则限流与日志拿到的是代理 IP，防爆破会失效）
 - [ ] 已执行 `node db/init.js` 与 `node db/migrate.js`
 - [ ] PM2 进程为 online，且已 `pm2 save` + `pm2 startup`
 - [ ] Nginx 已配置并成功反代
 - [ ] 已验证敏感文件不可访问：`curl -I http://你的域名/database.json` 应返回 **404**
+- [ ] 健康检查可用：`curl http://你的域名/api/health` 返回 `"status":"ok"`
+- [ ] **已执行 `git rm --cached database.json`** 并提交（该文件含真实用户密码哈希，不应继续被仓库跟踪）
+- [ ] 演示账号（`testuser`/`testdev` 等）的默认密码已修改或删除
 - [ ] 已配置数据库定时备份
-- [ ] （推荐）已启用 HTTPS
+- [ ] **已启用 HTTPS**（登录密码、JWT 令牌、私信在 HTTP 下明文传输，公网部署为必要条件）
 
 ---
 

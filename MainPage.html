@@ -1193,7 +1193,9 @@
     if (token && userStr && loginLink) {
       try {
         const user = JSON.parse(userStr);
-        const dashboardUrl = user.role === 'user' ? 'user-dashboard.html' : 'developer-dashboard.html';
+        // 兼容规范化后的角色名：user/buyer → 用户台，developer/artisan → 开发者台
+        const isBuyer = user.role === 'user' || user.role === 'buyer';
+        const dashboardUrl = isBuyer ? 'user-dashboard.html' : 'developer-dashboard.html';
 
         loginLink.href = dashboardUrl;
         loginLink.title = '个人中心';
@@ -1211,6 +1213,16 @@
           topLinks.appendChild(pcLink);
         }
       } catch(e) {}
+    }
+
+    // ------ 5. 在线状态心跳（每 30 秒上报一次） ------
+    if (token) {
+      const heartbeat = () => fetch('/api/heartbeat', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token }
+      }).catch(() => {});
+      heartbeat();
+      setInterval(heartbeat, 30000);
     }
 
     document.querySelector('.nav-actions span')?.addEventListener('click', function() {
