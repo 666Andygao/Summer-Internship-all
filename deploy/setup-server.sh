@@ -274,6 +274,22 @@ fi
 # ---------- 6. PM2 + 防火墙 ----------
 step "6/6 安装 PM2 并放行端口"
 
+# npm 全局安装的命令落在 Node 自己的 bin 目录里，而那个目录不在系统 PATH 上。
+# node / npm / npx 是前面手动链接到 /usr/local/bin 的，pm2 是装完之后才出现的，
+# 必须在这里再链一次，否则脚本自己后面都调不到 pm2。
+link_npm_globals() {
+    local bin_dir
+    bin_dir="$(npm prefix -g 2>/dev/null)/bin"
+    [ -d "$bin_dir" ] || return 0
+    local f
+    for f in "$bin_dir"/*; do
+        [ -e "$f" ] || continue
+        ln -sf "$f" "/usr/local/bin/$(basename "$f")"
+    done
+    # 非登录 shell（cron / systemd）也要能找到 pm2
+    printf 'export PATH="%s:$PATH"\n' "$bin_dir" >> /etc/profile.d/nodejs.sh
+}
+
 if command -v pm2 >/dev/null 2>&1; then
     ok "PM2 已安装，跳过"
 else
@@ -281,7 +297,10 @@ else
     npm install -g pm2 --registry="${NPM_REGISTRY:-https://registry.npmmirror.com}" >/dev/null 2>&1 \
         || npm install -g pm2 >/dev/null 2>&1 \
         || die "PM2 安装失败，请手动执行：npm install -g pm2"
+    link_npm_globals
     hash -r 2>/dev/null || true
+    command -v pm2 >/dev/null 2>&1 \
+        || die "PM2 已安装但命令不在 PATH 上，请手动执行：ln -sf \"\$(npm prefix -g)/bin/pm2\" /usr/local/bin/pm2"
     ok "PM2 $(pm2 -v) 安装完成"
 fi
 
