@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+  <title>华夏风物志 · 非遗传承</title>
+  <style>
+    /* ===== 全局重置 & 基础 ===== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f5f5f5;
+      color: #1a1a1a;
+      line-height: 1.5;
+    }
+
+    .site-wrapper {
+      max-width: 1440px;
+      margin: 0 auto;
+      background: #ffffff;
+      box-shadow: 0 0 20px rgba(0,0,0,0.02);
+      overflow: hidden; /* 防止滚动条偏移导致动画闪烁 */
+    }
+
+    /* ===== 顶部栏 ===== */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 40px;
+      height: 48px;
+      background: #f8f8f8;
+      border-bottom: 1px solid #eaeaea;
+      font-size: 14px;
+      color: #333;
+      transition: background 0.3s ease, box-shadow 0.3s ease;
+    }
+    .top-bar.scrolled {
+      background: #ffffff;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    }
+
+    .lang-region {
+      display: flex;
+      gap: 18px;
+      align-items: center;
+    }
+
+    .lang-region span {
+      cursor: default;
+      letter-spacing: 0.3px;
+    }
+
+    .lang-region .divider {
+      color: #ccc;
+    }
+
+    .top-links {
+      display: flex;
+      gap: 24px;
+      font-size: 13px;
+    }
+
+    .top-links a {
+      text-decoration: none;
+      color: #333;
+      transition: color 0.2s;
+      position: relative;
+    }
+    .top-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 0;
+      height: 1.5px;
+      background: #c0392b;
+      transition: width 0.3s ease;
+    }
+    .top-links a:hover {
+      color: #c0392b;
+    }
+    .top-links a:hover::after {
+      width: 100%;
+    }
+
+    /* ===== 主导航 ===== */
+    .main-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 40px;
+      background: white;
+      border-bottom: 1px solid #f0f0f0;
+      transition: box-shadow 0.3s ease;
+    }
+    .main-nav.scrolled {
+      box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+    }
+
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+      color: #c0392b;
+      background: #fce8e5;
+      padding: 4px 12px;
+      border-radius: 30px;
+      line-height: 1.2;
+      transition: transform 0.3s ease, background 0.3s ease;
+    }
+    .brand-icon:hover {
+      transform: scale(1.03) rotate(-1deg);
+      background: #fcded9;
+    }
+
+    .brand-sub {
+      font-size: 14px;
+      color: #666;
+      font-weight: 300;
+      letter-spacing: 2px;
+      border-left: 1px solid #ddd;
+      padding-left: 12px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      font-size: 15px;
+      font-weight: 450;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: #1a1a1a;
+      position: relative;
+      transition: color 0.2s;
+      padding: 4px 0;
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: #c0392b;
+      transition: width 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+
+    .nav-links a:hover {
+      color: #c0392b;
+    }
+
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+
+    .nav-actions {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .nav-actions span {
+      font-size: 20px;
+      cursor: default;
+      color: #444;
+      transition: transform 0.25s ease, color 0.2s;
+      display: inline-block;
+    }
+    .nav-actions span:hover {
+      transform: scale(1.15);
+      color: #c0392b;
+    }
+
+    .nav-actions a {
+      text-decoration: none;
+      color: #444;
+      transition: transform 0.25s ease;
+      display: inline-block;
+    }
+    .nav-actions a:hover {
+      transform: scale(1.1);
+    }
+
+    /* ===== 主横幅 Hero ===== */
+    .hero-section {
+      background: #f2ebe4;
+      background-image: radial-gradient(circle at 20% 30%, rgba(192, 57, 43, 0.03) 0%, transparent 40%),
+                        radial-gradient(circle at 80% 70%, rgba(192, 57, 43, 0.05) 0%, transparent 50%);
+      padding: 40px 40px 30px 40px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #e6ddd6;
+      transition: background 0.6s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-section::before {
+      content: '✦';
+      position: absolute;
+      font-size: 22rem;
+      color: rgba(192, 57, 43, 0.02);
+      right: -60px;
+      bottom: -80px;
+      transform: rotate(12deg);
+      pointer-events: none;
+      animation: floatSymbol 14s infinite alternate ease-in-out;
+    }
+    @keyframes floatSymbol {
+      0% { transform: rotate(8deg) translateY(0px); opacity: 0.6; }
+      100% { transform: rotate(-4deg) translateY(-30px); opacity: 1; }
+    }
+
+    .hero-text {
+      flex: 1 1 300px;
+      padding-right: 20px;
+      z-index: 2;
+    }
+
+    .hero-text .tagline {
+      display: inline-block;
+      background: #c0392b;
+      color: white;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 2px;
+      padding: 3px 14px;
+      border-radius: 20px;
+      margin-bottom: 14px;
+      animation: pulseTag 3s infinite ease-in-out;
+      box-shadow: 0 2px 12px rgba(192,57,43,0.2);
+    }
+    @keyframes pulseTag {
+      0%, 100% { transform: scale(1); box-shadow: 0 2px 12px rgba(192,57,43,0.2); }
+      50% { transform: scale(1.03); box-shadow: 0 4px 20px rgba(192,57,43,0.3); }
+    }
+
+    .hero-text h1 {
+      font-size: clamp(2.2rem, 6vw, 4rem);
+      font-weight: 600;
+      line-height: 1.1;
+      letter-spacing: -0.01em;
+      color: #1a1a1a;
+      margin-bottom: 8px;
+    }
+
+    .hero-text h1 .highlight {
+      color: #c0392b;
+      background: linear-gradient(145deg, #b0301e, #d94f3a);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 700;
+      animation: shimmerText 4s infinite alternate;
+    }
+    @keyframes shimmerText {
+      0% { background-position: 0% 50%; filter: drop-shadow(0 2px 4px rgba(192,57,43,0.1)); }
+      100% { background-position: 100% 50%; filter: drop-shadow(0 4px 12px rgba(192,57,43,0.2)); }
+    }
+
+    .hero-text .sub-head {
+      font-size: 1.2rem;
+      color: #4d3e36;
+      margin-bottom: 12px;
+      font-weight: 350;
+      letter-spacing: 1px;
+      opacity: 0;
+      animation: fadeUp 0.9s 0.2s forwards;
+    }
+
+    .hero-text .desc {
+      font-size: 1rem;
+      color: #4d3e36;
+      max-width: 480px;
+      margin-bottom: 20px;
+      line-height: 1.6;
+      opacity: 0.85;
+      opacity: 0;
+      animation: fadeUp 0.9s 0.4s forwards;
+    }
+
+    @keyframes fadeUp {
+      0% { opacity: 0; transform: translateY(18px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    .btn-primary {
+      display: inline-block;
+      background: #c0392b;
+      color: white;
+      padding: 12px 32px;
+      border-radius: 40px;
+      font-weight: 500;
+      font-size: 1rem;
+      letter-spacing: 0.5px;
+      text-decoration: none;
+      transition: background 0.25s, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s;
+      box-shadow: 0 4px 10px rgba(192, 57, 43, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-primary::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -60%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+      transform: rotate(25deg) translateY(-30%);
+      transition: transform 0.5s ease;
+    }
+    .btn-primary:hover {
+      background: #a83226;
+      transform: scale(1.04) translateY(-2px);
+      box-shadow: 0 8px 24px rgba(192, 57, 43, 0.3);
+    }
+    .btn-primary:hover::after {
+      transform: rotate(25deg) translateY(30%);
+    }
+
+    .hero-image {
+      flex: 0 0 280px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #e6dbd1;
+      border-radius: 40px 40px 40px 4px;
+      padding: 20px 10px;
+      min-height: 180px;
+      background-image: linear-gradient(145deg, #dccfc4, #eee4db);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+      transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.6s;
+      animation: floatImage 6s infinite alternate ease-in-out;
+    }
+    @keyframes floatImage {
+      0% { transform: translateY(0px) rotate(0deg); }
+      100% { transform: translateY(-12px) rotate(0.8deg); }
+    }
+    .hero-image:hover {
+      transform: scale(1.02) translateY(-6px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.06);
+    }
+
+    .hero-image .icon-symbol {
+      font-size: 5rem;
+      line-height: 1;
+      filter: drop-shadow(2px 6px 12px rgba(0,0,0,0.08));
+      letter-spacing: 8px;
+      color: #7a5a4a;
+      animation: iconPulse 4s infinite alternate;
+    }
+    @keyframes iconPulse {
+      0% { transform: scale(1) rotate(-2deg); }
+      100% { transform: scale(1.04) rotate(2deg); }
+    }
+
+    /* ===== 统计卡片 ===== */
+    .stats-section {
+      padding: 30px 40px;
+      background: #fcfaf8;
+      border-bottom: 1px solid #eee8e2;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 20px;
+      text-align: center;
+    }
+
+    .stat-item {
+      background: white;
+      padding: 18px 10px;
+      border-radius: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+      border: 1px solid #f0ebe7;
+      transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s, border-color 0.3s;
+      cursor: default;
+    }
+    .stat-item:hover {
+      transform: translateY(-8px) scale(1.01);
+      box-shadow: 0 12px 28px rgba(0,0,0,0.05);
+      border-color: #dccfc4;
+    }
+
+    .stat-item .number {
+      font-size: 2.2rem;
+      font-weight: 600;
+      color: #c0392b;
+      letter-spacing: -0.5px;
+      transition: transform 0.3s;
+      display: inline-block;
+    }
+    .stat-item:hover .number {
+      transform: scale(1.08);
+    }
+
+    .stat-item .label {
+      font-size: 0.85rem;
+      color: #5a4d44;
+      margin-top: 4px;
+    }
+
+    /* ===== 联合国名录 ===== */
+    .unesco-section {
+      padding: 30px 40px 10px 40px;
+      background: white;
+      border-bottom: 1px solid #f0ebe7;
+    }
+
+    .unesco-section .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #ececec;
+      padding-bottom: 10px;
+    }
+
+    .unesco-section .section-header h2 {
+      font-size: 1.6rem;
+      font-weight: 500;
+      color: #1a1a1a;
+    }
+
+    .unesco-badge {
+      display: inline-block;
+      background: #c0392b10;
+      color: #c0392b;
+      font-size: 0.9rem;
+      padding: 2px 16px;
+      border-radius: 30px;
+      border: 1px solid #c0392b30;
+      transition: all 0.3s;
+    }
+    .unesco-badge:hover {
+      background: #c0392b20;
+      transform: scale(1.03);
+    }
+
+    .unesco-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .unesco-item {
+      background: #faf8f6;
+      padding: 14px 12px;
+      border-radius: 16px;
+      border: 1px solid #f0ebe7;
+      font-size: 0.95rem;
+      color: #2d241f;
+      text-align: center;
+      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      cursor: default;
+    }
+    .unesco-item:hover {
+      transform: translateY(-5px) scale(1.02);
+      background: #f5efe9;
+      border-color: #c0392b40;
+      box-shadow: 0 8px 18px rgba(192,57,43,0.06);
+    }
+
+    .unesco-item strong {
+      display: block;
+      font-size: 0.8rem;
+      color: #b14f3e;
+      margin-top: 4px;
+      font-weight: 400;
+    }
+
+    /* ===== 推荐卡片 ===== */
+    .recommend-section {
+      padding: 40px 40px 50px 40px;
+      background: white;
+      border-bottom: 1px solid #f0ebe7;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 28px;
+      border-bottom: 1px solid #ececec;
+      padding-bottom: 12px;
+    }
+
+    .section-header h2 {
+      font-size: 1.8rem;
+      font-weight: 500;
+      letter-spacing: -0.3px;
+      color: #1a1a1a;
+    }
+
+    .section-header .more-link {
+      color: #888;
+      font-size: 14px;
+      text-decoration: none;
+      border-bottom: 1px dashed #ccc;
+      transition: color 0.2s, border-color 0.2s, transform 0.2s;
+      display: inline-block;
+    }
+    .section-header .more-link:hover {
+      color: #c0392b;
+      border-bottom-color: #c0392b;
+      transform: translateX(4px);
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 28px;
+    }
+
+    .card {
+      background: #faf8f6;
+      border-radius: 24px;
+      padding: 20px 18px 24px;
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      border: 1px solid #f0ebe7;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #c0392b, #e67e6b, #c0392b);
+      background-size: 200% 100%;
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+    .card:hover::before {
+      opacity: 1;
+      animation: gradientMove 1.2s linear infinite;
+    }
+    @keyframes gradientMove {
+      0% { background-position: 0% 0%; }
+      100% { background-position: 200% 0%; }
+    }
+
+    .card:hover {
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(0,0,0,0.02);
+      transform: translateY(-8px);
+      border-color: #dccfc4;
+    }
+
+    .card-emoji {
+      font-size: 2.8rem;
+      margin-bottom: 12px;
+      background: #ede7e1;
+      width: 60px;
+      height: 60px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s;
+    }
+    .card:hover .card-emoji {
+      transform: rotate(6deg) scale(1.06);
+      background: #e5dbd2;
+    }
+
+    .card h3 {
+      font-size: 1.3rem;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: #1e1a17;
+    }
+
+    .card .sub {
+      font-size: 0.8rem;
+      color: #b14f3e;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      font-weight: 400;
+      background: #f0e3dd;
+      display: inline-block;
+      padding: 0 10px;
+      border-radius: 12px;
+      transition: background 0.3s;
+    }
+    .card:hover .sub {
+      background: #e8d7cf;
+    }
+
+    .card p {
+      color: #4d3e36;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin-bottom: 14px;
+      flex: 1;
+    }
+
+    .card .tag {
+      display: inline-block;
+      font-size: 0.7rem;
+      background: white;
+      padding: 3px 12px;
+      border-radius: 30px;
+      border: 1px solid #ddd6cf;
+      color: #4d3e36;
+      margin-right: 6px;
+      margin-bottom: 4px;
+      transition: all 0.25s;
+    }
+    .card:hover .tag {
+      background: #fcf8f5;
+      border-color: #c0392b40;
+    }
+
+    .card .learn-more {
+      margin-top: 10px;
+      font-size: 0.9rem;
+      color: #c0392b;
+      text-decoration: none;
+      font-weight: 450;
+      align-self: flex-start;
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.25s, transform 0.25s;
+      display: inline-block;
+    }
+    .card .learn-more:hover {
+      border-bottom-color: #c0392b;
+      transform: translateX(4px);
+    }
+
+    /* ===== 底部 ===== */
+    .footer-links {
+      background: #f5f2ef;
+      padding: 30px 40px 20px;
+      border-top: 1px solid #e0d8d1;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 20px;
+      font-size: 13px;
+      color: #3f3732;
+    }
+
+    .footer-links .col {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .footer-links .col strong {
+      font-weight: 500;
+      color: #1f1b18;
+      margin-bottom: 4px;
+      transition: color 0.2s;
+    }
+    .footer-links .col strong:hover {
+      color: #c0392b;
+    }
+
+    .footer-links a {
+      color: #4f443d;
+      text-decoration: none;
+      transition: color 0.2s, transform 0.2s;
+      display: inline-block;
+      width: fit-content;
+    }
+    .footer-links a:hover {
+      color: #c0392b;
+      transform: translateX(4px);
+    }
+
+    .copyright {
+      background: #f5f2ef;
+      padding: 12px 40px 24px;
+      font-size: 12px;
+      color: #7a6b61;
+      border-top: 1px solid #e5dcd4;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    /* ===== 响应式 ===== */
+    @media (max-width: 860px) {
+      .top-bar, .main-nav {
+        flex-wrap: wrap;
+        padding: 12px 20px;
+      }
+      .nav-links {
+        gap: 18px;
+        flex-wrap: wrap;
+      }
+      .hero-section {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 28px;
+      }
+      .hero-image {
+        width: 100%;
+        flex: none;
+      }
+      .card-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .stats-section {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 550px) {
+      .card-grid {
+        grid-template-columns: 1fr;
+      }
+      .main-nav {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+      }
+      .nav-links {
+        justify-content: center;
+      }
+      .hero-text h1 {
+        font-size: 2.2rem;
+      }
+      .footer-links {
+        flex-direction: column;
+        gap: 16px;
+      }
+      .stats-section {
+        grid-template-columns: 1fr 1fr;
+      }
+      .unesco-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+	  .main-nav .nav-links {
+	    gap: 10px;
+	    font-size: 13px;
+	  }
+	  .nav-links a {
+	    padding: 4px 8px;
+	  }
+    }
+	
+	/* 回到顶部按钮 */
+	  .back-to-top {
+	    position: fixed;
+	    bottom: 40px;
+	    right: 40px;
+	    width: 50px;
+	    height: 50px;
+	    background: #c0392b;
+	    color: white;
+	    border: none;
+	    border-radius: 50%;
+	    font-size: 24px;
+	    cursor: pointer;
+	    box-shadow: 0 4px 16px rgba(192, 57, 43, 0.35);
+	    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+	    opacity: 0;
+	    visibility: hidden;
+	    transform: translateY(20px);
+	    z-index: 999;
+	    display: flex;
+	    align-items: center;
+	    justify-content: center;
+	    font-family: inherit;
+	  }
+	  .back-to-top:hover {
+	    background: #a83226;
+	    transform: scale(1.08) translateY(-2px);
+	    box-shadow: 0 6px 24px rgba(192, 57, 43, 0.45);
+	  }
+	  .back-to-top.visible {
+	    opacity: 1;
+	    visibility: visible;
+	    transform: translateY(0);
+	  }
+	  .back-to-top:active {
+	    transform: scale(0.92);
+	  }
+	
+	  @media (max-width: 550px) {
+	    .back-to-top {
+	      bottom: 24px;
+	      right: 24px;
+	      width: 44px;
+	      height: 44px;
+	      font-size: 20px;
+	    }
+	  }
+	
+  </style>
+</head>
+<body>
+<div class="site-wrapper">
+
+  <!-- ===== 顶部栏 ===== -->
+  <div class="top-bar" id="topBar">
+    <div class="lang-region">
+      <span>🌏 中国 · 中文</span>
+      <span class="divider">|</span>
+      <span>非物质文化遗产</span>
+    </div>
+    <div class="top-links">
+      <a href="#">个人及家庭</a>
+      <a href="#">传承人</a>
+      <a href="#">服务支持</a>
+      <a href="#">关于我们</a>
+    </div>
+  </div>
+
+  <!-- ===== 主导航 ===== -->
+  <div class="main-nav" id="mainNav">
+    <div class="logo-area">
+      <div class="brand-icon">🎋 数赋黔滇</div>
+      <div class="brand-sub">非遗·传承</div>
+    </div>
+    <div class="nav-links">
+      <a href="#" class="active">首页</a>
+      <a href="#">非遗名录</a>
+      <a href="#">匠人</a>
+      <a href="model.html">数字馆</a>
+      <a href="/shop/">商城</a>
+      <a href="#">活动</a>
+      <a href="#">社区</a>
+	  <a href="archive.html" class="active">📖 文化档案</a>
+    </div>
+    <div class="nav-actions">
+      <span>🔍</span>
+      <a href="login.html" title="登录"><span>👤</span></a>
+    </div>
+  </div>
+
+  <!-- ===== 主横幅 ===== -->
+  <div class="hero-section">
+    <div class="hero-text">
+      <div class="tagline">✦ 华夏非遗 · 新「枫」潮</div>
+      <h1>
+        我的两亿<br>
+        <span class="highlight">非遗传承</span>
+      </h1>
+      <div class="sub-head">匠心 · 技艺 · 记忆</div>
+      <div class="desc">
+        从缫丝造纸到雕版印刷，从昆曲古琴到二十四节气 —— 让千年文脉在数字时代焕发新生。
+      </div>
+      <a href="#" class="btn-primary">探索非遗 · 了解更多</a>
+    </div>
+    <div class="hero-image">
+      <div class="icon-symbol">🏮  ✿  🎋</div>
+    </div>
+  </div>
+
+  <!-- ===== 统计卡片 ===== -->
+  <div class="stats-section">
+    <div class="stat-item">
+      <div class="number" data-count="45">45</div>
+      <div class="label">联合国教科文组织名录（名册）项目</div>
+    </div>
+    <div class="stat-item">
+      <div class="number" data-count="1557">1557</div>
+      <div class="label">国家级代表性项目</div>
+    </div>
+    <div class="stat-item">
+      <div class="number" data-count="3068">3068</div>
+      <div class="label">国家级代表性传承人</div>
+    </div>
+    <div class="stat-item">
+      <div class="number" data-count="10">10</div>
+      <div class="label">非遗门类</div>
+    </div>
+  </div>
+
+  <!-- ===== 联合国教科文组织名录精选 ===== -->
+  <div class="unesco-section">
+    <div class="section-header">
+      <h2>🌍 联合国教科文组织非物质文化遗产 <span class="unesco-badge">名录（名册）项目</span></h2>
+      <a href="#" class="more-link">查看全部 45 项 →</a>
+    </div>
+    <div class="unesco-grid">
+      <div class="unesco-item">昆曲 <strong>人类非遗</strong></div>
+      <div class="unesco-item">古琴艺术 <strong>人类非遗</strong></div>
+      <div class="unesco-item">新疆维吾尔木卡姆艺术 <strong>人类非遗</strong></div>
+      <div class="unesco-item">蒙古族长调民歌 <strong>人类非遗</strong></div>
+      <div class="unesco-item">中国篆刻 <strong>人类非遗</strong></div>
+      <div class="unesco-item">中国雕版印刷技艺 <strong>人类非遗</strong></div>
+      <div class="unesco-item">中国书法 <strong>人类非遗</strong></div>
+      <div class="unesco-item">中国剪纸 <strong>人类非遗</strong></div>
+      <div class="unesco-item">端午节 <strong>人类非遗</strong></div>
+      <div class="unesco-item">妈祖信俗 <strong>人类非遗</strong></div>
+    </div>
+  </div>
+
+  <!-- ===== 推荐信息卡片 ===== -->
+  <div class="recommend-section">
+    <div class="section-header">
+      <h2>📌 推荐 · 非遗瑰宝</h2>
+      <a href="#" class="more-link">查看全部 →</a>
+    </div>
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-emoji">🏮</div>
+        <h3>秦淮灯彩</h3>
+        <div class="sub">国家级非遗</div>
+        <p>南京秦淮灯彩，融合剪纸、彩扎、裱糊等技艺，传承千年，是元宵佳节最璀璨的江南记忆。</p>
+        <div>
+          <span class="tag">#扎染</span>
+          <span class="tag">#纸艺</span>
+        </div>
+        <a href="#" class="learn-more">了解技艺 →</a>
+      </div>
+      <div class="card">
+        <div class="card-emoji">🎋</div>
+        <h3>竹编 · 细丝</h3>
+        <div class="sub">传统美术</div>
+        <p>四川竹编，以慈竹为料，细如发丝，编织出栩栩如生的花鸟虫鱼，堪称指尖上的非遗。</p>
+        <div>
+          <span class="tag">#竹艺</span>
+          <span class="tag">#编织</span>
+        </div>
+        <a href="#" class="learn-more">了解技艺 →</a>
+      </div>
+      <div class="card">
+        <div class="card-emoji">🖌️</div>
+        <h3>徽墨 · 歙砚</h3>
+        <div class="sub">文房四宝</div>
+        <p>徽墨“丰肌腻理，光泽如漆”，歙砚“涩不留笔，滑不拒墨”，文房雅器，传世之珍。</p>
+        <div>
+          <span class="tag">#制墨</span>
+          <span class="tag">#砚台</span>
+        </div>
+        <a href="#" class="learn-more">了解技艺 →</a>
+      </div>
+      <div class="card">
+        <div class="card-emoji">🎶</div>
+        <h3>古琴 · 广陵派</h3>
+        <div class="sub">人类非遗</div>
+        <p>广陵琴派，始于清初，以“跌宕多变，绮丽细腻”著称，一曲《梅花三弄》穿越古今。</p>
+        <div>
+          <span class="tag">#古琴</span>
+          <span class="tag">#昆曲</span>
+        </div>
+        <a href="#" class="learn-more">了解技艺 →</a>
+      </div>
+	  <div class="card" style="background: linear-gradient(145deg, #f5ede7, #fcf8f5); border-color: #c0392b40;">
+	    <div class="card-emoji" style="background: #c0392b20;">📚</div>
+	    <h3>文化档案 · 非遗宝库</h3>
+	    <div class="sub">贵州 · 四川 · 云南</div>
+	    <p>汇集西南地区国家级非物质文化遗产，苗绣、蜀锦、扎染……一键探索千年匠心。</p>
+	    <a href="archive.html" class="learn-more" style="color:#c0392b; font-weight:600;">进入文化档案 →</a>
+	  </div>
+    </div>
+  </div>
+
+  <!-- ===== 底部 ===== -->
+  <div class="footer-links">
+    <div class="col">
+      <strong>非遗传承</strong>
+      <a href="#">代表性项目</a>
+      <a href="#">传承人数据库</a>
+      <a href="#">保护条例</a>
+    </div>
+    <div class="col">
+      <strong>数字非遗</strong>
+      <a href="#">3D 技艺展示</a>
+      <a href="#">非遗地图</a>
+      <a href="#">线上课堂</a>
+    </div>
+    <div class="col">
+      <strong>合作与支持</strong>
+      <a href="#">匠人入驻</a>
+      <a href="#">品牌联名</a>
+      <a href="#">非遗基金</a>
+    </div>
+    <div class="col">
+      <strong>关于华夏风物</strong>
+      <a href="#">我们的使命</a>
+      <a href="#">专家委员会</a>
+      <a href="#">加入我们</a>
+    </div>
+  </div>
+  <div class="copyright">
+    <span>© 2026 华夏风物 · 非物质文化遗产数字平台</span>
+    <span>数据参考：中国非物质文化遗产网 (www.ihchina.cn) | 京ICP备 2026000000 号</span>
+  </div>
+</div>
+
+<!-- ===== 动态交互脚本 ===== -->
+<script>
+  (function() {
+    // ------ 1. 滚动阴影效果 ------
+    const topBar = document.getElementById('topBar');
+    const mainNav = document.getElementById('mainNav');
+    window.addEventListener('scroll', function() {
+      const scrolled = window.scrollY > 20;
+      topBar.classList.toggle('scrolled', scrolled);
+      mainNav.classList.toggle('scrolled', scrolled);
+    });
+
+    // ------ 2. 统计数字动画 (滚动触发) ------
+    const statNumbers = document.querySelectorAll('.stat-item .number');
+    let animated = false;
+
+    function animateNumbers() {
+      if (animated) return;
+      const section = document.querySelector('.stats-section');
+      const rect = section.getBoundingClientRect();
+      if (rect.top < window.innerHeight - 80) {
+        animated = true;
+        statNumbers.forEach(el => {
+          const target = parseInt(el.getAttribute('data-count'), 10);
+          let current = 0;
+          const step = Math.max(1, Math.floor(target / 40));
+          const interval = setInterval(() => {
+            current += step;
+            if (current >= target) {
+              el.textContent = target;
+              clearInterval(interval);
+            } else {
+              el.textContent = current;
+            }
+          }, 25);
+        });
+      }
+    }
+
+    window.addEventListener('scroll', animateNumbers);
+    // 页面加载时也尝试触发
+    setTimeout(animateNumbers, 300);
+
+    // ------ 3. 卡片入场渐显 (Intersection Observer) ------
+    const cards = document.querySelectorAll('.card');
+    const unescoItems = document.querySelectorAll('.unesco-item');
+    const allAnimateItems = [...cards, ...unescoItems];
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry, index) => {
+        if (entry.isIntersecting) {
+          // 添加一个简单的渐入类
+          entry.target.style.opacity = '0';
+          entry.target.style.transform = 'translateY(20px)';
+          entry.target.style.transition = `opacity 0.6s ease ${index * 0.06}s, transform 0.6s ease ${index * 0.06}s`;
+          requestAnimationFrame(() => {
+            entry.target.style.opacity = '1';
+            entry.target.style.transform = 'translateY(0)';
+          });
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+
+    allAnimateItems.forEach(item => {
+      // 初始设置透明，但保留可见性以防不支持
+      item.style.opacity = '0';
+      item.style.transform = 'translateY(20px)';
+      observer.observe(item);
+    });
+
+    // 如果已经可见，强制触发一次
+    setTimeout(() => {
+      allAnimateItems.forEach(item => {
+        const rect = item.getBoundingClientRect();
+        if (rect.top < window.innerHeight - 50) {
+          item.style.opacity = '1';
+          item.style.transform = 'translateY(0)';
+          observer.unobserve(item);
+        }
+      });
+    }, 200);
+
+    // ------ 4. 登录状态检查 (保留原有功能) ------
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+    const loginLink = document.querySelector('.nav-actions a[href="login.html"]');
+
+    if (token && userStr && loginLink) {
+      try {
+        const user = JSON.parse(userStr);
+        const dashboardUrl = user.role === 'user' ? 'user-dashboard.html' : 'developer-dashboard.html';
+
+        loginLink.href = dashboardUrl;
+        loginLink.title = '个人中心';
+        loginLink.style.textDecoration = 'none';
+        loginLink.innerHTML = '<span style="font-size:13px;color:#c0392b;font-weight:500;">' + user.display_name + '</span>';
+
+        const topLinks = document.querySelector('.top-links');
+        if (topLinks && !topLinks.querySelector('.personal-center')) {
+          const pcLink = document.createElement('a');
+          pcLink.href = dashboardUrl;
+          pcLink.className = 'personal-center';
+          pcLink.textContent = '个人中心';
+          pcLink.style.color = '#c0392b';
+          pcLink.style.fontWeight = '500';
+          topLinks.appendChild(pcLink);
+        }
+      } catch(e) {}
+    }
+
+    // 增加一个小细节：搜索图标点击反馈
+    document.querySelector('.nav-actions span')?.addEventListener('click', function() {
+      this.style.transform = 'scale(1.3)';
+      setTimeout(() => { this.style.transform = 'scale(1)'; }, 200);
+    });
+
+  })();
+</script>
+
+<button class="back-to-top" id="backToTop" aria-label="回到顶部" title="回到顶部">
+  ↑
+</button>
+
+<script>
+  // ===== 回到顶部功能 =====
+  (function() {
+    const backToTopBtn = document.getElementById('backToTop');
+
+    // 监听滚动事件，控制按钮显示/隐藏
+    window.addEventListener('scroll', function() {
+      if (window.scrollY > 300) {
+        backToTopBtn.classList.add('visible');
+      } else {
+        backToTopBtn.classList.remove('visible');
+      }
+    });
+
+    // 点击按钮平滑滚动到顶部
+    backToTopBtn.addEventListener('click', function() {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    });
+  })();
+</script>
+
+</body>
+</html>

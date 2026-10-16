@@ -20,10 +20,10 @@
         }
 
         body {
-            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif;
-            background: linear-gradient(160deg, #fff1f2 0%, #fecdd3 30%, #fda4af 70%, #fb7185 100%);
+            font-family: var(--font-kai), var(--font-song), serif;
+            background: linear-gradient(160deg, #f7efed 0%, #ecd8d3 30%, #c98a80 70%, #b06052 100%);
             min-height: 100vh;
-            color: #5c1f2e;
+            color: #3a3226;
             overflow: hidden;
         }
 
@@ -37,7 +37,7 @@
             align-items: center;
             justify-content: space-between;
             padding: 12px 24px;
-            background: rgba(255, 255, 255, 0.92);
+            background: rgba(255, 253, 247, 0.92);
             backdrop-filter: blur(14px);
             border-bottom: 1px solid rgba(225, 29, 72, 0.15);
             box-shadow: 0 4px 20px rgba(225, 29, 72, 0.08);
@@ -54,7 +54,7 @@
             align-items: center;
             gap: 6px;
             padding: 8px 18px;
-            background: linear-gradient(135deg, #fb7185 0%, #e11d48 100%);
+            background: linear-gradient(135deg, #b06052 0%, #a5372f 100%);
             color: #fff;
             text-decoration: none;
             border-radius: 8px;
@@ -82,7 +82,7 @@
             gap: 8px;
             padding: 10px 22px;
             background: transparent;
-            color: #be123c;
+            color: #8f2f28;
             text-decoration: none;
             border-radius: 10px;
             font-size: 0.92em;
@@ -93,7 +93,7 @@
         }
 
         .nav-tab.active {
-            background: linear-gradient(135deg, #fb7185 0%, #e11d48 100%);
+            background: linear-gradient(135deg, #b06052 0%, #a5372f 100%);
             color: #fff;
             border-color: transparent;
             box-shadow: 0 4px 14px rgba(225, 29, 72, 0.35);
@@ -115,11 +115,11 @@
             width: 40px;
             height: 40px;
             border: none;
-            background: linear-gradient(135deg, #fecdd3 0%, #fda4af 100%);
+            background: linear-gradient(135deg, #ecd8d3 0%, #c98a80 100%);
             border-radius: 10px;
             cursor: pointer;
             font-size: 1.2em;
-            color: #be123c;
+            color: #8f2f28;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -129,14 +129,14 @@
 
         .fullscreen-btn:hover {
             transform: scale(1.08);
-            background: linear-gradient(135deg, #fda4af 0%, #fb7185 100%);
+            background: linear-gradient(135deg, #c98a80 0%, #b06052 100%);
             box-shadow: 0 4px 14px rgba(225, 29, 72, 0.3);
         }
 
         header {
             text-align: center;
             padding: 24px 20px 20px;
-            background: rgba(255, 255, 255, 0.75);
+            background: rgba(255, 253, 247, 0.75);
             backdrop-filter: blur(12px);
             border-bottom: 1px solid rgba(225, 29, 72, 0.12);
             box-shadow: 0 2px 16px rgba(225, 29, 72, 0.06);
@@ -146,7 +146,7 @@
         header h1 {
             font-size: 1.6em;
             font-weight: 700;
-            color: #e11d48;
+            color: #a5372f;
             letter-spacing: 1px;
         }
 
@@ -176,7 +176,7 @@
         .model-3d-wrapper {
             width: 90%;
             height: 90%;
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 253, 247, 0.9);
             border-radius: 20px;
             box-shadow: 0 8px 40px rgba(225, 29, 72, 0.2), 0 2px 8px rgba(0, 0, 0, 0.04);
             border: 2px solid rgba(225, 29, 72, 0.15);
@@ -198,7 +198,7 @@
             display: flex;
             align-items: center;
             gap: 16px;
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 253, 247, 0.95);
             padding: 10px 24px;
             border-radius: 25px;
             box-shadow: 0 4px 20px rgba(225, 29, 72, 0.2);
@@ -210,7 +210,7 @@
             width: 32px;
             height: 32px;
             border: none;
-            background: linear-gradient(135deg, #fb7185 0%, #e11d48 100%);
+            background: linear-gradient(135deg, #b06052 0%, #a5372f 100%);
             color: white;
             border-radius: 50%;
             cursor: pointer;
@@ -251,7 +251,7 @@
         }
 
         .indicator-dot.active {
-            background: linear-gradient(135deg, #fb7185 0%, #e11d48 100%);
+            background: linear-gradient(135deg, #b06052 0%, #a5372f 100%);
             transform: scale(1.2);
             box-shadow: 0 2px 8px rgba(225, 29, 72, 0.4);
             border-color: rgba(254, 205, 211, 0.6);
@@ -264,7 +264,7 @@
 
         .current-model-label {
             font-size: 0.88em;
-            color: #be123c;
+            color: #8f2f28;
             font-weight: 600;
             min-width: 110px;
             text-align: center;
@@ -281,7 +281,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 253, 247, 0.95);
             z-index: 10;
             transition: opacity 0.5s ease;
         }
@@ -295,7 +295,7 @@
             width: 48px;
             height: 48px;
             border: 4px solid rgba(225, 29, 72, 0.15);
-            border-top-color: #e11d48;
+            border-top-color: #a5372f;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
@@ -306,7 +306,7 @@
 
         .loading-text {
             margin-top: 16px;
-            color: #e11d48;
+            color: #a5372f;
             font-size: 0.95em;
             font-weight: 500;
         }
@@ -350,7 +350,7 @@
             padding: 8px 20px;
             border-radius: 20px;
             font-size: 0.82em;
-            color: #e11d48;
+            color: #a5372f;
             backdrop-filter: blur(8px);
             border: 1px solid rgba(225, 29, 72, 0.15);
             white-space: nowrap;
@@ -370,12 +370,12 @@
             width: 36px;
             height: 36px;
             border: none;
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 253, 247, 0.9);
             border-radius: 50%;
             cursor: pointer;
             font-size: 18px;
             font-weight: bold;
-            color: #e11d48;
+            color: #a5372f;
             box-shadow: 0 2px 8px rgba(225, 29, 72, 0.2);
             transition: all 0.25s ease;
             display: flex;
@@ -391,7 +391,7 @@
 
         .info-section {
             flex: 4;
-            background: rgba(255, 255, 255, 0.75);
+            background: rgba(255, 253, 247, 0.75);
             backdrop-filter: blur(12px);
             border-left: 1px solid rgba(225, 29, 72, 0.1);
             display: flex;
@@ -402,12 +402,12 @@
         .info-header {
             padding: 28px 32px 20px;
             border-bottom: 1px solid rgba(225, 29, 72, 0.1);
-            background: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 253, 247, 0.5);
         }
 
         .info-header h2 {
             font-size: 1.5em;
-            color: #be123c;
+            color: #8f2f28;
             font-weight: 700;
             margin-bottom: 6px;
         }
@@ -451,7 +451,7 @@
         .info-block-title {
             font-size: 1.05em;
             font-weight: 600;
-            color: #be123c;
+            color: #8f2f28;
             margin-bottom: 10px;
             display: flex;
             align-items: center;
@@ -460,12 +460,12 @@
 
         .info-text {
             line-height: 1.75;
-            color: #5c1f2e;
+            color: #3a3226;
             font-size: 0.93em;
         }
 
         .info-text strong {
-            color: #be123c;
+            color: #8f2f28;
             font-weight: 600;
         }
 
@@ -481,7 +481,7 @@
             padding: 10px 14px;
             border-radius: 10px;
             font-size: 0.88em;
-            color: #be123c;
+            color: #8f2f28;
             text-align: center;
             font-weight: 600;
             border: 1px solid rgba(225, 29, 72, 0.12);
@@ -506,7 +506,7 @@
             gap: 10px;
             width: 100%;
             padding: 16px 24px;
-            background: linear-gradient(135deg, #fb7185 0%, #e11d48 100%);
+            background: linear-gradient(135deg, #b06052 0%, #a5372f 100%);
             color: #fff;
             text-decoration: none;
             border-radius: 14px;
@@ -522,7 +522,7 @@
         .process-link-button:hover {
             transform: translateY(-3px);
             box-shadow: 0 8px 28px rgba(225, 29, 72, 0.5);
-            background: linear-gradient(135deg, #fb7185 0%, #be123c 100%);
+            background: linear-gradient(135deg, #b06052 0%, #8f2f28 100%);
         }
 
         .process-link-button:active {
@@ -567,6 +567,7 @@
             }
         }
     </style>
+  <link rel="stylesheet" href="theme/gufeng.css">
 </head>
 <body>
     <nav class="top-nav">
@@ -883,7 +884,7 @@
                     (error) => {
                         console.error(`${config.label}模型加载错误:`, error);
                         textEl.innerHTML = `⚠️ ${config.label}加载失败<br><span style="font-size: 0.85em; color: #666;">请检查文件路径或刷新页面重试</span>`;
-                        loadingOverlay.querySelector('.loading-spinner').style.borderTopColor = '#e53935';
+                        loadingOverlay.querySelector('.loading-spinner').style.borderTopColor = '#a5372f';
                     }
                 );
             }, undefined, () => {
@@ -933,7 +934,7 @@
                     (error) => {
                         console.error(`${config.label}模型加载完全失败:`, error);
                         textEl.innerHTML = `⚠️ ${config.label}加载失败<br><span style="font-size: 0.85em; color: #666;">请检查文件路径或刷新页面重试</span>`;
-                        loadingOverlay.querySelector('.loading-spinner').style.borderTopColor = '#e53935';
+                        loadingOverlay.querySelector('.loading-spinner').style.borderTopColor = '#a5372f';
                     }
                 );
             });

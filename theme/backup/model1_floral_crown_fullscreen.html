@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>苗族银头饰 - 全屏展示</title>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-kai), var(--font-song), serif;
+            background: linear-gradient(160deg, #f7f2e7 0%, #f1e8d8 30%, #e6d6ba 70%, #d3c29c 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .fullscreen-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .model-canvas-wrapper {
+            width: 85%;
+            height: 85vh;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #fullscreenCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            border-radius: 20px;
+            box-shadow: 0 12px 48px rgba(168, 85, 247, 0.25);
+        }
+
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 32px;
+            background: rgba(255, 253, 247, 0.92);
+            backdrop-filter: blur(14px);
+            border-bottom: 2px solid rgba(168, 85, 247, 0.15);
+            box-shadow: 0 4px 20px rgba(168, 85, 247, 0.1);
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 24px;
+            background: linear-gradient(135deg, #9c6a5a 0%, #7c5a4a 100%);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 10px;
+            font-size: 0.95em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 14px rgba(168, 85, 247, 0.35);
+            letter-spacing: 0.5px;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 22px rgba(168, 85, 247, 0.5);
+        }
+
+        .title-text {
+            font-size: 1.3em;
+            color: #9333ea;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .controls-panel {
+            position: fixed;
+            bottom: 40px;
+            right: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 50;
+        }
+
+        .control-btn {
+            width: 50px;
+            height: 50px;
+            border: none;
+            background: rgba(255, 253, 247, 0.95);
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 22px;
+            font-weight: bold;
+            color: #9333ea;
+            box-shadow: 0 4px 16px rgba(168, 85, 247, 0.25);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .control-btn:hover {
+            transform: scale(1.15);
+            background: #fff;
+            box-shadow: 0 6px 24px rgba(168, 85, 247, 0.45);
+        }
+
+        .hint-bar {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 253, 247, 0.92);
+            padding: 12px 36px;
+            border-radius: 28px;
+            font-size: 0.95em;
+            color: #9333ea;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(168, 85, 247, 0.2);
+            box-shadow: 0 4px 20px rgba(168, 85, 247, 0.15);
+            z-index: 50;
+            letter-spacing: 0.5px;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 253, 247, 0.98);
+            z-index: 200;
+            transition: opacity 0.6s ease;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(168, 85, 247, 0.15);
+            border-top-color: #9333ea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            margin-top: 20px;
+            color: #9333ea;
+            font-size: 1.05em;
+            font-weight: 600;
+        }
+    </style>
+  <link rel="stylesheet" href="theme/gufeng.css">
+</head>
+<body>
+    <div class="top-bar">
+        <a href="model1_submodels.html" class="back-button">← 返回分类页</a>
+        <div class="title-text">👑 苗族银头饰 · 全屏展示</div>
+        <div style="width: 120px;"></div>
+    </div>
+
+    <div class="fullscreen-container">
+        <div class="model-canvas-wrapper">
+            <canvas id="fullscreenCanvas"></canvas>
+
+            <div class="loading-overlay" id="loadingOverlay">
+                <div class="spinner"></div>
+                <div class="loading-text">正在加载3D苗族银头饰...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls-panel">
+        <button class="control-btn" id="zoomInBtn" title="放大">+</button>
+        <button class="control-btn" id="zoomOutBtn" title="缩小">−</button>
+        <button class="control-btn" id="resetBtn" title="重置视角">⟳</button>
+    </div>
+
+    <div class="hint-bar">
+        🖱️ 拖拽旋转 · 滚轮缩放 · 右键平移
+    </div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+        import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
+
+        const canvas = document.getElementById('fullscreenCanvas');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const zoomInBtn = document.getElementById('zoomInBtn');
+        const zoomOutBtn = document.getElementById('zoomOutBtn');
+        const resetBtn = document.getElementById('resetBtn');
+
+        let scene, camera, renderer, controls;
+
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xfdf4ff);
+
+            const aspect = canvas.clientWidth / canvas.clientHeight;
+            camera = new THREE.PerspectiveCamera(40, aspect, 0.1, 1000);
+            camera.position.set(6, 3, 6);
+
+            renderer = new THREE.WebGLRenderer({
+                canvas: canvas,
+                antialias: true,
+                alpha: true
+            });
+            renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.3;
+
+            const ambientLight = new THREE.AmbientLight(0xfff5e0, 1.8);
+            scene.add(ambientLight);
+
+            const keyLight = new THREE.DirectionalLight(0xffffff, 4.5);
+            keyLight.position.set(6, 10, 6);
+            keyLight.castShadow = true;
+            keyLight.shadow.mapSize.width = 2048;
+            keyLight.shadow.mapSize.height = 2048;
+            keyLight.shadow.camera.near = 0.5;
+            keyLight.shadow.camera.far = 50;
+            keyLight.shadow.camera.left = -10;
+            keyLight.shadow.camera.right = 10;
+            keyLight.shadow.camera.top = 10;
+            keyLight.shadow.camera.bottom = -10;
+            keyLight.shadow.bias = -0.0001;
+            scene.add(keyLight);
+
+            const fillLight = new THREE.DirectionalLight(0xffe0b0, 2.5);
+            fillLight.position.set(-4, 3, -4);
+            scene.add(fillLight);
+
+            const rimLight = new THREE.DirectionalLight(0xffffff, 2);
+            rimLight.position.set(0, 2, -6);
+            scene.add(rimLight);
+
+            const groundGeometry = new THREE.PlaneGeometry(25, 25);
+            const groundMaterial = new THREE.ShadowMaterial({ opacity: 0.25 });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.position.y = -2.2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.target.set(0, 0.3, 0);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.08;
+            controls.minDistance = 2;
+            controls.maxDistance = 18;
+            controls.maxPolarAngle = Math.PI * 0.75;
+            controls.minPolarAngle = 0.2;
+            controls.autoRotate = true;
+            controls.autoRotateSpeed = 0.6;
+
+            controls.update();
+
+            loadModel();
+
+            window.addEventListener('resize', onWindowResize);
+
+            animate();
+        }
+
+        function loadModel() {
+            const mtlLoader = new MTLLoader();
+            const objLoader = new OBJLoader();
+            
+            const mtlPath = encodeURI('模型一模型/ornate floral crown 3d model/ornate+floral+crown+3d+model.mtl');
+            const objPath = encodeURI('模型一模型/ornate floral crown 3d model/ornate+floral+crown+3d+model.obj');
+
+            mtlLoader.load(mtlPath, (materials) => {
+                materials.preload();
+                objLoader.setMaterials(materials);
+                
+                objLoader.load(objPath, (object) => {
+                    object.traverse((child) => {
+                        if (child.isMesh) {
+                            child.castShadow = true;
+                            child.receiveShadow = true;
+                        }
+                    });
+
+                    const box = new THREE.Box3().setFromObject(object);
+                    const center = box.getCenter(new THREE.Vector3());
+                    object.position.sub(center);
+
+                    const size = box.getSize(new THREE.Vector3());
+                    const maxDim = Math.max(size.x, size.y, size.z);
+                    const scale = 3 / maxDim;
+                    object.scale.setScalar(scale);
+
+                    scene.add(object);
+
+                    loadingOverlay.classList.add('hidden');
+                }, (xhr) => {
+                    if (xhr.lengthComputable) {
+                        const percent = Math.round((xhr.loaded / xhr.total) * 100);
+                        const textEl = loadingOverlay.querySelector('.loading-text');
+                        if (textEl) {
+                            const loadedMB = (xhr.loaded / 1024 / 1024).toFixed(2);
+                            const totalMB = (xhr.total / 1024 / 1024).toFixed(2);
+                            textEl.textContent = `正在加载苗族银饰头饰... ${percent}% (${loadedMB}MB / ${totalMB}MB)`;
+                        }
+                    }
+                }, (error) => {
+                    console.error('Error loading model:', error);
+                    loadingOverlay.querySelector('.loading-text').textContent = '加载失败，请刷新重试';
+                });
+            }, undefined, () => {
+                objLoader.load(objPath, (object) => {
+                    object.traverse((child) => {
+                        if (child.isMesh) {
+                            child.castShadow = true;
+                            child.receiveShadow = true;
+                        }
+                    });
+
+                    const box = new THREE.Box3().setFromObject(object);
+                    const center = box.getCenter(new THREE.Vector3());
+                    object.position.sub(center);
+
+                    const size = box.getSize(new THREE.Vector3());
+                    const maxDim = Math.max(size.x, size.y, size.z);
+                    const scale = 3 / maxDim;
+                    object.scale.setScalar(scale);
+
+                    scene.add(object);
+
+                    loadingOverlay.classList.add('hidden');
+                });
+            });
+        }
+
+        function onWindowResize() {
+            if (!camera || !renderer) return;
+            
+            const container = canvas.parentElement;
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if (controls) controls.update();
+            if (renderer && scene && camera) {
+                renderer.render(scene, camera);
+            }
+        }
+
+        zoomInBtn.addEventListener('click', () => {
+            if (camera && controls) {
+                camera.position.multiplyScalar(0.85);
+                camera.updateProjectionMatrix();
+            }
+        });
+
+        zoomOutBtn.addEventListener('click', () => {
+            if (camera && controls) {
+                camera.position.multiplyScalar(1.15);
+                camera.updateProjectionMatrix();
+            }
+        });
+
+        resetBtn.addEventListener('click', () => {
+            if (camera && controls) {
+                camera.position.set(6, 3, 6);
+                controls.target.set(0, 0.3, 0);
+                controls.update();
+            }
+        });
+
+        init();
+    </script>
+</body>
+</html>

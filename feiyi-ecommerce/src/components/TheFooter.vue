@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 // 页脚：对标非遗官网的规整信息区
 const columns = [
   {
@@ -46,7 +46,7 @@ const columns = [
 <style scoped>
 .site-footer {
   margin-top: auto;
-  background: #f5f2ef; /* 宣纸暖灰 */
+  background: #f6f0e4; /* 宣纸暖灰 */
   color: var(--color-text-light);
   border-top: 1px solid var(--color-border);
 }

@@ -1,0 +1,79 @@
+# ============================================================
+#  Nginx 反向代理配置示例
+# ------------------------------------------------------------
+#  作用：把公网 80 端口的请求转发给本机 3000 端口的 Node 服务，
+#        并负责静态文件缓存、上传大小限制等。
+#
+#  使用：
+#    1. 复制本文件到 Nginx 配置目录（Linux 通常为 /etc/nginx/conf.d/heritage.conf）
+#    2. 把 server_name 改成你的域名或服务器公网 IP
+#    3. nginx -t        测试配置语法
+#    4. nginx -s reload 重载配置
+# ============================================================
+
+server {
+    listen 80;
+    # 改成你的域名；没有域名就填服务器公网 IP
+    server_name your-domain.com;
+
+    # 上传限制：消息中心支持发送视频，需大于 Node 端 multer 的 200MB 限制
+    client_max_body_size 220m;
+
+    # 传给后端的真实 IP（server.js 中 TRUST_PROXY=1 时用于日志记录）
+    proxy_set_header X-Real-IP        $remote_addr;
+    proxy_set_header X-Forwarded-For  $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Host             $host;
+
+    # ---------- 静态资源：由 Nginx 直接返回，减轻 Node 压力 ----------
+    # 商城构建产物（Vite 打包后带 hash，可长期缓存）
+    location /shop/assets/ {
+        alias /var/www/heritage/feiyi-ecommerce/dist/assets/;
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+        access_log off;
+    }
+
+    # 用户上传的图片/视频（体积大，交给 Nginx 更高效）
+    location /uploads/ {
+        alias /var/www/heritage/uploads/;
+        expires 7d;
+        access_log off;
+    }
+
+    # 样式与前端脚本
+    location ~* \.(css|js|svg|ico|woff2?|ttf)$ {
+        root /var/www/heritage;
+        expires 7d;
+        access_log off;
+    }
+
+    # ---------- 其余请求全部转发给 Node 服务 ----------
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade    $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_cache_bypass $http_upgrade;
+
+        # 超时设置（视频上传需要更长时间）
+        proxy_connect_timeout 60s;
+        proxy_send_timeout    300s;
+        proxy_read_timeout    300s;
+    }
+
+    # 禁止访问敏感路径（双保险，Node 端已有白名单）
+    location ~* ^/(\.env|\.git|database\.json|server\.js|package\.json|node_modules|db)/ {
+        deny all;
+        return 404;
+    }
+}
+
+# ============================================================
+#  HTTPS 配置（申请到域名后启用）
+#  推荐用 Let's Encrypt 免费证书：
+#    sudo apt install certbot python3-certbot-nginx
+#    sudo certbot --nginx -d your-domain.com
+#  certbot 会自动改写本文件并加上 443 监听与证书路径，
+#  同时配置 HTTP 自动跳转 HTTPS。
+# ============================================================

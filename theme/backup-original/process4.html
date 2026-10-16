@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>制作流程 - 模型四</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'KaiTi', 'STKaiti', 'SimSun', 'Noto Serif SC', 'PingFang SC', 'Microsoft YaHei', serif;
+            background: linear-gradient(160deg, #f5ecd7 0%, #ede0c8 30%, #e2d4b8 70%, #d4c4a0 100%);
+            min-height: 100vh;
+            color: #3e2723;
+            overflow: hidden;
+            display: flex;
+            align-items: stretch;
+        }
+
+        .image-panel {
+            flex: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2%;
+            position: relative;
+            min-width: 0;
+        }
+
+        .image-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 250, 240, 0.92);
+            border-radius: 8px;
+            border: 2px solid #a08868;
+            box-shadow: 0 4px 24px rgba(62, 39, 35, 0.12), inset 0 0 60px rgba(160, 136, 104, 0.06);
+            backdrop-filter: blur(8px);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .image-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            color: rgba(93, 64, 55, 0.25);
+            transition: opacity 0.3s ease;
+        }
+
+        .image-placeholder .icon {
+            font-size: 5em;
+            line-height: 1;
+        }
+
+        .image-placeholder .text {
+            font-size: 1.1em;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .process-image {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 4px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .process-image.visible {
+            opacity: 1;
+        }
+
+        .step-label {
+            position: absolute;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(93, 64, 55, 0.06);
+            color: #5d4037;
+            padding: 8px 24px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-weight: 600;
+            letter-spacing: 2px;
+            border: 1px solid rgba(93, 64, 55, 0.15);
+            transition: all 0.4s ease;
+            z-index: 5;
+        }
+
+        .back-link {
+            position: absolute;
+            top: 24px;
+            left: 24px;
+            z-index: 10;
+            padding: 8px 18px;
+            background: linear-gradient(135deg, #8d6e63 0%, #5d4037 100%);
+            color: #f5ecd7;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 0.82em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 14px rgba(62, 39, 35, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            letter-spacing: 0.5px;
+        }
+
+        .back-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(62, 39, 35, 0.45);
+        }
+
+        .tree-panel {
+            flex: 1;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            background: rgba(255, 250, 240, 0.85);
+            border-left: 2px solid #a08868;
+            box-shadow: -2px 0 20px rgba(62, 39, 35, 0.06);
+            overflow: hidden;
+            min-width: 260px;
+            position: relative;
+        }
+
+        .toc-view {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            padding: 0;
+            transition: transform 0.45s ease, opacity 0.45s ease;
+        }
+
+        .toc-view.hidden {
+            display: none;
+        }
+
+        .toc-header {
+            padding: 24px 20px 16px;
+            border-bottom: 1px solid rgba(160, 136, 104, 0.25);
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .toc-header .toc-icon {
+            font-size: 2em;
+            line-height: 1;
+            margin-bottom: 4px;
+            opacity: 0.6;
+        }
+
+        .toc-header .toc-title {
+            font-size: 1.15em;
+            font-weight: 700;
+            color: #3e2723;
+            letter-spacing: 3px;
+        }
+
+        .toc-header .toc-subtitle {
+            font-size: 0.7em;
+            color: #8d6e63;
+            letter-spacing: 1px;
+            margin-top: 2px;
+        }
+
+        .toc-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 0;
+        }
+
+        .toc-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .toc-list::-webkit-scrollbar-thumb {
+            background: rgba(160, 136, 104, 0.3);
+            border-radius: 2px;
+        }
+
+        .toc-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 1px solid rgba(160, 136, 104, 0.1);
+            position: relative;
+            gap: 14px;
+        }
+
+        .toc-item:hover {
+            background: rgba(160, 136, 104, 0.08);
+        }
+
+        .toc-item:last-child {
+            border-bottom: none;
+        }
+
+        .toc-item .toc-num {
+            width: 32px;
+            height: 32px;
+            border-radius: 2px;
+            background: rgba(160, 136, 104, 0.12);
+            color: #8d6e63;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85em;
+            font-weight: 700;
+            flex-shrink: 0;
+            border: 1px solid rgba(160, 136, 104, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .toc-item:hover .toc-num {
+            background: #5d4037;
+            color: #f5ecd7;
+            border-color: #5d4037;
+        }
+
+        .toc-item .toc-name {
+            font-size: 0.95em;
+            color: #5d4037;
+            font-weight: 600;
+            letter-spacing: 1px;
+            transition: color 0.3s ease;
+        }
+
+        .toc-item:hover .toc-name {
+            color: #3e2723;
+        }
+
+        .toc-item .toc-arrow {
+            margin-left: auto;
+            color: #a08868;
+            font-size: 0.8em;
+            transition: transform 0.3s ease;
+        }
+
+        .toc-item:hover .toc-arrow {
+            transform: translateX(4px);
+            color: #5d4037;
+        }
+
+        .detail-view {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            padding: 0;
+        }
+
+        .detail-view.visible {
+            display: flex;
+        }
+
+        .detail-back {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 12px 16px;
+            color: #8d6e63;
+            cursor: pointer;
+            font-size: 0.82em;
+            font-weight: 600;
+            letter-spacing: 1px;
+            transition: all 0.25s ease;
+            border-bottom: 1px solid rgba(160, 136, 104, 0.15);
+            flex-shrink: 0;
+            user-select: none;
+        }
+
+        .detail-back:hover {
+            color: #3e2723;
+            background: rgba(160, 136, 104, 0.06);
+        }
+
+        .detail-back .back-arrow {
+            font-size: 1.1em;
+            transition: transform 0.25s ease;
+        }
+
+        .detail-back:hover .back-arrow {
+            transform: translateX(-3px);
+        }
+
+        .detail-body {
+            flex: 1;
+            overflow-y: hidden;
+            overflow-x: auto;
+            padding: 28px 18px;
+            writing-mode: vertical-rl;
+            font-family: 'STXingkai', 'STLiti', 'Ma Shan Zheng', 'KaiTi', 'STKaiti', 'SimSun', serif;
+        }
+
+        .detail-body::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .detail-body::-webkit-scrollbar-track {
+            background: rgba(160, 136, 104, 0.12);
+            border-radius: 3px;
+        }
+
+        .detail-body::-webkit-scrollbar-thumb {
+            background: rgba(120, 80, 40, 0.35);
+            border-radius: 3px;
+        }
+
+        .detail-step-num {
+            font-size: 1.1em;
+            color: #8b5a2b;
+            letter-spacing: 4px;
+            margin-left: 16px;
+            padding: 4px 8px;
+            background: rgba(139, 90, 43, 0.06);
+            border: 1px solid rgba(139, 90, 43, 0.15);
+        }
+
+        .detail-title {
+            font-size: 2.0em;
+            font-weight: 700;
+            color: #3e2723;
+            letter-spacing: 6px;
+            line-height: 1.6;
+            margin-left: 22px;
+            padding-left: 16px;
+            border-left: 3px solid rgba(139, 90, 43, 0.3);
+        }
+
+        .detail-subtitle {
+            font-size: 1.0em;
+            color: #8b5a2b;
+            letter-spacing: 3px;
+            margin-left: 22px;
+            padding-left: 16px;
+            border-left: 3px solid rgba(139, 90, 43, 0.18);
+            font-style: italic;
+        }
+
+        .detail-desc {
+            font-size: 1.35em;
+            color: #4a3020;
+            line-height: 2.8;
+            letter-spacing: 2px;
+            margin-left: 20px;
+        }
+
+        .detail-desc p {
+            margin: 0;
+            text-indent: 0;
+        }
+
+        .detail-nav {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-top: 1px solid rgba(160, 136, 104, 0.2);
+            flex-shrink: 0;
+            gap: 10px;
+        }
+
+        .detail-nav-btn {
+            flex: 1;
+            padding: 8px 0;
+            text-align: center;
+            background: rgba(160, 136, 104, 0.08);
+            border: 1px solid rgba(160, 136, 104, 0.2);
+            color: #5d4037;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: 600;
+            letter-spacing: 1px;
+            transition: all 0.25s ease;
+            font-family: inherit;
+            user-select: none;
+        }
+
+        .detail-nav-btn:hover {
+            background: #5d4037;
+            color: #f5ecd7;
+            border-color: #5d4037;
+        }
+
+        .detail-nav-btn:active {
+            transform: scale(0.97);
+        }
+
+        .fullscreen-btn {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            z-index: 10;
+            padding: 8px 18px;
+            background: linear-gradient(135deg, #8d6e63 0%, #5d4037 100%);
+            color: #f5ecd7;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.82em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 14px rgba(62, 39, 35, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            letter-spacing: 0.5px;
+            font-family: inherit;
+        }
+
+        .fullscreen-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(62, 39, 35, 0.45);
+        }
+
+        .fullscreen-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.92);
+            z-index: 9999;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .fullscreen-overlay.visible {
+            display: flex;
+        }
+
+        .fullscreen-close {
+            position: absolute;
+            top: 24px;
+            right: 32px;
+            z-index: 10000;
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 50%;
+            color: #fff;
+            font-size: 1.4em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .fullscreen-close:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: rotate(90deg);
+        }
+
+        .fullscreen-image {
+            max-width: 92vw;
+            max-height: 85vh;
+            object-fit: contain;
+            border-radius: 4px;
+            box-shadow: 0 8px 48px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .fullscreen-image.visible {
+            opacity: 1;
+        }
+
+        .fullscreen-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 52px;
+            height: 52px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            color: #fff;
+            font-size: 1.3em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 10000;
+        }
+
+        .fullscreen-nav:hover {
+            background: rgba(255, 255, 255, 0.22);
+        }
+
+        .fullscreen-nav.disabled {
+            opacity: 0.25;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .fullscreen-prev {
+            left: 32px;
+        }
+
+        .fullscreen-next {
+            right: 32px;
+        }
+
+        .fullscreen-label {
+            position: absolute;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1em;
+            font-weight: 600;
+            letter-spacing: 3px;
+            z-index: 10000;
+        }
+
+        .detail-nav-btn.disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column-reverse;
+            }
+
+            .image-panel {
+                flex: 3;
+                padding: 2%;
+            }
+
+            .tree-panel {
+                flex: none;
+                height: auto;
+                max-height: 45vh;
+                min-width: 0;
+                border-left: none;
+                border-top: 2px solid #a08868;
+                box-shadow: 0 -2px 20px rgba(62, 39, 35, 0.06);
+            }
+
+            .toc-list {
+                max-height: 40vh;
+            }
+
+            .detail-body {
+                max-height: 35vh;
+                overflow-y: hidden;
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="image-panel" id="imagePanel">
+        <a class="back-link" href="model.html" title="返回模型展示中心">&#9664; 返回</a>
+        <button class="fullscreen-btn" id="fullscreenBtn" title="全屏查看">&#9974; 全屏</button>
+        <div class="image-container" id="imageContainer">
+            <div class="image-placeholder" id="imagePlaceholder">
+                <span class="icon">&#9874;</span>
+            </div>
+            <img class="process-image" id="processImage" src="" alt="制作流程">
+            <div class="step-label" id="stepLabel">选泥与和泥</div>
+        </div>
+    </div>
+
+    <div class="tree-panel">
+        <div class="toc-view" id="tocView">
+            <div class="toc-header">
+                <div class="toc-icon">&#128218;</div>
+                <div class="toc-title">制 作 流 程</div>
+                <div class="toc-subtitle">PROCESS</div>
+            </div>
+            <div class="toc-list" id="tocList">
+                <div class="toc-item" data-index="0">
+                    <span class="toc-num">壹</span>
+                    <span class="toc-name">选泥与和泥</span>
+                    <span class="toc-arrow">&#9654;</span>
+                </div>
+                <div class="toc-item" data-index="1">
+                    <span class="toc-num">贰</span>
+                    <span class="toc-name">手捏塑形</span>
+                    <span class="toc-arrow">&#9654;</span>
+                </div>
+                <div class="toc-item" data-index="2">
+                    <span class="toc-num">叁</span>
+                    <span class="toc-name">开哨</span>
+                    <span class="toc-arrow">&#9654;</span>
+                </div>
+                <div class="toc-item" data-index="3">
+                    <span class="toc-num">肆</span>
+                    <span class="toc-name">阴干</span>
+                    <span class="toc-arrow">&#9654;</span>
+                </div>
+                <div class="toc-item" data-index="4">
+                    <span class="toc-num">伍</span>
+                    <span class="toc-name">烧制</span>
+                    <span class="toc-arrow">&#9654;</span>
+                </div>
+                <div class="toc-item" data-index="5">
+                    <span class="toc-num">陆</span>
+                    <span class="toc-name">彩绘</span>
+                    <span class="toc-arrow">&#9654;</span>
+                </div>
+                <div class="toc-item" data-index="6">
+                    <span class="toc-num">柒</span>
+                    <span class="toc-name">罩漆</span>
+                    <span class="toc-arrow">&#9654;</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-view" id="detailView">
+            <div class="detail-back" id="detailBack">
+                <span class="back-arrow">&#9664;</span> 返回目录
+            </div>
+            <div class="detail-body">
+                <span class="detail-step-num" id="detailStepNum">第壹步</span>
+                <div class="detail-title" id="detailTitle">选泥与和泥</div>
+                <div class="detail-subtitle" id="detailSubtitle">择土选材，和泥为基</div>
+                <div class="detail-desc" id="detailDesc">匠人精心挑选质地细腻、黏性适中的泥料，剔除杂质与砂砾。将选好的泥料加水反复揉和，使泥质均匀柔软，富有韧性。和泥是泥哨制作的第一步，泥料的好坏直接决定了成品的品质。</div>
+            </div>
+            <div class="detail-nav">
+                <button class="detail-nav-btn" id="prevBtn">&#9664; 上一步</button>
+                <button class="detail-nav-btn" id="nextBtn">下一步 &#9654;</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="fullscreen-overlay" id="fullscreenOverlay">
+        <button class="fullscreen-close" id="fullscreenClose" title="关闭全屏">&#10005;</button>
+        <img class="fullscreen-image" id="fullscreenImage" src="" alt="全屏展示">
+        <button class="fullscreen-nav fullscreen-prev" id="fullscreenPrev" title="上一张">&#9664;</button>
+        <button class="fullscreen-nav fullscreen-next" id="fullscreenNext" title="下一张">&#9654;</button>
+        <div class="fullscreen-label" id="fullscreenLabel"></div>
+    </div>
+
+    <script>
+        (function() {
+            var tocView = document.getElementById('tocView');
+            var detailView = document.getElementById('detailView');
+            var tocItems = document.querySelectorAll('.toc-item');
+            var detailBack = document.getElementById('detailBack');
+            var prevBtn = document.getElementById('prevBtn');
+            var nextBtn = document.getElementById('nextBtn');
+            var stepLabel = document.getElementById('stepLabel');
+            var processImage = document.getElementById('processImage');
+            var imagePlaceholder = document.getElementById('imagePlaceholder');
+            var detailTitle = document.getElementById('detailTitle');
+            var detailSubtitle = document.getElementById('detailSubtitle');
+            var detailDesc = document.getElementById('detailDesc');
+            var detailStepNum = document.getElementById('detailStepNum');
+            var currentIndex = 0;
+            var isAnimating = false;
+
+            var chineseNums = ['壹', '贰', '叁', '肆', '伍', '陆', '柒'];
+
+            var steps = [
+                {
+                    name: '选泥与和泥',
+                    file: '模型四图片/选泥与和泥.png',
+                    fullscreenFile: '模型四全屏展示/选泥与和泥.png',
+                    subtitle: '择土选材，和泥为基',
+                    desc: '匠人精心挑选质地细腻、黏性适中的泥料，剔除杂质与砂砾。将选好的泥料加水反复揉和，使泥质均匀柔软，富有韧性。和泥是泥哨制作的第一步，泥料的好坏直接决定了成品的品质。'
+                },
+                {
+                    name: '手捏塑形',
+                    file: '模型四图片/手捏塑形.png',
+                    fullscreenFile: '模型四全屏展示/手捏塑形.png',
+                    subtitle: '指尖生花，泥塑成形',
+                    desc: '匠人取一团和好的泥料，以手捏塑。拇指与食指轻拢慢捻，泥团在掌心间不断变换形态。从圆润的腹身到微微翘起的哨嘴，每一处细节都由指尖的温度与力度决定。手捏塑形没有模具的约束，全凭匠人胸中的丘壑与多年的经验，每一件泥哨都是独一无二的手作。'
+                },
+                {
+                    name: '开哨',
+                    file: '模型四图片/开哨.png',
+                    fullscreenFile: '模型四全屏展示/开哨.png',
+                    subtitle: '一孔之间，天籁之始',
+                    desc: '开哨是泥哨制作中最关键的一步。匠人以细竹签或特制工具，在哨体上精准地开出音孔与气道。开孔的角度、深度、大小，稍有偏差便会影响音色。匠人屏息凝神，手腕稳如磐石，一孔下去，泥哨便有了呼吸。试吹第一声，那清脆的哨音穿透空气，仿佛唤醒了沉睡在泥中的灵魂。'
+                },
+                {
+                    name: '阴干',
+                    file: '模型四图片/阴干.png',
+                    fullscreenFile: '模型四全屏展示/阴干.png',
+                    subtitle: '避光而置，静待风干',
+                    desc: '塑好形、开好哨的泥哨不可暴晒，需置于阴凉通风处慢慢阴干。匠人将泥哨整齐排列，任时光与微风徐徐带走泥中的水分。阴干需耐心，骤然干燥会使泥哨开裂变形，唯有顺其自然，方能让泥哨在静谧中逐渐坚硬，保持最初的形态。'
+                },
+                {
+                    name: '烧制',
+                    file: '模型四图片/烧制.png',
+                    fullscreenFile: '模型四全屏展示/烧制.png',
+                    subtitle: '入窑一色，出窑万彩',
+                    desc: '阴干后的泥哨被送入窑中，以烈火淬炼。窑温层层攀升，泥哨在火焰中经历由软到硬的蜕变。高温下，泥中的矿物质熔融结晶，赋予泥哨坚硬的质地与温润的色泽。待到火熄窑冷，泥哨已不再是当初那团柔软的泥，而是一件能吹响天籁的器物。'
+                },
+                {
+                    name: '彩绘',
+                    file: '模型四图片/彩绘.png',
+                    fullscreenFile: '模型四全屏展示/彩绘.png',
+                    subtitle: '丹青点染，泥哨生辉',
+                    desc: '烧制完成的泥哨，尚需穿上彩衣。匠人执笔蘸取矿物颜料，在素净的哨体上细细描绘——或绘花鸟鱼虫，或画吉祥纹样，色彩明丽而不艳俗，线条流畅而富有韵律。彩绘不仅为泥哨增添了美感，更赋予了它独特的文化内涵与地域特色。'
+                },
+                {
+                    name: '罩漆',
+                    file: '模型四图片/罩漆.png',
+                    fullscreenFile: '模型四全屏展示/罩漆.png',
+                    subtitle: '覆漆如镜，华彩永驻',
+                    desc: '彩绘完成之后，最后一道工序是罩漆。匠人以清漆均匀涂覆哨体表面，漆层薄而透亮，既保护了彩绘不受磨损，又为泥哨增添了一层温润的光泽。罩漆后的泥哨，色彩更加鲜明，质地更加光滑，拿在手中，温润如玉，光彩照人。一件凝聚了数道工序心血的泥哨，至此终于完成。'
+                }
+            ];
+
+            function loadImage(index) {
+                processImage.classList.remove('visible');
+                if (imagePlaceholder) {
+                    imagePlaceholder.style.display = 'flex';
+                }
+
+                var img = new Image();
+                img.onload = function() {
+                    processImage.src = steps[index].file;
+                    if (imagePlaceholder) {
+                        imagePlaceholder.style.display = 'none';
+                    }
+                    processImage.classList.add('visible');
+                };
+                img.onerror = function() {
+                    processImage.classList.remove('visible');
+                    if (imagePlaceholder) {
+                        imagePlaceholder.style.display = 'flex';
+                    }
+                };
+                img.src = steps[index].file;
+            }
+
+            function showDetail(index) {
+                if (isAnimating) return;
+                isAnimating = true;
+
+                currentIndex = index;
+
+                stepLabel.textContent = steps[index].name;
+                detailTitle.textContent = steps[index].name;
+                detailSubtitle.textContent = steps[index].subtitle || '';
+                detailDesc.innerHTML = steps[index].desc;
+                detailStepNum.textContent = '第' + chineseNums[index] + '步';
+
+                updateNavButtons();
+
+                tocView.classList.add('hidden');
+                detailView.classList.add('visible');
+
+                loadImage(index);
+
+                setTimeout(function() {
+                    isAnimating = false;
+                }, 450);
+            }
+
+            function showToc() {
+                if (isAnimating) return;
+                isAnimating = true;
+
+                detailView.classList.remove('visible');
+                tocView.classList.remove('hidden');
+
+                setTimeout(function() {
+                    isAnimating = false;
+                }, 450);
+            }
+
+            function updateNavButtons() {
+                if (currentIndex <= 0) {
+                    prevBtn.classList.add('disabled');
+                } else {
+                    prevBtn.classList.remove('disabled');
+                }
+                if (currentIndex >= steps.length - 1) {
+                    nextBtn.classList.add('disabled');
+                } else {
+                    nextBtn.classList.remove('disabled');
+                }
+            }
+
+            function goToPrev() {
+                if (currentIndex > 0 && !isAnimating) {
+                    showDetail(currentIndex - 1);
+                }
+            }
+
+            function goToNext() {
+                if (currentIndex < steps.length - 1 && !isAnimating) {
+                    showDetail(currentIndex + 1);
+                }
+            }
+
+            for (var i = 0; i < tocItems.length; i++) {
+                (function(idx) {
+                    tocItems[idx].addEventListener('click', function() {
+                        showDetail(idx);
+                    });
+                })(i);
+            }
+
+            detailBack.addEventListener('click', showToc);
+            prevBtn.addEventListener('click', goToPrev);
+            nextBtn.addEventListener('click', goToNext);
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    goToPrev();
+                } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    goToNext();
+                } else if (e.key === 'Escape') {
+                    if (detailView.classList.contains('visible')) {
+                        showToc();
+                    } else if (fullscreenOverlay.classList.contains('visible')) {
+                        closeFullscreen();
+                    }
+                }
+            });
+
+            var fullscreenOverlay = document.getElementById('fullscreenOverlay');
+            var fullscreenImage = document.getElementById('fullscreenImage');
+            var fullscreenLabel = document.getElementById('fullscreenLabel');
+            var fullscreenBtn = document.getElementById('fullscreenBtn');
+            var fullscreenClose = document.getElementById('fullscreenClose');
+            var fullscreenPrev = document.getElementById('fullscreenPrev');
+            var fullscreenNext = document.getElementById('fullscreenNext');
+            var fullscreenCurrentIndex = 0;
+
+            function openFullscreen(index) {
+                fullscreenCurrentIndex = index !== undefined ? index : currentIndex;
+                fullscreenLabel.textContent = steps[fullscreenCurrentIndex].name;
+                fullscreenImage.classList.remove('visible');
+
+                var img = new Image();
+                img.onload = function() {
+                    fullscreenImage.src = steps[fullscreenCurrentIndex].fullscreenFile || steps[fullscreenCurrentIndex].file;
+                    fullscreenImage.classList.add('visible');
+                };
+                img.onerror = function() {
+                    fullscreenImage.src = steps[fullscreenCurrentIndex].file;
+                    fullscreenImage.classList.add('visible');
+                };
+                img.src = steps[fullscreenCurrentIndex].fullscreenFile || steps[fullscreenCurrentIndex].file;
+
+                fullscreenOverlay.classList.add('visible');
+                updateFullscreenNav();
+            }
+
+            function closeFullscreen() {
+                fullscreenOverlay.classList.remove('visible');
+            }
+
+            function updateFullscreenNav() {
+                if (fullscreenCurrentIndex <= 0) {
+                    fullscreenPrev.classList.add('disabled');
+                } else {
+                    fullscreenPrev.classList.remove('disabled');
+                }
+                if (fullscreenCurrentIndex >= steps.length - 1) {
+                    fullscreenNext.classList.add('disabled');
+                } else {
+                    fullscreenNext.classList.remove('disabled');
+                }
+            }
+
+            function fullscreenGoPrev() {
+                if (fullscreenCurrentIndex > 0) {
+                    openFullscreen(fullscreenCurrentIndex - 1);
+                }
+            }
+
+            function fullscreenGoNext() {
+                if (fullscreenCurrentIndex < steps.length - 1) {
+                    openFullscreen(fullscreenCurrentIndex + 1);
+                }
+            }
+
+            fullscreenBtn.addEventListener('click', function() {
+                openFullscreen(currentIndex);
+            });
+
+            fullscreenClose.addEventListener('click', closeFullscreen);
+            fullscreenPrev.addEventListener('click', fullscreenGoPrev);
+            fullscreenNext.addEventListener('click', fullscreenGoNext);
+
+            fullscreenOverlay.addEventListener('click', function(e) {
+                if (e.target === fullscreenOverlay) {
+                    closeFullscreen();
+                }
+            });
+
+            loadImage(0);
+        })();
+    </script>
+</body>
+</html>

@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>登录 - 华夏风物 · 非遗传承</title>
+    <title>登录 · 华夏风物 · 非遗传承</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'KaiTi', 'STKaiti', '楷体', 'Inter', -apple-system, sans-serif;
             background: linear-gradient(135deg, #f2ebe4 0%, #e8d5c4 50%, #f5f2ef 100%);
             min-height: 100vh;
             display: flex;
@@ -27,7 +27,7 @@
         }
 
         .login-header {
-            background: linear-gradient(135deg, #c0392b 0%, #a83226 100%);
+            background: linear-gradient(135deg, #2f4f4f 0%, #243f3f 100%);
             color: white;
             padding: 36px 36px 28px;
             text-align: center;
@@ -75,7 +75,7 @@
 
         .role-tab.active {
             background: white;
-            color: #c0392b;
+            color: #2f4f4f;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
 
@@ -91,6 +91,7 @@
 
         .form-group {
             margin-bottom: 20px;
+            position: relative;
         }
 
         .form-group label {
@@ -102,9 +103,13 @@
             letter-spacing: 0.3px;
         }
 
-        .form-group input {
+        .input-wrap {
+            position: relative;
+        }
+
+        .input-wrap input {
             width: 100%;
-            padding: 14px 16px;
+            padding: 14px 44px 14px 16px;
             border: 2px solid #e0d8d1;
             border-radius: 12px;
             font-size: 15px;
@@ -114,16 +119,99 @@
             outline: none;
         }
 
-        .form-group input:focus {
-            border-color: #c0392b;
+        .input-wrap input:focus {
+            border-color: #2f4f4f;
             background: #fff;
-            box-shadow: 0 0 0 4px rgba(192, 57, 43, 0.08);
+            box-shadow: 0 0 0 4px rgba(47, 79, 79, 0.08);
+        }
+
+        .eye-btn {
+            position: absolute;
+            right: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 18px;
+            color: #999;
+            border-radius: 8px;
+            transition: color 0.2s, background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .eye-btn:hover {
+            color: #2f4f4f;
+            background: #f0ebe3;
+        }
+
+        .strength-wrap {
+            margin-top: 8px;
+            padding: 0 2px;
+        }
+
+        .strength-wrap .bar {
+            display: flex;
+            gap: 4px;
+            height: 4px;
+        }
+
+        .strength-wrap .bar span {
+            flex: 1;
+            background: #e0d8d1;
+            border-radius: 2px;
+            transition: background 0.3s;
+        }
+
+        .strength-wrap .bar span.on-1 { background: #dc2626; }
+        .strength-wrap .bar span.on-2 { background: #f59e0b; }
+        .strength-wrap .bar span.on-3 { background: #22c55e; }
+        .strength-wrap .bar span.on-4 { background: #16a34a; }
+
+        .strength-wrap .label {
+            font-size: 12px;
+            color: #6b6255;
+            margin-top: 4px;
+            display: block;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: #6b6255;
+            cursor: pointer;
+            line-height: 1.5;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            margin-top: 3px;
+            width: 16px;
+            height: 16px;
+            accent-color: #2f4f4f;
+            cursor: pointer;
+        }
+
+        .checkbox-group a {
+            color: #2f4f4f;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .checkbox-group a:hover {
+            text-decoration: underline;
         }
 
         .submit-btn {
             width: 100%;
             padding: 15px;
-            background: linear-gradient(135deg, #c0392b 0%, #a83226 100%);
+            background: linear-gradient(135deg, #2f4f4f 0%, #243f3f 100%);
             color: white;
             border: none;
             border-radius: 14px;
@@ -137,11 +225,17 @@
 
         .submit-btn:hover {
             transform: translateY(-1px);
-            box-shadow: 0 8px 24px rgba(192, 57, 43, 0.3);
+            box-shadow: 0 8px 24px rgba(47, 79, 79, 0.3);
         }
 
         .submit-btn:active {
             transform: translateY(0);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .switch-mode {
@@ -152,7 +246,7 @@
         }
 
         .switch-mode a {
-            color: #c0392b;
+            color: #2f4f4f;
             text-decoration: none;
             font-weight: 500;
             cursor: pointer;
@@ -188,6 +282,13 @@
 
         .success-msg.show { display: block; }
 
+        .field-hint {
+            font-size: 12px;
+            color: #9a8f7e;
+            margin-top: 4px;
+            padding-left: 2px;
+        }
+
         .back-home {
             display: block;
             text-align: center;
@@ -197,34 +298,22 @@
             text-decoration: none;
         }
 
-        .back-home:hover { color: #c0392b; }
-
-        .btn-secondary {
-            background: #f5f2ef;
-            color: #4d3e36;
-        }
-        .btn-secondary:hover {
-            background: #ede7e1;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            transform: translateY(-1px);
-        }
+        .back-home:hover { color: #2f4f4f; }
     </style>
 </head>
 <body>
-    <!-- 协议检测提示 -->
     <div id="protocolWarning" style="display:none; position:fixed; top:0; left:0; right:0; background:#fff3cd; color:#856404; padding:14px 20px; text-align:center; z-index:9999; font-size:14px; border-bottom:2px solid #ffc107;">
-        ⚠️ 请使用 <b>http://localhost:3000/login.html</b> 访问，而不是直接双击打开文件！
+        请使用 <b>http://localhost:3000/login.html</b> 访问，而不是直接双击打开文件！
     </div>
     <div class="login-container">
         <div class="login-header">
-            <div class="logo">🎋 华夏风物</div>
+            <div class="logo">华夏风物</div>
             <div class="subtitle">非遗传承 · 数字平台</div>
         </div>
         <div class="login-body">
             <div id="errorMsg" class="error-msg"></div>
             <div id="successMsg" class="success-msg"></div>
 
-            <!-- 角色选择 -->
             <div class="role-tabs" id="roleTabs">
                 <button class="role-tab active" data-role="user">
                     <span class="role-icon">👤</span> 用户
@@ -234,36 +323,62 @@
                 </button>
             </div>
 
-            <!-- 登录表单 -->
             <form id="loginForm">
                 <div class="form-group">
                     <label>用户名</label>
-                    <input type="text" id="loginUsername" placeholder="请输入用户名" required autocomplete="username">
+                    <div class="input-wrap">
+                        <input type="text" id="loginUsername" placeholder="请输入用户名" required autocomplete="username">
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>密码</label>
-                    <input type="password" id="loginPassword" placeholder="请输入密码" required autocomplete="current-password">
+                    <div class="input-wrap">
+                        <input type="password" id="loginPassword" placeholder="请输入密码" required autocomplete="current-password">
+                        <button type="button" class="eye-btn" id="toggleLoginPwd" title="显示/隐藏密码">👁</button>
+                    </div>
                 </div>
                 <input type="hidden" id="loginRole" value="user">
                 <button type="submit" class="submit-btn">登 录</button>
             </form>
 
-            <!-- 注册表单 -->
             <form id="registerForm" style="display:none;">
                 <div class="form-group">
                     <label>显示名称</label>
-                    <input type="text" id="regDisplayName" placeholder="请输入您的显示名称" required>
+                    <div class="input-wrap">
+                        <input type="text" id="regDisplayName" placeholder="您的昵称或艺名" required maxlength="30">
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>用户名</label>
-                    <input type="text" id="regUsername" placeholder="请输入用户名" required autocomplete="username">
+                    <div class="input-wrap">
+                        <input type="text" id="regUsername" placeholder="3-20 位字母/数字/下划线" required autocomplete="username" pattern="[A-Za-z0-9_]{3,20}">
+                    </div>
+                    <div class="field-hint">3-20 位，只能包含字母、数字和下划线</div>
                 </div>
                 <div class="form-group">
                     <label>密码</label>
-                    <input type="password" id="regPassword" placeholder="密码至少6位" required minlength="6" autocomplete="new-password">
+                    <div class="input-wrap">
+                        <input type="password" id="regPassword" placeholder="至少 6 位，建议混合大小写和数字" required minlength="6" autocomplete="new-password">
+                        <button type="button" class="eye-btn" id="toggleRegPwd" title="显示/隐藏密码">👁</button>
+                    </div>
+                    <div class="strength-wrap" id="pwdStrength" style="display:none;">
+                        <div class="bar"><span></span><span></span><span></span><span></span></div>
+                        <span class="label"></span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>确认密码</label>
+                    <div class="input-wrap">
+                        <input type="password" id="regConfirmPassword" placeholder="请再次输入密码" required autocomplete="new-password">
+                        <button type="button" class="eye-btn" id="toggleConfirmPwd" title="显示/隐藏密码">👁</button>
+                    </div>
                 </div>
                 <input type="hidden" id="regRole" value="user">
-                <button type="submit" class="submit-btn">注 册</button>
+                <label class="checkbox-group">
+                    <input type="checkbox" id="agreeTerms" required>
+                    <span>我已阅读并同意 <a href="#" onclick="alert('用户协议详情页');return false;">《用户协议》</a> 和 <a href="#" onclick="alert('隐私政策详情页');return false;">《隐私政策》</a></span>
+                </label>
+                <button type="submit" class="submit-btn" id="registerBtn">注 册</button>
             </form>
 
             <div class="switch-mode">
@@ -276,7 +391,6 @@
     </div>
 
     <script>
-        // 检测是否通过 file:// 协议打开
         if (window.location.protocol === 'file:') {
             document.getElementById('protocolWarning').style.display = 'block';
         }
@@ -285,7 +399,6 @@
         let isLoginMode = true;
         let selectedRole = 'user';
 
-        // 角色切换
         document.querySelectorAll('.role-tab').forEach(tab => {
             tab.addEventListener('click', () => {
                 document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
@@ -296,7 +409,6 @@
             });
         });
 
-        // 登录/注册切换
         function toggleMode() {
             isLoginMode = !isLoginMode;
             document.getElementById('loginForm').style.display = isLoginMode ? 'block' : 'none';
@@ -330,7 +442,6 @@
             localStorage.setItem('user', JSON.stringify(data.user));
         }
 
-        // 读取 ?redirect= 回跳地址（仅允许站内相对路径，防止开放重定向）
         function getRedirect() {
             try {
                 const r = new URLSearchParams(window.location.search).get('redirect');
@@ -339,14 +450,51 @@
             return null;
         }
 
-        // 登录/注册成功后的跳转目标：优先回跳（如商城登录后返回商城），否则进角色仪表盘
         function successDestination(user) {
             const redirect = getRedirect();
             if (redirect) return redirect;
             return user.role === 'user' ? 'user-dashboard.html' : 'developer-dashboard.html';
         }
 
-        // 登录
+        function bindEyeToggle(btnId, inputId) {
+            document.getElementById(btnId).addEventListener('click', () => {
+                const input = document.getElementById(inputId);
+                input.type = input.type === 'password' ? 'text' : 'password';
+            });
+        }
+        bindEyeToggle('toggleLoginPwd', 'loginPassword');
+        bindEyeToggle('toggleRegPwd', 'regPassword');
+        bindEyeToggle('toggleConfirmPwd', 'regConfirmPassword');
+
+        const STRENGTH_LABELS = ['', '弱', '中等', '强', '很强'];
+        function checkPasswordStrength(pwd) {
+            let score = 0;
+            if (pwd.length >= 6) score++;
+            if (pwd.length >= 10) score++;
+            if (/[A-Z]/.test(pwd) && /[a-z]/.test(pwd)) score++;
+            if (/\d/.test(pwd)) score++;
+            if (/[^A-Za-z0-9]/.test(pwd)) score++;
+            return Math.min(score, 4);
+        }
+
+        const strengthEl = document.getElementById('pwdStrength');
+        const strengthBars = strengthEl.querySelectorAll('.bar span');
+        const strengthLabel = strengthEl.querySelector('.label');
+
+        document.getElementById('regPassword').addEventListener('input', (e) => {
+            const pwd = e.target.value;
+            if (pwd.length === 0) {
+                strengthEl.style.display = 'none';
+                return;
+            }
+            strengthEl.style.display = 'block';
+            const score = checkPasswordStrength(pwd);
+            strengthBars.forEach((bar, i) => {
+                bar.className = i < score ? 'on-' + score : '';
+            });
+            strengthLabel.textContent = STRENGTH_LABELS[score] || '';
+        });
+
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             hideMessages();
@@ -382,7 +530,6 @@
             }
         });
 
-        // 注册
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             hideMessages();
@@ -390,14 +537,19 @@
             const display_name = document.getElementById('regDisplayName').value.trim();
             const username = document.getElementById('regUsername').value.trim();
             const password = document.getElementById('regPassword').value;
+            const confirm = document.getElementById('regConfirmPassword').value;
             const role = selectedRole;
+            const agree = document.getElementById('agreeTerms').checked;
 
-            if (!display_name || !username || !password) {
-                return showError('请填写所有字段');
-            }
-            if (password.length < 6) {
-                return showError('密码至少6位');
-            }
+            if (!display_name) return showError('请填写显示名称');
+            if (!/^[A-Za-z0-9_]{3,20}$/.test(username)) return showError('用户名须为 3–20 位字母、数字或下划线');
+            if (password.length < 6) return showError('密码至少 6 位');
+            if (password !== confirm) return showError('两次输入的密码不一致');
+            if (!agree) return showError('请先同意用户协议和隐私政策');
+
+            const btn = document.getElementById('registerBtn');
+            btn.disabled = true;
+            btn.textContent = '注册中...';
 
             try {
                 const res = await fetch(API + '/register', {
@@ -419,6 +571,9 @@
                 }, 800);
             } catch (err) {
                 showError('网络错误，请检查服务器是否启动');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '注 册';
             }
         });
     </script>

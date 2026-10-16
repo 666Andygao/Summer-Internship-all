@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 // 个人中心：与主平台共享登录态，展示当前账号信息
 // 进入页面时调用后端 /api/me 验证 token 并拉取最新用户数据，
 // 确保商城展示的是真实的后端账号（而非仅依赖本地缓存）。
@@ -45,14 +45,14 @@ function goToDashboard() {
     <div class="container">
       <!-- 后端验证中 -->
       <div v-if="checking" class="uc-card uc-empty">
-        <el-icon :size="56" color="#c0392b" class="is-loading"><Loading /></el-icon>
+        <el-icon :size="56" color="#a5372f" class="is-loading"><Loading /></el-icon>
         <h2>正在验证登录状态...</h2>
         <p>正在连接后端服务器，请稍候。</p>
       </div>
 
       <!-- 未登录态（本地无 token 或后端验证失败） -->
       <div v-else-if="!auth.isLoggedIn" class="uc-card uc-empty">
-        <el-icon :size="56" color="#c0392b"><User /></el-icon>
+        <el-icon :size="56" color="#a5372f"><User /></el-icon>
         <h2>尚未登录</h2>
         <p>登录「华夏风物志」首页后，即可在此查看您的账号信息。</p>
         <el-button type="primary" size="large" @click="auth.goLogin">前往登录</el-button>

@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 // 筛选侧边栏：民族 / 品类 / 价格区间 多条件筛选
 import { reactive, watch } from 'vue'
 import { ETHNICS, CATEGORIES } from '@/mock/goods'
@@ -237,7 +237,7 @@ watch(() => [local.ethnic, local.category, local.priceIndex], apply)
   padding: 14px;
   border-radius: var(--radius-md);
   border: 1px solid rgba(177, 79, 62, 0.18);
-  background: linear-gradient(135deg, #fffaf4 0%, #f8efe6 100%);
+  background: linear-gradient(135deg, #fffdf7 0%, #f6f0e4 100%);
 }
 .heritage-panel {
   flex: 1;

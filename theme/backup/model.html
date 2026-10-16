@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数字非遗馆 - 3D模型展示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-kai), var(--font-song), serif;
+            background: linear-gradient(135deg, #2f4f4f 0%, #5c4a3d 50%, #b0806a 100%);
+            min-height: 100vh;
+            color: #3a3226;
+            overflow-x: hidden;
+        }
+
+        .page-header {
+            text-align: center;
+            padding: 30px 20px 20px;
+            background: rgba(255, 253, 247, 0.95);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 4px 24px rgba(102, 126, 234, 0.15);
+            position: relative;
+            z-index: 10;
+        }
+
+        .page-header h1 {
+            font-size: 2.5em;
+            font-weight: 700;
+            background: linear-gradient(135deg, #2f4f4f, #5c4a3d);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+
+        .page-header p {
+            color: #718096;
+            font-size: 1.05em;
+            margin-top: 6px;
+        }
+
+        .main-content {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .models-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 28px;
+            padding: 20px 0;
+        }
+
+        .model-card {
+            background: rgba(255, 253, 247, 0.92);
+            backdrop-filter: blur(16px);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            border: 2px solid transparent;
+        }
+
+        .model-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--card-gradient);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .model-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 48px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.06);
+            border-color: rgba(255, 253, 247, 0.6);
+        }
+
+        .model-card:hover::before {
+            opacity: 1;
+        }
+
+        .model-card.model-1 {
+            --card-gradient: linear-gradient(90deg, #4a6b63, #2f4f4f);
+        }
+
+        .model-card.model-2 {
+            --card-gradient: linear-gradient(90deg, #4e7a6c, #3a6b5f);
+        }
+
+        .model-card.model-3 {
+            --card-gradient: linear-gradient(90deg, #c07a6a, #a5372f);
+        }
+
+        .model-card.model-4 {
+            --card-gradient: linear-gradient(90deg, #b5853f, #9c5a34);
+        }
+
+        .model-card.model-5 {
+            --card-gradient: linear-gradient(90deg, #b06052, #a5372f);
+        }
+
+        .card-image-section {
+            height: 220px;
+            background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .model-1 .card-image-section {
+            --bg-start: rgba(74, 107, 99, 0.15);
+            --bg-end: rgba(47, 79, 79, 0.25);
+        }
+
+        .model-2 .card-image-section {
+            --bg-start: rgba(52, 211, 153, 0.15);
+            --bg-end: rgba(5, 150, 105, 0.25);
+        }
+
+        .model-3 .card-image-section {
+            --bg-start: rgba(244, 114, 182, 0.15);
+            --bg-end: rgba(233, 30, 99, 0.25);
+        }
+
+        .model-4 .card-image-section {
+            --bg-start: rgba(251, 191, 36, 0.15);
+            --bg-end: rgba(217, 119, 6, 0.25);
+        }
+
+        .model-5 .card-image-section {
+            --bg-start: rgba(251, 113, 133, 0.15);
+            --bg-end: rgba(225, 29, 72, 0.25);
+        }
+
+        .card-icon {
+            font-size: 80px;
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.1));
+            transition: transform 0.4s ease;
+        }
+
+        .model-card:hover .card-icon {
+            transform: scale(1.15) rotate(5deg);
+        }
+
+        .card-badge {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            background: rgba(255, 253, 247, 0.95);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.78em;
+            font-weight: 600;
+            color: var(--badge-color);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .model-1 .card-badge { --badge-color: #2f4f4f; }
+        .model-2 .card-badge { --badge-color: #3a6b5f; }
+        .model-3 .card-badge { --badge-color: #a5372f; }
+        .model-4 .card-badge { --badge-color: #9c5a34; }
+        .model-5 .card-badge { --badge-color: #a5372f; }
+
+        .card-content {
+            padding: 22px 26px;
+        }
+
+        .card-number {
+            font-size: 0.82em;
+            font-weight: 600;
+            color: #a89472;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        .card-title {
+            font-size: 1.45em;
+            font-weight: 700;
+            color: #3a3226;
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+
+        .card-subtitle {
+            font-size: 0.88em;
+            color: #718096;
+            line-height: 1.6;
+            margin-bottom: 18px;
+        }
+
+        .card-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 18px;
+        }
+
+        .tag {
+            padding: 5px 12px;
+            border-radius: 12px;
+            font-size: 0.78em;
+            font-weight: 500;
+            background: var(--tag-bg);
+            color: var(--tag-color);
+        }
+
+        .model-1 .tag { --tag-bg: rgba(47, 79, 79, 0.08); --tag-color: #2f4f4f; }
+        .model-2 .tag { --tag-bg: rgba(5, 150, 105, 0.08); --tag-color: #3a6b5f; }
+        .model-3 .tag { --tag-bg: rgba(233, 30, 99, 0.08); --tag-color: #a5372f; }
+        .model-4 .tag { --tag-bg: rgba(217, 119, 6, 0.08); --tag-color: #9c5a34; }
+        .model-5 .tag { --tag-bg: rgba(225, 29, 72, 0.08); --tag-color: #a5372f; }
+
+        .card-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 11px 22px;
+            background: linear-gradient(135deg, var(--btn-start), var(--btn-end));
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-size: 0.92em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .model-1 .card-action { --btn-start: #4a6b63; --btn-end: #2f4f4f; }
+        .model-2 .card-action { --btn-start: #4e7a6c; --btn-end: #3a6b5f; }
+        .model-3 .card-action { --btn-start: #c07a6a; --btn-end: #a5372f; }
+        .model-4 .card-action { --btn-start: #b5853f; --btn-end: #9c5a34; }
+        .model-5 .card-action { --btn-start: #b06052; --btn-end: #a5372f; }
+
+        .card-action:hover {
+            transform: translateX(4px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .action-arrow {
+            font-size: 1.1em;
+            transition: transform 0.3s ease;
+        }
+
+        .card-action:hover .action-arrow {
+            transform: translateX(4px);
+        }
+
+        .card-actions-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .card-action-process {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 11px 18px;
+            background: linear-gradient(135deg, var(--process-btn-start), var(--process-btn-end));
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-size: 0.88em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .model-1 .card-action-process { --process-btn-start: #9c6a5a; --process-btn-end: #7c3aed; }
+        .model-2 .card-action-process { --process-btn-start: #7aa89a; --process-btn-end: #3a6b5f; }
+        .model-3 .card-action-process { --process-btn-start: #d9b3a6; --process-btn-end: #a5372f; }
+        .model-4 .card-action-process { --process-btn-start: #c9a25f; --process-btn-end: #9c5a34; }
+        .model-5 .card-action-process { --process-btn-start: #c98a80; --process-btn-end: #a5372f; }
+
+        .card-action-process:hover {
+            transform: translateX(4px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .footer-info {
+            text-align: center;
+            padding: 40px 20px;
+            color: rgba(255, 253, 247, 0.85);
+            font-size: 0.92em;
+        }
+
+        .footer-info a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            border-bottom: 1px solid rgba(255, 253, 247, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .footer-info a:hover {
+            border-bottom-color: white;
+        }
+
+        @media (max-width: 768px) {
+            .models-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .page-header h1 {
+                font-size: 1.8em;
+            }
+
+            .card-image-section {
+                height: 180px;
+            }
+        }
+    </style>
+  <link rel="stylesheet" href="theme/gufeng.css">
+</head>
+<body>
+
+<div class="page-header">
+    <h1>🏛️ 数字非遗馆</h1>
+    <p>探索中国传统非物质文化遗产 · 3D数字化展示</p>
+</div>
+
+<div class="main-content">
+    <div class="models-grid">
+
+        <!-- 模型一：苗族银饰 -->
+        <div class="model-card model-1" onclick="window.location.href='model1.html'">
+            <div class="card-image-section">
+                <div class="card-icon">💍</div>
+                <div class="card-badge">国家级非遗</div>
+            </div>
+            <div class="card-content">
+                <div class="card-number">MODEL 01</div>
+                <h3 class="card-title">苗族银饰锻造技艺</h3>
+                <p class="card-subtitle">贵州省 · 黔东南苗族侗族自治州<br>千年传承的银饰手工技艺</p>
+                <div class="card-tags">
+                    <span class="tag">#银饰锻造</span>
+                    <span class="tag">#錾花工艺</span>
+                    <span class="tag">#苗族文化</span>
+                </div>
+                <div class="card-actions-container">
+                    <a href="model1.html" class="card-action" onclick="event.stopPropagation()">
+                        查看3D模型 <span class="action-arrow">→</span>
+                    </a>
+                    <a href="process1.html" class="card-action-process" onclick="event.stopPropagation()">
+                        🔧 查看制作流程
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 模型二：建水紫陶 -->
+        <div class="model-card model-2" onclick="window.location.href='model2.html'">
+            <div class="card-image-section">
+                <div class="card-icon">🏺</div>
+                <div class="card-badge">国家级非遗</div>
+            </div>
+            <div class="card-content">
+                <div class="card-number">MODEL 02</div>
+                <h3 class="card-title">建水紫陶烧制技艺</h3>
+                <p class="card-subtitle">云南省红河哈尼族彝族自治州建水县<br>中国四大名陶之一</p>
+                <div class="card-tags">
+                    <span class="tag">#陶器烧制</span>
+                    <span class="tag">#书画装饰</span>
+                    <span class="tag">#阴刻阳填</span>
+                </div>
+                <div class="card-actions-container">
+                    <a href="model2.html" class="card-action" onclick="event.stopPropagation()">
+                        查看3D模型 <span class="action-arrow">→</span>
+                    </a>
+                    <a href="process2.html" class="card-action-process" onclick="event.stopPropagation()">
+                        🔧 查看制作流程
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 模型三：云南瓦猫 -->
+        <div class="model-card model-3" onclick="window.location.href='model3.html'">
+            <div class="card-image-section">
+                <div class="card-icon">🐱</div>
+                <div class="card-badge">省级非遗</div>
+            </div>
+            <div class="card-content">
+                <div class="card-number">MODEL 03</div>
+                <h3 class="card-title">云南瓦猫</h3>
+                <p class="card-subtitle">云南省 · 昆明/大理/丽江等地<br>镇宅辟邪的传统民居装饰</p>
+                <div class="card-tags">
+                    <span class="tag">#瓦猫制作</span>
+                    <span class="tag">#镇宅神兽</span>
+                    <span class="tag">#彝族文化</span>
+                </div>
+                <div class="card-actions-container">
+                    <a href="model3.html" class="card-action" onclick="event.stopPropagation()">
+                        查看3D模型 <span class="action-arrow">→</span>
+                    </a>
+                    <a href="process3.html" class="card-action-process" onclick="event.stopPropagation()">
+                        🔧 查看制作流程
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 模型四：黄平泥哨 -->
+        <div class="model-card model-4" onclick="window.location.href='model4.html'">
+            <div class="card-image-section">
+                <div class="card-icon">🎵</div>
+                <div class="card-badge">国家级非遗</div>
+            </div>
+            <div class="card-content">
+                <div class="card-number">MODEL 04</div>
+                <h3 class="card-title">黄平泥哨制作技艺</h3>
+                <p class="card-subtitle">贵州省黄平县<br>独特的民间艺术形式</p>
+                <div class="card-tags">
+                    <span class="tag">#白善泥哨</span>
+                    <span class="tag">#彩绘工艺</span>
+                    <span class="tag">#烧制成型</span>
+                </div>
+                <div class="card-actions-container">
+                    <a href="model4.html" class="card-action" onclick="event.stopPropagation()">
+                        查看3D模型 <span class="action-arrow">→</span>
+                    </a>
+                    <a href="process4.html" class="card-action-process" onclick="event.stopPropagation()">
+                        🔧 查看制作流程
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 模型五：火草纺织 -->
+        <div class="model-card model-5" onclick="window.location.href='model5.html'">
+            <div class="card-image-section">
+                <div class="card-icon">🧵</div>
+                <div class="card-badge">国家级非遗</div>
+            </div>
+            <div class="card-content">
+                <div class="card-number">MODEL 05</div>
+                <h3 class="card-title">火草纺织工艺</h3>
+                <p class="card-subtitle">四川省凉山州 · 德昌/会理等地<br>中国唯一植物纤维传统纺织技艺</p>
+                <div class="card-tags">
+                    <span class="tag">#火草纺织</span>
+                    <span class="tag">#植物纤维</span>
+                    <span class="tag">#彝族织布</span>
+                </div>
+                <div class="card-actions-container">
+                    <a href="model5.html" class="card-action" onclick="event.stopPropagation()">
+                        查看3D模型 <span class="action-arrow">→</span>
+                    </a>
+                    <a href="process5.html" class="card-action-process" onclick="event.stopPropagation()">
+                        🔧 查看制作流程
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="footer-info">
+    <p>🌟 共收录 <strong>5</strong> 项国家级/省级非物质文化遗产 3D数字模型</p>
+    <p style="margin-top: 8px;">
+        <a href="MainPage.html">← 返回主页</a>
+    </p>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const cards = document.querySelectorAll('.model-card');
+
+        cards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(30px)';
+            
+            setTimeout(() => {
+                card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, 120 * (index + 1));
+        });
+    });
+</script>
+
+</body>
+</html>

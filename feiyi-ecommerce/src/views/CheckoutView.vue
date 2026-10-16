@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 // 页面4：订单结算页面
 // 收货地址（新增/切换）+ 订单清单 + 费用汇总 + 提交订单（前端弹窗提示）
 import { ref, reactive, computed, onMounted } from 'vue'
@@ -88,7 +88,7 @@ async function onSubmit() {
     await ElMessageBox.alert(
       `<div style="line-height:1.9">
         <p>订单号：<strong>${res.orderNo}</strong></p>
-        <p>应付金额：<strong style="color:#c0392b">¥${payAmount.value.toFixed(0)}</strong></p>
+        <p>应付金额：<strong style="color:#a5372f">¥${payAmount.value.toFixed(0)}</strong></p>
         <p style="color:#9a9284;font-size:13px">（本页为前端演示，未接入真实支付渠道）</p>
       </div>`,
       '订单提交成功',

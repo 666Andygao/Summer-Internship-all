@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理用户 · 华夏风物 · 开发者中心</title>
+<style>
+    /* ==========================================================================
+       管理用户 —— 开发者专属二级界面
+       设计：纯白底 · 细线分隔 · 每条一位用户 · 侧边茶色描边（呼应主页侧边形象）
+       ========================================================================== */
+    :root {
+        --paper: #ffffff;          /* 主背景：纯白 */
+        --paper-soft: #fafafa;     /* 悬停 / 次级底 */
+        --line: #ececec;           /* 行分隔线 */
+        --line-strong: #e2e2e2;    /* 面板外框 */
+        --ink: #1f1f1f;            /* 主文字 */
+        --ink-sub: #6b6b6b;        /* 次要文字 */
+        --ink-faint: #9a9a9a;      /* 弱文字 */
+        --tea: #9a8163;            /* 茶色描边（与主页一致） */
+        --online: #3fae6a;         /* 在线 */
+        --offline: #bfbfbf;        /* 离线 */
+
+        --font-song: 'Songti SC', 'SimSun', '宋体', 'STSong', 'Noto Serif CJK SC', serif;
+        --font-kai: 'KaiTi', 'STKaiti', '楷体', 'Kaiti SC', serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+        background: var(--paper);
+        color: var(--ink);
+        font-family: var(--font-kai), var(--font-song), serif;
+        line-height: 1.7;
+        letter-spacing: 0.02em;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    /* ---------- 顶部导航（白底细线） ---------- */
+    .top-nav {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 0 28px;
+        height: 58px;
+        background: rgba(255, 255, 255, 0.94);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid var(--line);
+    }
+
+    .nav-brand {
+        font-family: var(--font-song), serif;
+        font-size: 15px;
+        letter-spacing: 0.14em;
+        color: var(--ink);
+    }
+
+    .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        font-size: 13px;
+    }
+
+    .nav-links a {
+        color: var(--ink-sub);
+        text-decoration: none;
+        transition: color 0.25s ease;
+    }
+
+    .nav-links a:hover { color: var(--tea); }
+
+    .nav-links .logout-btn {
+        padding: 6px 14px;
+        border: 1px solid var(--line-strong);
+        border-radius: 2px;
+        background: #fff;
+        color: var(--ink-sub);
+        font-family: inherit;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.25s ease;
+    }
+
+    .nav-links .logout-btn:hover {
+        border-color: var(--tea);
+        color: var(--tea);
+    }
+
+    /* ---------- 居中容器 ---------- */
+    .wrap {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 34px 22px 72px;
+    }
+
+    /* 页首标题：左侧茶色描边（主页标签同款） */
+    .page-head {
+        padding-left: 16px;
+        border-left: 2px solid var(--tea);
+        margin-bottom: 22px;
+    }
+
+    .page-head h1 {
+        font-family: var(--font-song), serif;
+        font-size: 1.5rem;
+        font-weight: 400;
+        letter-spacing: 0.16em;
+        color: var(--ink);
+    }
+
+    .page-head p {
+        margin-top: 4px;
+        font-size: 12.5px;
+        color: var(--ink-faint);
+        letter-spacing: 0.06em;
+    }
+
+    /* ---------- 工具条：搜索 + 筛选 ---------- */
+    .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 14px;
+    }
+
+    .search-input {
+        flex: 1 1 240px;
+        min-width: 180px;
+        padding: 9px 14px;
+        border: 1px solid var(--line-strong);
+        border-radius: 2px;
+        font-family: inherit;
+        font-size: 13px;
+        color: var(--ink);
+        outline: none;
+        transition: border-color 0.25s ease;
+    }
+
+    .search-input::placeholder { color: var(--ink-faint); }
+    .search-input:focus { border-color: var(--tea); }
+
+    .filters { display: flex; gap: 6px; }
+
+    .filter-btn {
+        padding: 8px 16px;
+        border: 1px solid var(--line-strong);
+        border-radius: 2px;
+        background: #fff;
+        color: var(--ink-sub);
+        font-family: inherit;
+        font-size: 12.5px;
+        cursor: pointer;
+        transition: all 0.25s ease;
+    }
+
+    .filter-btn:hover { border-color: var(--tea); color: var(--tea); }
+
+    .filter-btn.active {
+        background: var(--ink);
+        border-color: var(--ink);
+        color: #fff;
+    }
+
+    .refresh-btn {
+        padding: 8px 16px;
+        border: 1px solid var(--line-strong);
+        border-radius: 2px;
+        background: #fff;
+        color: var(--ink-sub);
+        font-family: inherit;
+        font-size: 12.5px;
+        cursor: pointer;
+        transition: all 0.25s ease;
+    }
+
+    .refresh-btn:hover { border-color: var(--tea); color: var(--tea); }
+
+    /* ---------- 列表面板：细线外框 + 左侧茶色描边 ---------- */
+    .panel {
+        background: #fff;
+        border: 1px solid var(--line-strong);
+        border-left: 3px solid var(--tea);
+        border-radius: 3px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    }
+
+    .summary-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 20px;
+        background: var(--paper-soft);
+        border-bottom: 1px solid var(--line);
+        font-size: 12.5px;
+        color: var(--ink-sub);
+    }
+
+    .summary-bar .count-online { color: var(--online); font-weight: 600; }
+
+    /* 表头（大屏显示，小屏隐藏） */
+    .list-head {
+        display: grid;
+        grid-template-columns: 42px minmax(140px, 1.5fr) minmax(110px, 1fr) minmax(100px, 0.9fr) minmax(150px, 1.2fr) 88px;
+        gap: 16px;
+        align-items: center;
+        padding: 10px 20px;
+        border-bottom: 1px solid var(--line);
+        font-size: 11.5px;
+        letter-spacing: 0.1em;
+        color: var(--ink-faint);
+    }
+
+    /* ---------- 每条一位用户 ---------- */
+    .user-row {
+        display: grid;
+        grid-template-columns: 42px minmax(140px, 1.5fr) minmax(110px, 1fr) minmax(100px, 0.9fr) minmax(150px, 1.2fr) 88px;
+        gap: 16px;
+        align-items: center;
+        padding: 14px 20px;
+        border-bottom: 1px solid var(--line);
+        border-left: 2px solid transparent;
+        transition: background 0.22s ease, border-left-color 0.22s ease;
+    }
+
+    .user-row:last-child { border-bottom: none; }
+    .user-row:hover { background: var(--paper-soft); border-left-color: var(--tea); }
+
+    .avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-song), serif;
+        font-size: 15px;
+        color: #fff;
+        background: var(--offline);
+        user-select: none;
+    }
+
+    .avatar.online { background: var(--online); }
+
+    .u-name {
+        font-size: 14px;
+        color: var(--ink);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .u-name .badge {
+        display: inline-block;
+        margin-left: 6px;
+        padding: 1px 7px;
+        border: 1px solid var(--line-strong);
+        border-radius: 2px;
+        font-size: 10.5px;
+        color: var(--ink-faint);
+        vertical-align: 1px;
+    }
+
+    .u-username {
+        font-size: 11.5px;
+        color: var(--ink-faint);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .u-cell {
+        font-size: 12.5px;
+        color: var(--ink-sub);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .status-cell {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 12.5px;
+        color: var(--ink-faint);
+        white-space: nowrap;
+        overflow: hidden;
+    }
+
+    .dot {
+        flex: 0 0 auto;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--offline);
+    }
+
+    .dot.online {
+        background: var(--online);
+        box-shadow: 0 0 0 3px rgba(63, 174, 106, 0.16);
+    }
+
+    .status-cell.online-text { color: var(--online); }
+
+    .act-btn {
+        padding: 6px 14px;
+        border: 1px solid var(--line-strong);
+        border-radius: 2px;
+        background: #fff;
+        color: var(--ink-sub);
+        font-family: inherit;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.25s ease;
+    }
+
+    .act-btn:hover { border-color: var(--tea); color: var(--tea); }
+    .act-btn:disabled { opacity: 0.45; cursor: default; }
+
+    .empty {
+        padding: 56px 20px;
+        text-align: center;
+        color: var(--ink-faint);
+        font-size: 13px;
+        letter-spacing: 0.08em;
+    }
+
+    /* ---------- 轻提示 ---------- */
+    .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 40px;
+        transform: translateX(-50%) translateY(14px);
+        padding: 10px 22px;
+        background: rgba(31, 31, 31, 0.92);
+        color: #fff;
+        font-size: 13px;
+        border-radius: 2px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ---------- 窄屏：隐藏表头，行改为纵向堆叠 ---------- */
+    @media (max-width: 720px) {
+        .list-head { display: none; }
+
+        .user-row {
+            grid-template-columns: 42px 1fr;
+            row-gap: 6px;
+        }
+
+        .user-row .u-cell,
+        .user-row .status-cell,
+        .user-row .act-btn {
+            grid-column: 2;
+        }
+
+        .user-row .act-btn { justify-self: start; }
+    }
+</style>
+</head>
+<body>
+    <nav class="top-nav">
+        <div class="nav-brand">🎋 华夏风物 · 管理用户</div>
+        <div class="nav-links">
+            <span style="color:#9a9a9a;">👨‍💻 <span id="displayName"></span></span>
+            <a href="developer-dashboard.html">开发者中心</a>
+            <a href="MainPage.html">返回首页</a>
+            <button class="logout-btn" onclick="logout()">退出登录</button>
+        </div>
+    </nav>
+
+    <div class="wrap">
+        <div class="page-head">
+            <h1>管理用户</h1>
+            <p>查看普通用户的账号信息与在线状态（每 10 秒自动刷新）</p>
+        </div>
+
+        <div class="toolbar">
+            <input type="text" class="search-input" id="searchInput" placeholder="🔍 搜索昵称或用户名...">
+            <div class="filters">
+                <button class="filter-btn active" data-filter="all" onclick="setFilter('all', this)">全部</button>
+                <button class="filter-btn" data-filter="online" onclick="setFilter('online', this)">在线</button>
+                <button class="filter-btn" data-filter="offline" onclick="setFilter('offline', this)">离线</button>
+            </div>
+            <button class="refresh-btn" onclick="loadUsers(true)">↻ 刷新</button>
+        </div>
+
+        <div class="panel">
+            <div class="summary-bar">
+                <span id="summaryText">加载中...</span>
+                <span id="updatedText"></span>
+            </div>
+            <div class="list-head">
+                <span></span>
+                <span>用户</span>
+                <span>手机号</span>
+                <span>注册时间</span>
+                <span>状态</span>
+                <span>操作</span>
+            </div>
+            <div id="userList">
+                <div class="empty">加载中...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const API = '/api';
+        const ROLE = { DEVELOPER: 'developer', ARTISAN: 'artisan' };
+
+        let token = '';
+        let currentUser = null;
+        let users = [];
+        let filter = 'all';
+        let pollTimer = null;
+
+        const escapeHtml = (s) => String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+        function showToast(msg) {
+            const el = document.getElementById('toast');
+            el.textContent = msg;
+            el.classList.add('show');
+            clearTimeout(el._t);
+            el._t = setTimeout(() => el.classList.remove('show'), 2200);
+        }
+
+        function maskPhone(phone) {
+            const s = String(phone || '');
+            return s.length >= 7 ? s.slice(0, 3) + '****' + s.slice(-4) : s;
+        }
+
+        function formatDate(iso) {
+            if (!iso) return '—';
+            const d = new Date(iso);
+            if (isNaN(d)) return '—';
+            const p = (n) => String(n).padStart(2, '0');
+            return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+        }
+
+        function formatRelative(iso) {
+            if (!iso) return '';
+            const diff = Date.now() - new Date(iso).getTime();
+            if (isNaN(diff)) return '';
+            const min = Math.floor(diff / 60000);
+            if (min < 1) return '刚刚';
+            if (min < 60) return min + ' 分钟前';
+            const hr = Math.floor(min / 60);
+            if (hr < 24) return hr + ' 小时前';
+            return Math.floor(hr / 24) + ' 天前';
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+
+        async function api(path, options = {}) {
+            const headers = { 'Authorization': 'Bearer ' + token, ...options.headers };
+            if (options.body && !(options.body instanceof FormData)) {
+                headers['Content-Type'] = 'application/json';
+            }
+            return fetch(API + path, { ...options, headers });
+        }
+
+        function setFilter(f, btn) {
+            filter = f;
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            render();
+        }
+
+        async function loadUsers(manual = false) {
+            try {
+                const res = await api('/users/manage');
+                if (res.status === 401) { logout(); return; }
+                if (res.status === 403) {
+                    document.getElementById('userList').innerHTML =
+                        '<div class="empty">当前账号无权查看用户列表</div>';
+                    return;
+                }
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+                users = data.users || [];
+                render();
+                if (manual) showToast('已刷新');
+            } catch (e) {
+                if (!users.length) {
+                    document.getElementById('userList').innerHTML =
+                        '<div class="empty">加载失败，请检查服务器是否已启动</div>';
+                }
+            }
+        }
+
+        function render() {
+            const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+
+            const list = users.filter(u => {
+                if (filter === 'online' && !u.is_online) return false;
+                if (filter === 'offline' && u.is_online) return false;
+                if (!keyword) return true;
+                return String(u.display_name || '').toLowerCase().includes(keyword)
+                    || String(u.username || '').toLowerCase().includes(keyword);
+            });
+
+            const onlineCount = users.filter(u => u.is_online).length;
+            document.getElementById('summaryText').innerHTML =
+                `共 ${users.length} 位用户 · <span class="count-online">${onlineCount} 人在线</span>`;
+            document.getElementById('updatedText').textContent =
+                '更新于 ' + new Date().toLocaleTimeString('zh-CN', { hour12: false });
+
+            const box = document.getElementById('userList');
+            if (!list.length) {
+                box.innerHTML = `<div class="empty">${users.length ? '没有符合条件的用户' : '暂无普通用户'}</div>`;
+                return;
+            }
+
+            box.innerHTML = list.map(u => {
+                const online = !!u.is_online;
+                const name = u.display_name || u.username || '未命名';
+                const initial = escapeHtml(name.slice(0, 1).toUpperCase());
+                const statusText = online
+                    ? '当前在线'
+                    : (u.last_seen ? '最后活跃：' + formatRelative(u.last_seen) : '离线');
+
+                return `
+                <div class="user-row">
+                    <div class="avatar ${online ? 'online' : ''}">${initial}</div>
+                    <div>
+                        <div class="u-name" title="${escapeHtml(name)}">${escapeHtml(name)}<span class="badge">用户</span></div>
+                        <div class="u-username">@${escapeHtml(u.username)}</div>
+                    </div>
+                    <div class="u-cell" title="${escapeHtml(u.phone || '')}">${escapeHtml(u.phone ? maskPhone(u.phone) : '—')}</div>
+                    <div class="u-cell">${formatDate(u.created_at)}</div>
+                    <div class="status-cell ${online ? 'online-text' : ''}">
+                        <span class="dot ${online ? 'online' : ''}"></span>${statusText}
+                    </div>
+                    <button class="act-btn" onclick="addFriend(${Number(u.id)}, this)">加好友</button>
+                </div>`;
+            }).join('');
+        }
+
+        async function addFriend(userId, btn) {
+            const user = users.find(u => u.id === userId);
+            if (!user) return;
+            btn.disabled = true;
+            try {
+                const res = await api('/friends/request', {
+                    method: 'POST',
+                    body: JSON.stringify({ target_id: userId })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    showToast(data.error || '添加好友失败');
+                } else {
+                    showToast(`已向「${user.display_name || user.username}」发送好友请求`);
+                }
+            } catch (e) {
+                showToast('网络错误，添加好友失败');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        function init() {
+            token = localStorage.getItem('token');
+            const userStr = localStorage.getItem('user');
+            if (!token || !userStr) { window.location.href = 'login.html'; return; }
+
+            currentUser = JSON.parse(userStr);
+            // 兼容 developer / artisan 两种角色写法
+            if (currentUser.role !== ROLE.DEVELOPER && currentUser.role !== ROLE.ARTISAN) {
+                window.location.href = 'user-dashboard.html';
+                return;
+            }
+
+            document.getElementById('displayName').textContent = currentUser.display_name || '';
+            document.getElementById('searchInput').addEventListener('input', render);
+
+            loadUsers();
+            pollTimer = setInterval(loadUsers, 10000);   // 每 10 秒自动刷新
+        }
+
+        init();
+    </script>
+</body>
+</html>

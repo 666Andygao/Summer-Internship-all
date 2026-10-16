@@ -35,6 +35,79 @@
       "display_name": "开发者",
       "avatar": "",
       "created_at": "2026-07-21T10:32:52.763Z"
+    },
+    {
+      "id": 5,
+      "username": "newuser",
+      "password": "$2a$10$zW9W7se8JSSWr2Hn6cNYY.caLhdzd9jFi6SMmTWhYot0jQLc4/Hpe",
+      "role": "user",
+      "display_name": "新买家",
+      "avatar": "",
+      "created_at": "2026-08-25T08:00:00.000Z"
+    },
+    {
+      "id": 6,
+      "username": "newdev",
+      "password": "$2a$10$eCxI1FJtJRHORR0h6hmjcOXY3MJlmYcXAF.M5yD8OplPoDYWi15LC",
+      "role": "developer",
+      "display_name": "新开发者",
+      "avatar": "",
+      "created_at": "2026-08-25T08:00:01.000Z"
+    },
+    {
+      "id": 7,
+      "username": "alice_new",
+      "password": "$2a$12$cy3oUvaR5sTZJe5neLPq7ubE6yECe6unTf1TN3DoVknLUEsB4BdwG",
+      "role": "buyer",
+      "display_name": "Alice???",
+      "phone": "",
+      "avatar": "",
+      "addresses": [],
+      "created_at": "2026-10-16T14:31:50.288Z"
+    },
+    {
+      "id": 8,
+      "username": "dev_new2",
+      "password": "$2a$12$9q53ibUbpcVrdMr2E/mmAOqbSwY8kPrjQyLO7xJCox1tjV4oJJfe6",
+      "role": "artisan",
+      "display_name": "新匠人",
+      "phone": "",
+      "avatar": "",
+      "addresses": [],
+      "created_at": "2026-10-16T14:32:32.569Z"
+    },
+    {
+      "id": 9,
+      "username": "good_u23",
+      "password": "$2a$12$KYt3Av969m/PqGKj8pM/muQVBC9ylKIQNrDyOkXkE5k50Fu4miyUO",
+      "role": "buyer",
+      "display_name": "好的",
+      "phone": "",
+      "avatar": "",
+      "addresses": [],
+      "created_at": "2026-10-16T14:35:12.334Z"
+    },
+    {
+      "id": 10,
+      "username": "newtestxx_826",
+      "password": "$2a$12$GppIiFIMDaxwtUO6A3Yagej.5.50q6fiAvKl63sRTubr4ERyiVjqG",
+      "role": "buyer",
+      "display_name": "测试",
+      "phone": "",
+      "avatar": "",
+      "addresses": [],
+      "created_at": "2026-10-16T15:01:50.997Z"
+    },
+    {
+      "id": 11,
+      "username": "final_1877",
+      "password": "$2a$12$BEUJwx3BTgieT9mES29PQ.Kt89YxdkeyaXfifk50/ecdDnK0/..Ie",
+      "role": "artisan",
+      "display_name": "最终测试",
+      "phone": "",
+      "avatar": "",
+      "addresses": [],
+      "created_at": "2026-10-16T15:03:57.120Z"
     }
   ],
   "conversations": [
@@ -55,36 +128,81 @@
       "user_id": 3,
       "developer_id": 2,
       "created_at": "2026-08-04T09:01:20.762Z"
+    },
+    {
+      "id": 5,
+      "user_id": 5,
+      "developer_id": 3,
+      "created_at": "2026-08-25T07:38:59.926Z"
+    },
+    {
+      "id": 6,
+      "user_id": 3,
+      "developer_id": 5,
+      "created_at": "2026-08-25T07:39:17.803Z"
     }
   ],
   "messages": [
     {
-      "id": 2,
-      "conversation_id": 3,
-      "sender_id": 3,
-      "content": "我是大学生，给我钱",
+      "id": 7,
+      "conversation_id": 5,
+      "sender_id": 5,
+      "content": "你好",
       "file_path": "",
       "file_type": "",
       "file_name": "",
-      "is_read": true,
-      "created_at": "2026-07-21T11:48:10.843Z"
+      "is_read": false,
+      "created_at": "2026-08-25T07:39:27.735Z"
     },
     {
-      "id": 3,
-      "conversation_id": 3,
+      "id": 8,
+      "conversation_id": 6,
       "sender_id": 3,
-      "content": "📎 10月14日(1).png",
-      "file_path": "/uploads/images/79e59a0f-3bd1-4704-902d-51dd1f133201.png",
-      "file_type": "image/png",
-      "file_name": "10æ14æ¥(1).png",
-      "is_read": true,
-      "created_at": "2026-07-21T11:48:43.811Z"
+      "content": "你好",
+      "file_path": "",
+      "file_type": "",
+      "file_name": "",
+      "is_read": false,
+      "created_at": "2026-08-25T07:39:35.474Z"
+    },
+    {
+      "id": 9,
+      "conversation_id": 6,
+      "sender_id": 3,
+      "content": "你哈",
+      "file_path": "",
+      "file_type": "",
+      "file_name": "",
+      "is_read": false,
+      "created_at": "2026-08-25T08:18:21.437Z"
+    },
+    {
+      "id": 10,
+      "conversation_id": 6,
+      "sender_id": 3,
+      "content": "你好",
+      "file_path": "",
+      "file_type": "",
+      "file_name": "",
+      "is_read": false,
+      "created_at": "2026-08-25T08:21:42.983Z"
+    },
+    {
+      "id": 11,
+      "conversation_id": 6,
+      "sender_id": 3,
+      "content": "你好",
+      "file_path": "",
+      "file_type": "",
+      "file_name": "",
+      "is_read": false,
+      "created_at": "2026-08-25T08:53:28.330Z"
     }
   ],
   "nextId": {
-    "user": 5,
-    "conversation": 5,
-    "message": 4,
+    "user": 12,
+    "conversation": 7,
+    "message": 12,
     "address": 1,
     "favorite": 1,
     "review": 1,
@@ -93,7 +211,7 @@
     "product": 1,
     "cart": 1,
     "complaint": 1,
-    "friend": 3
+    "friend": 4
   },
   "addresses": [],
   "favorites": [],
@@ -118,6 +236,13 @@
       "to_user_id": 4,
       "status": "accepted",
       "created_at": "2026-08-04T12:00:00.000Z"
+    },
+    {
+      "id": 3,
+      "from_user_id": 5,
+      "to_user_id": 3,
+      "status": "accepted",
+      "created_at": "2026-08-25T08:05:00.000Z"
     }
   ]
 }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>牙州陶器 - 全屏展示</title>
+    <title>建水紫陶 - 全屏展示</title>
     <script type="importmap">
     {
         "imports": {
@@ -20,8 +20,8 @@
         }
 
         body {
-            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif;
-            background: linear-gradient(160deg, #f0fdf9 0%, #d1fae5 30%, #a7f3d0 70%, #6ee7b7 100%);
+            font-family: var(--font-kai), var(--font-song), serif;
+            background: linear-gradient(160deg, #eef3ef 0%, #dbe9e2 30%, #b5cdc3 70%, #7aa89a 100%);
             min-height: 100vh;
             overflow: hidden;
             position: relative;
@@ -63,7 +63,7 @@
             align-items: center;
             justify-content: space-between;
             padding: 16px 32px;
-            background: rgba(255, 255, 255, 0.92);
+            background: rgba(255, 253, 247, 0.92);
             backdrop-filter: blur(14px);
             border-bottom: 2px solid rgba(16, 185, 129, 0.15);
             box-shadow: 0 4px 20px rgba(16, 185, 129, 0.1);
@@ -74,7 +74,7 @@
             align-items: center;
             gap: 8px;
             padding: 10px 24px;
-            background: linear-gradient(135deg, #34d399 0%, #059669 100%);
+            background: linear-gradient(135deg, #4e7a6c 0%, #3a6b5f 100%);
             color: #fff;
             text-decoration: none;
             border-radius: 10px;
@@ -111,12 +111,12 @@
             width: 50px;
             height: 50px;
             border: none;
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 253, 247, 0.95);
             border-radius: 50%;
             cursor: pointer;
             font-size: 22px;
             font-weight: bold;
-            color: #059669;
+            color: #3a6b5f;
             box-shadow: 0 4px 16px rgba(16, 185, 129, 0.25);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
@@ -135,7 +135,7 @@
             bottom: 40px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(255, 255, 255, 0.92);
+            background: rgba(255, 253, 247, 0.92);
             padding: 12px 36px;
             border-radius: 28px;
             font-size: 0.95em;
@@ -158,7 +158,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            background: rgba(255, 255, 255, 0.98);
+            background: rgba(255, 253, 247, 0.98);
             z-index: 200;
             transition: opacity 0.6s ease;
         }
@@ -172,7 +172,7 @@
             width: 60px;
             height: 60px;
             border: 5px solid rgba(16, 185, 129, 0.15);
-            border-top-color: #059669;
+            border-top-color: #3a6b5f;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
@@ -188,6 +188,7 @@
             font-weight: 600;
         }
     </style>
+  <link rel="stylesheet" href="theme/gufeng.css">
 </head>
 <body>
     <div class="top-bar">
@@ -202,7 +203,7 @@
 
             <div class="loading-overlay" id="loadingOverlay">
                 <div class="spinner"></div>
-                <div class="loading-text">正在加载3D牙州陶器模型...</div>
+                <div class="loading-text">正在加载3D建水紫陶模型...</div>
             </div>
         </div>
     </div>
@@ -316,7 +317,7 @@
 
                 objLoader.load(objPath,
                     (object) => {
-                        console.log('牙州陶器模型加载成功');
+                        console.log('建水紫陶模型加载成功');
 
                         object.traverse((child) => {
                             if (child.isMesh) {
@@ -348,7 +349,7 @@
                             if (textEl) {
                                 const loadedMB = (xhr.loaded / 1024 / 1024).toFixed(2);
                                 const totalMB = (xhr.total / 1024 / 1024).toFixed(2);
-                                textEl.textContent = `正在加载3D牙州陶器模型... ${percent}% (${loadedMB}MB / ${totalMB}MB)`;
+                                textEl.textContent = `正在加载3D建水紫陶模型... ${percent}% (${loadedMB}MB / ${totalMB}MB)`;
                             }
                         }
                     },
@@ -359,7 +360,7 @@
                             textEl.innerHTML = '⚠️ 模型加载失败<br><span style="font-size: 0.88em; color: #666; margin-top: 8px; display: block;">请检查文件路径或返回重试</span>';
                         }
                         const spinnerEl = loadingOverlay.querySelector('.spinner');
-                        if (spinnerEl) spinnerEl.style.borderTopColor = '#e53935';
+                        if (spinnerEl) spinnerEl.style.borderTopColor = '#a5372f';
                     }
                 );
             }, undefined, (error) => {
@@ -367,7 +368,7 @@
 
                 objLoader.load(objPath,
                     (object) => {
-                        console.log('牙州陶器模型加载成功（无材质）');
+                        console.log('建水紫陶模型加载成功（无材质）');
 
                         object.traverse((child) => {
                             if (child.isMesh) {
@@ -415,7 +416,7 @@
                             textEl.innerHTML = '⚠️ 模型加载失败<br><span style="font-size: 0.88em; color: #666; margin-top: 8px; display: block;">请检查文件路径或返回重试</span>';
                         }
                         const spinnerEl = loadingOverlay.querySelector('.spinner');
-                        if (spinnerEl) spinnerEl.style.borderTopColor = '#e53935';
+                        if (spinnerEl) spinnerEl.style.borderTopColor = '#a5372f';
                     }
                 );
             });

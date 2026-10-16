@@ -1,36 +1,42 @@
 /*
- * 全局设计变量 —— 中式国风配色体系
- * 对标「中国非物质文化遗产官网 ihchina.cn」的沉稳素雅调性
- * 主色：深青 / 赭石 / 米白，点缀朱砂红，拒绝艳丽浮夸的商业电商视觉
+ * 全局设计变量 —— 中式国风配色体系（与主平台 theme/gufeng.css 统一）
+ * 主色：墨青 / 赭石 / 宣纸米白，点缀朱砂红
+ * 字体：楷体/宋体/仿宋/隶书 传统字体栈（系统自适应选择）
  */
 :root {
-  /* ===== 主色板（对标 MainPage.html：中国红 + 宣纸暖底，华为官网风）===== */
-  --color-primary: #c0392b;        /* 中国红（主色，主按钮/强调）*/
-  --color-primary-dark: #a83226;   /* 深红（悬停态）*/
-  --color-primary-light: #d94f3a;  /* 亮红 */
-  --color-secondary: #b14f3e;      /* 赤陶褐（辅助色，标签/描边）*/
-  --color-secondary-light: #cf7a63;/* 赤陶提亮 */
-  --color-accent: #c0392b;         /* 强调红（价格/促销强调）*/
+  /* ===== 主色板（与门户主题 theme/gufeng.css 对齐）===== */
+  --color-primary: #2f4f4f;        /* 墨青（主色，主按钮/强调）*/
+  --color-primary-dark: #243f3f;   /* 深墨青（悬停态）*/
+  --color-primary-light: #4a6b63;  /* 浅墨青 */
+  --color-secondary: #9c5a34;      /* 赭石（辅助色，标签/描边）*/
+  --color-secondary-light: #b5853f;/* 赭金提亮 */
+  --color-accent: #a5372f;         /* 朱砂红（价格/促销强调）*/
 
   /* ===== 中性色 ===== */
-  --color-bg: #f3ede5;             /* 宣纸暖米（页面背景）*/
-  --color-surface: #ffffff;        /* 白（卡片/面板底色）*/
-  --color-border: #e7ded5;         /* 暖描边/分割线 */
-  --color-text: #1a1a1a;           /* 正文主文字（近墨黑）*/
-  --color-text-light: #5c5048;     /* 暖褐次级文字 */
+  --color-bg: #f7f2e7;             /* 宣纸暖米（页面背景）*/
+  --color-surface: #fffdf7;        /* 米白（卡片/面板底色）*/
+  --color-border: #d8cdb8;         /* 淡褐描边/分割线 */
+  --color-text: #3a3226;           /* 墨（正文主文字）*/
+  --color-text-light: #6b6255;     /* 灰褐次级文字 */
   --color-text-muted: #8a7d72;     /* 暖灰辅助说明文字 */
 
-  /* ===== 字体 ===== */
-  /* 标题：厚重醒目的宋/仿宋系，契合非遗厚重感 */
-  --font-title: 'STZhongsong', 'STСаг', 'Songti SC', 'SimSun', 'Noto Serif SC', serif;
-  /* 正文：清晰易读的黑体系 */
-  --font-body: 'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', 'Noto Sans SC', sans-serif;
+  /* ===== 传统字体栈（自适应选择：系统安装哪种即用哪种）===== */
+  /* 楷体系：正文首选，手书韵味 */
+  --font-kai: 'KaiTi', 'STKaiti', '楷体', 'Kaiti SC', 'AR PL UKai CN', 'TW-Kai', 'DFKai-SB', serif;
+  /* 宋体系：标题首选，庄重典雅 */
+  --font-song: 'Songti SC', 'SimSun', '宋体', 'STSong', 'Noto Serif CJK SC', 'Source Han Serif SC', 'NSimSun', serif;
+  /* 仿宋系：引用/档案正文 */
+  --font-fangsong: 'FangSong', 'STFangsong', '仿宋', 'FZFS', 'FangSong_GB2312', serif;
+  /* 隶书系：品牌大字 */
+  --font-lisu: 'LiSu', '隶书', 'STLiti', 'Baoli SC', serif;
+  /* 行楷系：标语点缀 */
+  --font-xingkai: 'Xingkai SC', 'STXingkai', '行楷', 'KaiTi', serif;
 
   /* ===== 圆角 / 阴影 / 间距 ===== */
   --radius-sm: 4px;
   --radius-md: 8px;
-  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.05);
-  --shadow-hover: 0 12px 28px rgba(0, 0, 0, 0.08);
+  --shadow-card: 0 2px 12px rgba(74, 56, 26, 0.08);
+  --shadow-hover: 0 12px 28px rgba(74, 56, 26, 0.12);
   --container-width: 1200px;       /* 主内容区最大宽度 */
 
   /* ===== 覆写 Element Plus 主题色，使组件贴合国风 ===== */

@@ -1,7 +1,16 @@
 <script setup>
 // 应用根组件：固定头部 + 路由视图 + 页脚
+import { onMounted } from 'vue'
 import TheHeader from '@/components/TheHeader.vue'
 import TheFooter from '@/components/TheFooter.vue'
+import { useAuthStore } from '@/store/auth'
+
+const auth = useAuthStore()
+
+// 已登录用户启动在线状态心跳（每 30 秒一次，覆盖商城全部页面）
+onMounted(() => {
+  if (auth.isLoggedIn) auth.startPresence()
+})
 </script>
 
 <template>

@@ -16,6 +16,9 @@ const USER_KEY = 'user'
 // 主平台登录页地址（商城未登录时跳转过去）
 const LOGIN_PAGE = '/login.html'
 
+// 在线状态心跳定时器（模块级，避免放入响应式 state）
+let presenceTimer = null
+
 // 安全读取 user，避免 JSON 解析失败
 function loadUser() {
   try {
@@ -91,6 +94,22 @@ export const useAuthStore = defineStore('auth', {
     goLogin() {
       const redirect = encodeURIComponent(window.location.href)
       window.location.href = `${LOGIN_PAGE}?redirect=${redirect}`
+    },
+
+    // 在线状态心跳：每 30 秒向后端上报一次，使开发者端能看到「在线」状态
+    // 覆盖商城全部页面（在 App.vue 挂载时调用一次即可）
+    startPresence() {
+      if (presenceTimer) return          // 防止重复启动
+      const ping = () => {
+        const t = localStorage.getItem(TOKEN_KEY)
+        if (!t) return                   // 未登录则不上报
+        fetch('/api/heartbeat', {
+          method: 'POST',
+          headers: { Authorization: 'Bearer ' + t }
+        }).catch(() => {})
+      }
+      ping()
+      presenceTimer = setInterval(ping, 30000)
     }
   }
 })

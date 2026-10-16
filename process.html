@@ -12,10 +12,10 @@
         }
 
         body {
-            font-family: 'KaiTi', 'STKaiti', 'SimSun', 'Noto Serif SC', 'PingFang SC', 'Microsoft YaHei', serif;
-            background: linear-gradient(160deg, #f5ecd7 0%, #ede0c8 30%, #e2d4b8 70%, #d4c4a0 100%);
+            font-family: var(--font-kai), var(--font-song), serif;
+            background: linear-gradient(160deg, #f6efdf 0%, #ece0c8 30%, #e2d4b6 70%, #d3c29c 100%);
             min-height: 100vh;
-            color: #3e2723;
+            color: #3a3226;
             overflow: hidden;
             display: flex;
             align-items: stretch;
@@ -37,7 +37,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: rgba(255, 250, 240, 0.92);
+            background: rgba(255, 253, 247, 0.92);
             border-radius: 8px;
             border: 2px solid #a08868;
             box-shadow: 0 4px 24px rgba(62, 39, 35, 0.12), inset 0 0 60px rgba(160, 136, 104, 0.06);
@@ -108,7 +108,7 @@
             z-index: 10;
             padding: 8px 18px;
             background: linear-gradient(135deg, #8d6e63 0%, #5d4037 100%);
-            color: #f5ecd7;
+            color: #f6efdf;
             text-decoration: none;
             border-radius: 4px;
             font-size: 0.82em;
@@ -131,7 +131,7 @@
             flex-shrink: 0;
             display: flex;
             flex-direction: column;
-            background: rgba(255, 250, 240, 0.85);
+            background: rgba(255, 253, 247, 0.85);
             border-left: 2px solid #a08868;
             box-shadow: -2px 0 20px rgba(62, 39, 35, 0.06);
             overflow: hidden;
@@ -168,7 +168,7 @@
         .toc-header .toc-title {
             font-size: 1.15em;
             font-weight: 700;
-            color: #3e2723;
+            color: #3a3226;
             letter-spacing: 3px;
         }
 
@@ -231,7 +231,7 @@
 
         .toc-item:hover .toc-num {
             background: #5d4037;
-            color: #f5ecd7;
+            color: #f6efdf;
             border-color: #5d4037;
         }
 
@@ -244,7 +244,7 @@
         }
 
         .toc-item:hover .toc-name {
-            color: #3e2723;
+            color: #3a3226;
         }
 
         .toc-item .toc-arrow {
@@ -287,7 +287,7 @@
         }
 
         .detail-back:hover {
-            color: #3e2723;
+            color: #3a3226;
             background: rgba(160, 136, 104, 0.06);
         }
 
@@ -306,7 +306,7 @@
             overflow-x: auto;
             padding: 28px 18px;
             writing-mode: vertical-rl;
-            font-family: 'STXingkai', 'STLiti', 'Ma Shan Zheng', 'KaiTi', 'STKaiti', 'SimSun', serif;
+            font-family: var(--font-kai), var(--font-song), serif;
         }
 
         .detail-body::-webkit-scrollbar {
@@ -325,7 +325,7 @@
 
         .detail-step-num {
             font-size: 1.1em;
-            color: #8b5a2b;
+            color: #9c5a34;
             letter-spacing: 4px;
             margin-left: 16px;
             padding: 4px 8px;
@@ -336,7 +336,7 @@
         .detail-title {
             font-size: 2.0em;
             font-weight: 700;
-            color: #3e2723;
+            color: #3a3226;
             letter-spacing: 6px;
             line-height: 1.6;
             margin-left: 22px;
@@ -346,7 +346,7 @@
 
         .detail-subtitle {
             font-size: 1.0em;
-            color: #8b5a2b;
+            color: #9c5a34;
             letter-spacing: 3px;
             margin-left: 22px;
             padding-left: 16px;
@@ -389,13 +389,13 @@
             font-weight: 600;
             letter-spacing: 1px;
             transition: all 0.25s ease;
-            font-family: inherit;
+            font-family: var(--font-kai), var(--font-song), serif;
             user-select: none;
         }
 
         .detail-nav-btn:hover {
             background: #5d4037;
-            color: #f5ecd7;
+            color: #f6efdf;
             border-color: #5d4037;
         }
 
@@ -410,7 +410,7 @@
             z-index: 10;
             padding: 8px 18px;
             background: linear-gradient(135deg, #8d6e63 0%, #5d4037 100%);
-            color: #f5ecd7;
+            color: #f6efdf;
             border: none;
             border-radius: 4px;
             font-size: 0.82em;
@@ -422,7 +422,7 @@
             align-items: center;
             gap: 4px;
             letter-spacing: 0.5px;
-            font-family: inherit;
+            font-family: var(--font-kai), var(--font-song), serif;
         }
 
         .fullscreen-btn:hover {
@@ -455,8 +455,8 @@
             z-index: 10000;
             width: 48px;
             height: 48px;
-            background: rgba(255, 255, 255, 0.12);
-            border: 1px solid rgba(255, 255, 255, 0.25);
+            background: rgba(255, 253, 247, 0.12);
+            border: 1px solid rgba(255, 253, 247, 0.25);
             border-radius: 50%;
             color: #fff;
             font-size: 1.4em;
@@ -468,7 +468,7 @@
         }
 
         .fullscreen-close:hover {
-            background: rgba(255, 255, 255, 0.25);
+            background: rgba(255, 253, 247, 0.25);
             transform: rotate(90deg);
         }
 
@@ -492,8 +492,8 @@
             transform: translateY(-50%);
             width: 52px;
             height: 52px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 253, 247, 0.1);
+            border: 1px solid rgba(255, 253, 247, 0.2);
             border-radius: 50%;
             color: #fff;
             font-size: 1.3em;
@@ -506,7 +506,7 @@
         }
 
         .fullscreen-nav:hover {
-            background: rgba(255, 255, 255, 0.22);
+            background: rgba(255, 253, 247, 0.22);
         }
 
         .fullscreen-nav.disabled {
@@ -528,7 +528,7 @@
             bottom: 32px;
             left: 50%;
             transform: translateX(-50%);
-            color: rgba(255, 255, 255, 0.7);
+            color: rgba(255, 253, 247, 0.7);
             font-size: 1em;
             font-weight: 600;
             letter-spacing: 3px;
@@ -572,6 +572,7 @@
             }
         }
     </style>
+  <link rel="stylesheet" href="theme/gufeng.css">
 </head>
 <body>
     <div class="image-panel" id="imagePanel">

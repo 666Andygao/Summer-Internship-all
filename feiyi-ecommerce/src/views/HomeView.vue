@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 // 页面1：非遗电商商品首页
 // 顶部 Banner + 左侧多条件筛选 + 右侧瀑布流商品陈列 + 排序 + 分页
 import { ref, reactive, watch, onMounted, nextTick } from 'vue'
@@ -123,14 +123,14 @@ onMounted(() => {
             <!-- 中心柔光 -->
             <defs>
               <radialGradient id="totemGlow" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stop-color="#c0392b" stop-opacity="0.12" />
-                <stop offset="100%" stop-color="#c0392b" stop-opacity="0" />
+                <stop offset="0%" stop-color="#a5372f" stop-opacity="0.12" />
+                <stop offset="100%" stop-color="#a5372f" stop-opacity="0" />
               </radialGradient>
             </defs>
             <circle cx="200" cy="200" r="170" fill="url(#totemGlow)" />
 
             <!-- 外圈：缓慢旋转的虚线环 -->
-            <g class="ring-spin" fill="none" stroke="#c0392b">
+            <g class="ring-spin" fill="none" stroke="#a5372f">
               <circle cx="200" cy="200" r="188" stroke-opacity="0.25" stroke-width="1" />
               <circle cx="200" cy="200" r="178" stroke-opacity="0.5" stroke-width="2" stroke-dasharray="2 12" />
             </g>
@@ -140,7 +140,7 @@ onMounted(() => {
             <circle cx="200" cy="200" r="120" fill="none" stroke="#c9b3a3" stroke-opacity="0.7" stroke-width="1" stroke-dasharray="1 9" />
 
             <!-- 太阳纹芒线：12 道三角光芒环绕中心 -->
-            <g fill="#c0392b">
+            <g fill="#a5372f">
               <polygon
                 v-for="n in 12"
                 :key="n"
@@ -150,7 +150,7 @@ onMounted(() => {
             </g>
 
             <!-- 铜鼓中心「鼓芯」 -->
-            <circle cx="200" cy="200" r="46" fill="#c0392b" stroke="#e8c9a0" stroke-width="2" />
+            <circle cx="200" cy="200" r="46" fill="#a5372f" stroke="#e8c9a0" stroke-width="2" />
             <circle cx="200" cy="200" r="31" fill="none" stroke="#e8c9a0" stroke-opacity="0.7" stroke-width="1.5" />
             <circle cx="200" cy="200" r="7" fill="#e8c9a0" />
           </svg>

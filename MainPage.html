@@ -5,803 +5,852 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
   <title>华夏风物志 · 非遗传承</title>
   <style>
-    /* ===== 全局重置 & 基础 ===== */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+    /* ==========================================================================
+       水墨 Ink Wash 设计系统（参考 StyleKit · Ink Wash Showcase）
+       计白当黑 · 墨分五色 · 笔断意连 · 气韵生动
+       忌满忌堵 · 忌浮忌飘 · 忌板忌刻 · 忌俗忌媚
+       ========================================================================== */
+    :root {
+      /* ---- 墨分五色 + 纸色 ---- */
+      --ink-scorched: #1a1a1a;   /* 焦：标题 / 主按钮 / 主文字 */
+      --ink-thick: #2c2c2c;      /* 浓：正文主文字 */
+      --ink-heavy: #5a5a5a;      /* 重：次级文字 / 悬停 */
+      --ink-light: #a8a8a8;      /* 淡：弱文字 */
+      --ink-clear: #e2d6bd;      /* 清：分隔线 / 浅底（偏黄宣纸色） */
+      /* ---- 辅助色 ---- */
+      --paper: #f5ebd7;          /* 宣纸：页面背景（古旧黄纸色） */
+      --paper-soft: #efe2c9;     /* 柔宣纸：区块底 */
+      --sand: #b7a68a;           /* 沙：注释文字 */
+      --tea: #9a8163;            /* 茶：副标题 / 强调 */
+      --moss: #6b7b6e;           /* 苔：边框揭示 / 链接悬停 */
+      /* ---- 传统字体（自适应） ---- */
+      --font-song: 'Songti SC', 'SimSun', '宋体', 'STSong', 'Noto Serif CJK SC', 'Source Han Serif SC', 'NSimSun', serif;
+      --font-kai: 'KaiTi', 'STKaiti', '楷体', 'Kaiti SC', serif;
+      /* ---- 过渡（墨晕：700ms–1000ms，仅颜色/透明度，不位移不旋转） ---- */
+      --ink-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
     }
 
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      background-color: #f5f5f5;
-      color: #1a1a1a;
-      line-height: 1.5;
+      font-family: var(--font-song), serif;
+      font-weight: 300;
+      background-color: var(--paper);
+      background-image:
+        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(156, 122, 84, 0.06), transparent 60%),
+        radial-gradient(ellipse 60% 40% at 90% 30%, rgba(107, 123, 110, 0.03), transparent 70%);
+      background-attachment: fixed;
+      color: var(--ink-thick);
+      line-height: 2;
+      letter-spacing: 0.03em;
+      -webkit-font-smoothing: antialiased;
     }
+
+    ::selection { background: var(--ink-scorched); color: var(--paper); }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--paper); }
+    ::-webkit-scrollbar-thumb { background: var(--ink-clear); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--sand); }
 
     .site-wrapper {
       max-width: 1440px;
       margin: 0 auto;
-      background: #ffffff;
-      box-shadow: 0 0 20px rgba(0,0,0,0.02);
-      overflow: hidden; /* 防止滚动条偏移导致动画闪烁 */
+      background: transparent;
     }
 
-    /* ===== 顶部栏 ===== */
+    /* ==========================================================================
+       顶部细栏（墨线分隔）
+       ========================================================================== */
     .top-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0 40px;
-      height: 48px;
-      background: #f8f8f8;
-      border-bottom: 1px solid #eaeaea;
-      font-size: 14px;
-      color: #333;
-      transition: background 0.3s ease, box-shadow 0.3s ease;
+      padding: 10px 48px;
+      border-bottom: 1px solid var(--ink-clear);
+      font-size: 0.75rem;
+      letter-spacing: 0.18em;
+      color: var(--sand);
+      transition: background 0.8s var(--ink-ease);
     }
-    .top-bar.scrolled {
-      background: #ffffff;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-    }
+    .top-bar.scrolled { background: var(--paper-soft); }
 
-    .lang-region {
-      display: flex;
-      gap: 18px;
-      align-items: center;
-    }
+    .lang-region { display: flex; gap: 16px; align-items: center; }
+    .lang-region .divider { color: var(--ink-clear); }
 
-    .lang-region span {
-      cursor: default;
-      letter-spacing: 0.3px;
-    }
-
-    .lang-region .divider {
-      color: #ccc;
-    }
-
-    .top-links {
-      display: flex;
-      gap: 24px;
-      font-size: 13px;
-    }
-
+    .top-links { display: flex; gap: 28px; }
     .top-links a {
       text-decoration: none;
-      color: #333;
-      transition: color 0.2s;
+      color: var(--sand);
       position: relative;
+      padding-bottom: 2px;
+      transition: color 0.8s var(--ink-ease);
     }
     .top-links a::after {
       content: '';
       position: absolute;
-      bottom: -2px;
-      left: 0;
-      width: 0;
-      height: 1.5px;
-      background: #c0392b;
-      transition: width 0.3s ease;
+      bottom: 0; left: 0;
+      width: 0; height: 1px;
+      background: var(--moss);
+      transition: width 0.8s var(--ink-ease);
     }
-    .top-links a:hover {
-      color: #c0392b;
-    }
-    .top-links a:hover::after {
-      width: 100%;
-    }
+    .top-links a:hover { color: var(--moss); }
+    .top-links a:hover::after { width: 100%; }
 
-    /* ===== 主导航 ===== */
+    /* ==========================================================================
+       主导航（留白充足，仅墨线勾勒）
+       ========================================================================== */
     .main-nav {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 12px 40px;
-      background: white;
-      border-bottom: 1px solid #f0f0f0;
-      transition: box-shadow 0.3s ease;
+      padding: 22px 48px;
+      border-bottom: 1px solid var(--ink-clear);
+      background: rgba(245, 235, 215, 0.82);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      transition: background 0.8s var(--ink-ease), box-shadow 0.8s var(--ink-ease);
     }
     .main-nav.scrolled {
-      box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+      background: rgba(245, 235, 215, 0.94);
+      box-shadow: 0 1px 0 rgba(26, 26, 26, 0.04);
     }
 
-    .logo-area {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+    .logo-area { display: flex; align-items: center; gap: 16px; }
 
     .brand-icon {
-      font-size: 28px;
-      font-weight: 600;
-      letter-spacing: -0.5px;
-      color: #c0392b;
-      background: #fce8e5;
-      padding: 4px 12px;
-      border-radius: 30px;
-      line-height: 1.2;
-      transition: transform 0.3s ease, background 0.3s ease;
+      font-family: var(--font-song), serif;
+      font-size: 1.3rem;
+      font-weight: 500;
+      letter-spacing: 0.22em;
+      color: var(--ink-scorched);
     }
-    .brand-icon:hover {
-      transform: scale(1.03) rotate(-1deg);
-      background: #fcded9;
+    .brand-icon::before {
+      content: '墨';
+      display: inline-block;
+      margin-right: 12px;
+      font-size: 0.9rem;
+      color: var(--paper);
+      background: var(--ink-scorched);
+      padding: 2px 7px;
+      border-radius: 2px;
+      letter-spacing: 0;
+      vertical-align: 2px;
     }
 
     .brand-sub {
-      font-size: 14px;
-      color: #666;
-      font-weight: 300;
-      letter-spacing: 2px;
-      border-left: 1px solid #ddd;
-      padding-left: 12px;
+      font-size: 0.72rem;
+      letter-spacing: 0.32em;
+      color: var(--sand);
+      border-left: 1px solid var(--ink-clear);
+      padding-left: 16px;
     }
 
-    .nav-links {
-      display: flex;
-      gap: 32px;
-      font-size: 15px;
-      font-weight: 450;
-    }
+    .nav-links { display: flex; gap: 38px; align-items: center; }
 
     .nav-links a {
       text-decoration: none;
-      color: #1a1a1a;
+      color: var(--ink-heavy);
+      font-size: 0.95rem;
+      letter-spacing: 0.14em;
       position: relative;
-      transition: color 0.2s;
-      padding: 4px 0;
+      padding: 6px 0;
+      transition: color 0.8s var(--ink-ease);
     }
-
     .nav-links a::after {
       content: '';
       position: absolute;
-      bottom: -2px;
-      left: 0;
-      width: 0;
-      height: 2px;
-      background: #c0392b;
-      transition: width 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+      bottom: 0; left: 50%;
+      width: 0; height: 1px;
+      background: var(--moss);
+      transform: translateX(-50%);
+      transition: width 0.8s var(--ink-ease);
     }
-
-    .nav-links a:hover {
-      color: #c0392b;
-    }
-
-    .nav-links a:hover::after {
-      width: 100%;
-    }
+    .nav-links a:hover { color: var(--ink-scorched); }
+    .nav-links a:hover::after { width: 100%; }
+    .nav-links a.active { color: var(--ink-scorched); font-weight: 400; }
+    .nav-links a.active::after { width: 100%; }
 
     .nav-actions {
       display: flex;
-      gap: 16px;
+      gap: 20px;
       align-items: center;
+      color: var(--ink-heavy);
+      font-size: 0.9rem;
     }
+    .nav-actions span { cursor: pointer; transition: opacity 0.8s var(--ink-ease); }
+    .nav-actions span:hover { opacity: 0.6; }
+    .nav-actions a { text-decoration: none; color: var(--ink-heavy); transition: opacity 0.8s var(--ink-ease); }
+    .nav-actions a:hover { opacity: 0.6; }
 
-    .nav-actions span {
-      font-size: 20px;
-      cursor: default;
-      color: #444;
-      transition: transform 0.25s ease, color 0.2s;
-      display: inline-block;
-    }
-    .nav-actions span:hover {
-      transform: scale(1.15);
-      color: #c0392b;
-    }
-
-    .nav-actions a {
-      text-decoration: none;
-      color: #444;
-      transition: transform 0.25s ease;
-      display: inline-block;
-    }
-    .nav-actions a:hover {
-      transform: scale(1.1);
-    }
-
-    /* ===== 主横幅 Hero ===== */
+    /* ==========================================================================
+       Hero 主横幅 —— 计白当黑 · 大字宽距
+       ========================================================================== */
     .hero-section {
-      background: #f2ebe4;
-      background-image: radial-gradient(circle at 20% 30%, rgba(192, 57, 43, 0.03) 0%, transparent 40%),
-                        radial-gradient(circle at 80% 70%, rgba(192, 57, 43, 0.05) 0%, transparent 50%);
-      padding: 40px 40px 30px 40px;
+      position: relative;
+      padding: 84px 48px 76px;
+      border-bottom: 1px solid var(--ink-clear);
+      overflow: hidden;
+      /* 水墨山水画卷背景：左侧宣纸渐变托住文字，右侧展开画卷 */
+      background-image:
+        linear-gradient(105deg, rgba(245, 235, 215, 0.96) 0%, rgba(245, 235, 215, 0.88) 30%, rgba(245, 235, 215, 0.56) 56%, rgba(245, 235, 215, 0.2) 75%, rgba(245, 235, 215, 0.06) 100%),
+        url('uploads/images/hero-inkwash-bg.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+    /* 画卷底部卷轴细线 */
+    .hero-section::after {
+      content: '';
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      height: 1px;
+      background: rgba(26, 26, 26, 0.08);
+      pointer-events: none;
+    }
+
+    .hero-inner {
       display: flex;
-      flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid #e6ddd6;
-      transition: background 0.6s ease;
-      position: relative;
-      overflow: hidden;
-    }
-    .hero-section::before {
-      content: '✦';
-      position: absolute;
-      font-size: 22rem;
-      color: rgba(192, 57, 43, 0.02);
-      right: -60px;
-      bottom: -80px;
-      transform: rotate(12deg);
-      pointer-events: none;
-      animation: floatSymbol 14s infinite alternate ease-in-out;
-    }
-    @keyframes floatSymbol {
-      0% { transform: rotate(8deg) translateY(0px); opacity: 0.6; }
-      100% { transform: rotate(-4deg) translateY(-30px); opacity: 1; }
+      gap: 48px;
+      max-width: 1180px;
+      margin: 0 auto;
     }
 
-    .hero-text {
-      flex: 1 1 300px;
-      padding-right: 20px;
-      z-index: 2;
-    }
+    .hero-text { flex: 1 1 640px; position: relative; z-index: 1; }
 
     .hero-text .tagline {
       display: inline-block;
-      background: #c0392b;
-      color: white;
-      font-size: 12px;
-      font-weight: 500;
-      letter-spacing: 2px;
-      padding: 3px 14px;
-      border-radius: 20px;
-      margin-bottom: 14px;
-      animation: pulseTag 3s infinite ease-in-out;
-      box-shadow: 0 2px 12px rgba(192,57,43,0.2);
-    }
-    @keyframes pulseTag {
-      0%, 100% { transform: scale(1); box-shadow: 0 2px 12px rgba(192,57,43,0.2); }
-      50% { transform: scale(1.03); box-shadow: 0 4px 20px rgba(192,57,43,0.3); }
+      font-size: 0.74rem;
+      letter-spacing: 0.5em;
+      color: var(--tea);
+      margin-bottom: 24px;
+      padding-left: 18px;
+      border-left: 2px solid var(--tea);
+      opacity: 0;
+      animation: fadeUp 1s 0.15s forwards;
     }
 
     .hero-text h1 {
-      font-size: clamp(2.2rem, 6vw, 4rem);
-      font-weight: 600;
-      line-height: 1.1;
-      letter-spacing: -0.01em;
-      color: #1a1a1a;
-      margin-bottom: 8px;
+      font-size: clamp(2.4rem, 5.2vw, 3.8rem);
+      font-weight: 300;
+      letter-spacing: 0.1em;
+      line-height: 1.35;
+      color: var(--ink-scorched);
+      margin-bottom: 18px;
+      opacity: 0;
+      animation: fadeUp 1s 0.3s forwards;
     }
-
     .hero-text h1 .highlight {
-      color: #c0392b;
-      background: linear-gradient(145deg, #b0301e, #d94f3a);
-      background-clip: text;
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      font-weight: 700;
-      animation: shimmerText 4s infinite alternate;
-    }
-    @keyframes shimmerText {
-      0% { background-position: 0% 50%; filter: drop-shadow(0 2px 4px rgba(192,57,43,0.1)); }
-      100% { background-position: 100% 50%; filter: drop-shadow(0 4px 12px rgba(192,57,43,0.2)); }
+      font-weight: 300;
+      color: var(--ink-scorched);
+      background-image: linear-gradient(transparent 78%, rgba(154, 129, 99, 0.45) 78%);
+      background-size: 100% 100%;
     }
 
     .hero-text .sub-head {
-      font-size: 1.2rem;
-      color: #4d3e36;
-      margin-bottom: 12px;
-      font-weight: 350;
-      letter-spacing: 1px;
+      font-family: var(--font-kai), var(--font-song), serif;
+      font-style: italic;
+      font-size: 1.1rem;
+      font-weight: 300;
+      letter-spacing: 0.3em;
+      color: var(--tea);
+      margin-bottom: 14px;
       opacity: 0;
-      animation: fadeUp 0.9s 0.2s forwards;
+      animation: fadeUp 1s 0.45s forwards;
     }
 
     .hero-text .desc {
-      font-size: 1rem;
-      color: #4d3e36;
-      max-width: 480px;
-      margin-bottom: 20px;
-      line-height: 1.6;
-      opacity: 0.85;
+      font-size: 0.95rem;
+      font-weight: 300;
+      color: var(--ink-heavy);
+      max-width: 540px;
+      line-height: 2;
+      margin-bottom: 32px;
       opacity: 0;
-      animation: fadeUp 0.9s 0.4s forwards;
-    }
-
-    @keyframes fadeUp {
-      0% { opacity: 0; transform: translateY(18px); }
-      100% { opacity: 1; transform: translateY(0); }
+      animation: fadeUp 1s 0.6s forwards;
     }
 
     .btn-primary {
       display: inline-block;
-      background: #c0392b;
-      color: white;
-      padding: 12px 32px;
-      border-radius: 40px;
-      font-weight: 500;
-      font-size: 1rem;
-      letter-spacing: 0.5px;
+      background: var(--ink-scorched);
+      color: var(--paper);
+      padding: 13px 40px;
+      border-radius: 2px;
+      font-family: var(--font-song), serif;
+      font-weight: 300;
+      font-size: 0.9rem;
+      letter-spacing: 0.28em;
+      text-indent: 0.28em;
       text-decoration: none;
-      transition: background 0.25s, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s;
-      box-shadow: 0 4px 10px rgba(192, 57, 43, 0.2);
-      position: relative;
-      overflow: hidden;
-    }
-    .btn-primary::after {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -60%;
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
-      transform: rotate(25deg) translateY(-30%);
-      transition: transform 0.5s ease;
+      transition: background 0.9s var(--ink-ease), color 0.9s var(--ink-ease);
+      opacity: 0;
+      animation: fadeUp 1s 0.75s forwards;
     }
     .btn-primary:hover {
-      background: #a83226;
-      transform: scale(1.04) translateY(-2px);
-      box-shadow: 0 8px 24px rgba(192, 57, 43, 0.3);
-    }
-    .btn-primary:hover::after {
-      transform: rotate(25deg) translateY(30%);
+      background: var(--ink-thick);
+      color: #f4f0e9;
     }
 
-    .hero-image {
-      flex: 0 0 280px;
+    /* 墨色印章装饰（右侧） */
+    .hero-seal {
+      flex: 0 0 auto;
+      width: 106px;
+      height: 106px;
       display: flex;
-      justify-content: center;
       align-items: center;
-      background: #e6dbd1;
-      border-radius: 40px 40px 40px 4px;
-      padding: 20px 10px;
-      min-height: 180px;
-      background-image: linear-gradient(145deg, #dccfc4, #eee4db);
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
-      transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.6s;
-      animation: floatImage 6s infinite alternate ease-in-out;
+      justify-content: center;
+      border: 1px solid rgba(26, 26, 26, 0.14);
+      border-radius: 50%;
+      position: relative;
+      opacity: 0;
+      animation: fadeUp 1.2s 0.5s forwards;
     }
-    @keyframes floatImage {
-      0% { transform: translateY(0px) rotate(0deg); }
-      100% { transform: translateY(-12px) rotate(0.8deg); }
+    .hero-seal::before {
+      content: '';
+      position: absolute;
+      inset: 9px;
+      border: 1px solid rgba(154, 129, 99, 0.35);
+      border-radius: 50%;
     }
-    .hero-image:hover {
-      transform: scale(1.02) translateY(-6px);
-      box-shadow: 0 20px 40px rgba(0,0,0,0.06);
-    }
-
-    .hero-image .icon-symbol {
-      font-size: 5rem;
-      line-height: 1;
-      filter: drop-shadow(2px 6px 12px rgba(0,0,0,0.08));
-      letter-spacing: 8px;
-      color: #7a5a4a;
-      animation: iconPulse 4s infinite alternate;
-    }
-    @keyframes iconPulse {
-      0% { transform: scale(1) rotate(-2deg); }
-      100% { transform: scale(1.04) rotate(2deg); }
+    .hero-seal .seal-char {
+      font-family: var(--font-song), serif;
+      font-size: 1rem;
+      font-weight: 300;
+      letter-spacing: 0.5em;
+      line-height: 1.9;
+      color: var(--tea);
+      writing-mode: vertical-rl;
+      text-align: center;
+      padding-left: 0.5em;
     }
 
-    /* ===== 统计卡片 ===== */
+    @keyframes fadeUp {
+      0% { opacity: 0; transform: translateY(16px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ==========================================================================
+       统计区 —— 墨色数字 · 细线分隔
+       ========================================================================== */
     .stats-section {
-      padding: 30px 40px;
-      background: #fcfaf8;
-      border-bottom: 1px solid #eee8e2;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(4, 1fr);
+      padding: 76px 48px;
+      border-bottom: 1px solid var(--ink-clear);
       text-align: center;
     }
 
     .stat-item {
-      background: white;
-      padding: 18px 10px;
-      border-radius: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-      border: 1px solid #f0ebe7;
-      transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s, border-color 0.3s;
-      cursor: default;
+      padding: 10px 20px;
+      border-left: 1px solid var(--ink-clear);
+      transition: opacity 1s var(--ink-ease);
     }
-    .stat-item:hover {
-      transform: translateY(-8px) scale(1.01);
-      box-shadow: 0 12px 28px rgba(0,0,0,0.05);
-      border-color: #dccfc4;
-    }
+    .stat-item:first-child { border-left: none; }
 
     .stat-item .number {
-      font-size: 2.2rem;
-      font-weight: 600;
-      color: #c0392b;
-      letter-spacing: -0.5px;
-      transition: transform 0.3s;
+      font-size: clamp(2.2rem, 4vw, 3.2rem);
+      font-weight: 200;
+      letter-spacing: 0.04em;
+      color: var(--ink-scorched);
+      line-height: 1.2;
       display: inline-block;
+      transition: color 0.9s var(--ink-ease);
     }
-    .stat-item:hover .number {
-      transform: scale(1.08);
-    }
+    .stat-item:hover .number { color: var(--tea); }
 
     .stat-item .label {
-      font-size: 0.85rem;
-      color: #5a4d44;
-      margin-top: 4px;
+      font-size: 0.82rem;
+      letter-spacing: 0.22em;
+      color: var(--ink-heavy);
+      margin-top: 10px;
     }
 
-    /* ===== 联合国名录 ===== */
-    .unesco-section {
-      padding: 30px 40px 10px 40px;
-      background: white;
-      border-bottom: 1px solid #f0ebe7;
-    }
-
-    .unesco-section .section-header {
+    /* ==========================================================================
+       分区标题 —— 英文小标 + 大字距标题
+       ========================================================================== */
+    .section-header {
       display: flex;
       justify-content: space-between;
-      align-items: baseline;
-      margin-bottom: 16px;
-      border-bottom: 1px solid #ececec;
-      padding-bottom: 10px;
+      align-items: flex-end;
+      margin-bottom: 46px;
     }
 
-    .unesco-section .section-header h2 {
-      font-size: 1.6rem;
-      font-weight: 500;
-      color: #1a1a1a;
+    .section-header .section-heading {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
-
-    .unesco-badge {
+    .section-header .section-en {
+      font-size: 0.7rem;
+      letter-spacing: 0.42em;
+      text-transform: uppercase;
+      color: var(--sand);
+    }
+    .section-header h2 {
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+      font-weight: 300;
+      letter-spacing: 0.16em;
+      color: var(--ink-scorched);
+      line-height: 1.4;
+    }
+    .section-header h2 .unesco-badge {
       display: inline-block;
-      background: #c0392b10;
-      color: #c0392b;
-      font-size: 0.9rem;
-      padding: 2px 16px;
-      border-radius: 30px;
-      border: 1px solid #c0392b30;
-      transition: all 0.3s;
+      font-size: 0.72rem;
+      font-weight: 300;
+      letter-spacing: 0.22em;
+      color: var(--tea);
+      border: 1px solid rgba(168, 146, 121, 0.4);
+      padding: 3px 16px;
+      border-radius: 2px;
+      margin-left: 14px;
+      vertical-align: 3px;
+      transition: border-color 0.9s var(--ink-ease), color 0.9s var(--ink-ease);
     }
-    .unesco-badge:hover {
-      background: #c0392b20;
-      transform: scale(1.03);
+    .section-header h2 .unesco-badge:hover { border-color: var(--tea); color: var(--ink-scorched); }
+
+    .more-link {
+      font-size: 0.85rem;
+      letter-spacing: 0.18em;
+      color: var(--sand);
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      padding-bottom: 4px;
+      transition: color 0.9s var(--ink-ease), border-color 0.9s var(--ink-ease);
+      white-space: nowrap;
+    }
+    .more-link:hover { color: var(--moss); border-bottom-color: var(--moss); }
+
+    /* ==========================================================================
+       名录区 —— 细框卡片网格
+       ========================================================================== */
+    .unesco-section {
+      padding: 84px 48px 70px;
+      border-bottom: 1px solid var(--ink-clear);
     }
 
     .unesco-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 16px;
-      margin-bottom: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 22px;
     }
 
     .unesco-item {
-      background: #faf8f6;
-      padding: 14px 12px;
-      border-radius: 16px;
-      border: 1px solid #f0ebe7;
-      font-size: 0.95rem;
-      color: #2d241f;
+      background: var(--paper-soft);
+      border: 1px solid var(--ink-clear);
+      border-radius: 3px;
+      padding: 22px 14px 18px;
+      font-size: 0.98rem;
+      font-weight: 300;
+      letter-spacing: 0.08em;
+      color: var(--ink-thick);
       text-align: center;
-      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
       cursor: default;
+      transition: border-color 1s var(--ink-ease), background 1s var(--ink-ease);
     }
     .unesco-item:hover {
-      transform: translateY(-5px) scale(1.02);
-      background: #f5efe9;
-      border-color: #c0392b40;
-      box-shadow: 0 8px 18px rgba(192,57,43,0.06);
+      border-color: rgba(107, 123, 110, 0.55);
+      background: linear-gradient(160deg, var(--paper-soft), rgba(232, 228, 222, 0.55));
     }
 
     .unesco-item strong {
       display: block;
-      font-size: 0.8rem;
-      color: #b14f3e;
-      margin-top: 4px;
-      font-weight: 400;
+      font-size: 0.7rem;
+      font-weight: 300;
+      letter-spacing: 0.3em;
+      color: var(--tea);
+      margin-top: 8px;
     }
 
-    /* ===== 推荐卡片 ===== */
+    /* ==========================================================================
+       推荐卡片 —— 宣纸底 · 细边框 · 苔色揭示
+       ========================================================================== */
     .recommend-section {
-      padding: 40px 40px 50px 40px;
-      background: white;
-      border-bottom: 1px solid #f0ebe7;
-    }
-
-    .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      margin-bottom: 28px;
-      border-bottom: 1px solid #ececec;
-      padding-bottom: 12px;
-    }
-
-    .section-header h2 {
-      font-size: 1.8rem;
-      font-weight: 500;
-      letter-spacing: -0.3px;
-      color: #1a1a1a;
-    }
-
-    .section-header .more-link {
-      color: #888;
-      font-size: 14px;
-      text-decoration: none;
-      border-bottom: 1px dashed #ccc;
-      transition: color 0.2s, border-color 0.2s, transform 0.2s;
-      display: inline-block;
-    }
-    .section-header .more-link:hover {
-      color: #c0392b;
-      border-bottom-color: #c0392b;
-      transform: translateX(4px);
+      padding: 84px 48px 96px;
+      border-bottom: 1px solid var(--ink-clear);
     }
 
     .card-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 28px;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 34px;
     }
 
     .card {
-      background: #faf8f6;
-      border-radius: 24px;
-      padding: 20px 18px 24px;
-      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-      border: 1px solid #f0ebe7;
+      background: #fbf4e2;
+      border: 1px solid var(--ink-clear);
+      border-radius: 4px;
+      padding: 34px 30px 30px;
       display: flex;
       flex-direction: column;
       position: relative;
       overflow: hidden;
+      transition: border-color 1s var(--ink-ease), background 1s var(--ink-ease);
     }
-    .card::before {
+    /* 墨晕背景：hover 时自左上缓慢渗入（纯颜色变化，不位移） */
+    .card::after {
       content: '';
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 3px;
-      background: linear-gradient(90deg, #c0392b, #e67e6b, #c0392b);
-      background-size: 200% 100%;
+      inset: 0;
+      background: linear-gradient(150deg, rgba(168, 146, 121, 0.05), transparent 45%);
       opacity: 0;
-      transition: opacity 0.4s;
+      transition: opacity 1s var(--ink-ease);
+      pointer-events: none;
     }
-    .card:hover::before {
-      opacity: 1;
-      animation: gradientMove 1.2s linear infinite;
-    }
-    @keyframes gradientMove {
-      0% { background-position: 0% 0%; }
-      100% { background-position: 200% 0%; }
-    }
-
-    .card:hover {
-      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(0,0,0,0.02);
-      transform: translateY(-8px);
-      border-color: #dccfc4;
-    }
+    .card:hover { border-color: rgba(107, 123, 110, 0.5); }
+    .card:hover::after { opacity: 1; }
 
     .card-emoji {
-      font-size: 2.8rem;
-      margin-bottom: 12px;
-      background: #ede7e1;
-      width: 60px;
-      height: 60px;
-      border-radius: 20px;
+      width: 52px;
+      height: 52px;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s;
+      font-size: 1.5rem;
+      background: var(--ink-clear);
+      border-radius: 3px;
+      margin-bottom: 22px;
+      transition: background 0.9s var(--ink-ease);
     }
-    .card:hover .card-emoji {
-      transform: rotate(6deg) scale(1.06);
-      background: #e5dbd2;
-    }
+    .card:hover .card-emoji { background: var(--ink-clear); }
 
     .card h3 {
-      font-size: 1.3rem;
-      font-weight: 500;
-      margin-bottom: 6px;
-      color: #1e1a17;
+      font-size: 1.28rem;
+      font-weight: 400;
+      letter-spacing: 0.12em;
+      color: var(--ink-scorched);
+      margin-bottom: 10px;
+      line-height: 1.5;
     }
 
     .card .sub {
-      font-size: 0.8rem;
-      color: #b14f3e;
-      letter-spacing: 1px;
-      margin-bottom: 8px;
-      font-weight: 400;
-      background: #f0e3dd;
       display: inline-block;
-      padding: 0 10px;
-      border-radius: 12px;
-      transition: background 0.3s;
+      font-size: 0.7rem;
+      letter-spacing: 0.3em;
+      color: var(--tea);
+      margin-bottom: 16px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(168, 146, 121, 0.35);
+      align-self: flex-start;
+      transition: border-color 0.9s var(--ink-ease);
     }
-    .card:hover .sub {
-      background: #e8d7cf;
-    }
+    .card:hover .sub { border-color: var(--tea); }
 
     .card p {
-      color: #4d3e36;
-      font-size: 0.95rem;
-      line-height: 1.6;
-      margin-bottom: 14px;
+      font-size: 0.94rem;
+      font-weight: 300;
+      color: var(--ink-heavy);
+      line-height: 2;
+      margin-bottom: 20px;
       flex: 1;
     }
 
     .card .tag {
       display: inline-block;
       font-size: 0.7rem;
-      background: white;
-      padding: 3px 12px;
-      border-radius: 30px;
-      border: 1px solid #ddd6cf;
-      color: #4d3e36;
-      margin-right: 6px;
-      margin-bottom: 4px;
-      transition: all 0.25s;
+      letter-spacing: 0.1em;
+      color: var(--ink-heavy);
+      background: transparent;
+      padding: 3px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--ink-clear);
+      margin-right: 8px;
+      margin-bottom: 6px;
+      transition: border-color 0.9s var(--ink-ease), color 0.9s var(--ink-ease);
     }
-    .card:hover .tag {
-      background: #fcf8f5;
-      border-color: #c0392b40;
-    }
+    .card:hover .tag { border-color: var(--sand); color: var(--ink-scorched); }
 
     .card .learn-more {
-      margin-top: 10px;
-      font-size: 0.9rem;
-      color: #c0392b;
+      margin-top: 14px;
+      font-size: 0.88rem;
+      letter-spacing: 0.18em;
+      color: var(--ink-scorched);
       text-decoration: none;
-      font-weight: 450;
       align-self: flex-start;
       border-bottom: 1px solid transparent;
-      transition: border-color 0.25s, transform 0.25s;
-      display: inline-block;
+      padding-bottom: 3px;
+      transition: color 0.9s var(--ink-ease), border-color 0.9s var(--ink-ease);
     }
-    .card .learn-more:hover {
-      border-bottom-color: #c0392b;
-      transform: translateX(4px);
+    .card .learn-more:hover { color: var(--moss); border-bottom-color: var(--moss); }
+
+    /* ==========================================================================
+       新闻资讯区 —— 头条 + 列表（古籍书页式）
+       ========================================================================== */
+    .news-section {
+      padding: 84px 48px 96px;
+      border-bottom: 1px solid var(--ink-clear);
     }
 
-    /* ===== 底部 ===== */
+    .news-layout {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 40px;
+      align-items: stretch;
+    }
+
+    /* ---- 头条（书页式卡片） ---- */
+    .news-featured {
+      background: #fbf4e2;
+      border: 1px solid var(--ink-clear);
+      border-radius: 4px;
+      padding: 40px 38px 34px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 1s var(--ink-ease);
+    }
+    .news-featured::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(150deg, rgba(154, 129, 99, 0.06), transparent 45%);
+      opacity: 0;
+      transition: opacity 1s var(--ink-ease);
+      pointer-events: none;
+    }
+    .news-featured:hover { border-color: rgba(107, 123, 110, 0.5); }
+    .news-featured:hover::after { opacity: 1; }
+
+    /* 报头"讯"字印章 */
+    .news-featured .news-flag {
+      position: absolute;
+      top: 0; right: 0;
+      width: 44px; height: 44px;
+      background: var(--ink-scorched);
+      color: var(--paper);
+      font-family: var(--font-song), serif;
+      font-size: 1.05rem;
+      letter-spacing: 0.2em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      writing-mode: vertical-rl;
+      border-bottom-left-radius: 4px;
+    }
+
+    .news-featured .news-kicker {
+      display: inline-block;
+      font-size: 0.72rem;
+      letter-spacing: 0.3em;
+      color: var(--tea);
+      border: 1px solid rgba(154, 129, 99, 0.4);
+      padding: 3px 14px;
+      border-radius: 2px;
+      margin-bottom: 22px;
+      align-self: flex-start;
+    }
+
+    .news-featured h3 {
+      font-size: 1.7rem;
+      font-weight: 400;
+      letter-spacing: 0.08em;
+      line-height: 1.5;
+      color: var(--ink-scorched);
+      margin-bottom: 18px;
+      padding-right: 30px;
+    }
+
+    .news-featured .news-summary {
+      font-size: 0.95rem;
+      font-weight: 300;
+      color: var(--ink-heavy);
+      line-height: 2;
+      margin-bottom: 28px;
+      flex: 1;
+    }
+
+    .news-featured .news-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--ink-clear);
+      padding-top: 18px;
+    }
+    .news-featured .news-date {
+      font-size: 0.78rem;
+      letter-spacing: 0.18em;
+      color: var(--sand);
+    }
+    .news-featured .news-more {
+      font-size: 0.88rem;
+      letter-spacing: 0.18em;
+      color: var(--ink-scorched);
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      padding-bottom: 2px;
+      transition: color 0.9s var(--ink-ease), border-color 0.9s var(--ink-ease);
+    }
+    .news-featured .news-more:hover { color: var(--moss); border-bottom-color: var(--moss); }
+
+    /* ---- 新闻列表 ---- */
+    .news-list {
+      display: flex;
+      flex-direction: column;
+      border-top: 1px solid var(--ink-clear);
+    }
+
+    .news-item {
+      display: block;
+      text-decoration: none;
+      padding: 26px 6px 24px 4px;
+      border-bottom: 1px solid var(--ink-clear);
+      transition: background 0.9s var(--ink-ease);
+    }
+    .news-item:hover { background: rgba(154, 129, 99, 0.04); }
+
+    .news-item .news-date {
+      display: block;
+      font-size: 0.72rem;
+      letter-spacing: 0.22em;
+      color: var(--sand);
+      margin-bottom: 10px;
+    }
+
+    .news-item h4 {
+      font-size: 1.06rem;
+      font-weight: 400;
+      letter-spacing: 0.06em;
+      line-height: 1.6;
+      color: var(--ink-scorched);
+      margin-bottom: 8px;
+      transition: color 0.9s var(--ink-ease);
+    }
+    .news-item:hover h4 { color: var(--moss); }
+
+    .news-item p {
+      font-size: 0.85rem;
+      font-weight: 300;
+      color: var(--ink-heavy);
+      line-height: 1.9;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* ==========================================================================
+       页脚 —— 细线分隔 · 留白
+       ========================================================================== */
     .footer-links {
-      background: #f5f2ef;
-      padding: 30px 40px 20px;
-      border-top: 1px solid #e0d8d1;
+      background: var(--paper-soft);
+      padding: 72px 48px 44px;
       display: flex;
       flex-wrap: wrap;
       justify-content: space-between;
-      gap: 20px;
-      font-size: 13px;
-      color: #3f3732;
+      gap: 40px;
+      font-size: 0.85rem;
     }
 
-    .footer-links .col {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
+    .footer-links .col { display: flex; flex-direction: column; gap: 10px; min-width: 140px; }
 
     .footer-links .col strong {
-      font-weight: 500;
-      color: #1f1b18;
-      margin-bottom: 4px;
-      transition: color 0.2s;
-    }
-    .footer-links .col strong:hover {
-      color: #c0392b;
+      font-weight: 400;
+      letter-spacing: 0.2em;
+      color: var(--ink-scorched);
+      margin-bottom: 10px;
     }
 
     .footer-links a {
-      color: #4f443d;
+      color: var(--ink-heavy);
       text-decoration: none;
-      transition: color 0.2s, transform 0.2s;
-      display: inline-block;
+      letter-spacing: 0.08em;
       width: fit-content;
+      transition: color 0.9s var(--ink-ease);
     }
-    .footer-links a:hover {
-      color: #c0392b;
-      transform: translateX(4px);
-    }
+    .footer-links a:hover { color: var(--moss); }
 
     .copyright {
-      background: #f5f2ef;
-      padding: 12px 40px 24px;
-      font-size: 12px;
-      color: #7a6b61;
-      border-top: 1px solid #e5dcd4;
+      background: var(--paper-soft);
+      padding: 22px 48px 34px;
+      border-top: 1px solid var(--ink-clear);
+      font-size: 0.74rem;
+      letter-spacing: 0.12em;
+      color: var(--sand);
       display: flex;
       justify-content: space-between;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 10px;
     }
 
-    /* ===== 响应式 ===== */
+    /* ==========================================================================
+       回到顶部（墨色印章式）
+       ========================================================================== */
+    .back-to-top {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      width: 48px;
+      height: 48px;
+      background: var(--ink-scorched);
+      color: var(--paper);
+      border: none;
+      border-radius: 50%;
+      font-size: 20px;
+      cursor: pointer;
+      box-shadow: none;
+      transition: background 0.9s var(--ink-ease), opacity 0.9s var(--ink-ease);
+      opacity: 0;
+      visibility: hidden;
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-song), serif;
+    }
+    .back-to-top:hover { background: var(--ink-thick); }
+    .back-to-top.visible { opacity: 1; visibility: visible; }
+
+    /* ==========================================================================
+       响应式
+       ========================================================================== */
+    @media (max-width: 960px) {
+      .top-bar, .main-nav { padding: 14px 24px; }
+      .nav-links { gap: 22px; }
+      .hero-section { padding: 64px 24px 56px; }
+      .hero-seal { display: none; }
+      .stats-section { padding: 60px 24px; }
+      .unesco-section, .recommend-section { padding: 64px 24px 56px; }
+      .footer-links { padding: 56px 24px 36px; }
+      .copyright { padding: 18px 24px 28px; }
+    }
+
     @media (max-width: 860px) {
-      .top-bar, .main-nav {
-        flex-wrap: wrap;
-        padding: 12px 20px;
-      }
-      .nav-links {
-        gap: 18px;
-        flex-wrap: wrap;
-      }
+      .main-nav { flex-wrap: wrap; gap: 12px; }
+      .nav-links { flex-wrap: wrap; }
       .hero-section {
         flex-direction: column;
-        align-items: flex-start;
-        gap: 28px;
+        /* 移动端改为自上而下的宣纸渐变遮罩，保证整块文字可读 */
+        background-image:
+          linear-gradient(180deg, rgba(245, 235, 215, 0.94) 0%, rgba(245, 235, 215, 0.84) 38%, rgba(245, 235, 215, 0.62) 68%, rgba(245, 235, 215, 0.3) 100%),
+          url('uploads/images/hero-inkwash-bg.jpg');
+        background-position: center top;
       }
-      .hero-image {
-        width: 100%;
-        flex: none;
-      }
-      .card-grid {
-        grid-template-columns: 1fr 1fr;
-      }
-      .stats-section {
-        grid-template-columns: repeat(3, 1fr);
-      }
+      .hero-inner { flex-direction: column; align-items: flex-start; }
+      .stats-section { grid-template-columns: repeat(2, 1fr); gap: 24px 0; }
+      .stat-item { border-left: none; }
+      .stat-item:nth-child(odd) { border-right: 1px solid var(--ink-clear); }
+      .card-grid { grid-template-columns: 1fr 1fr; }
+      .news-layout { grid-template-columns: 1fr; }
+      .hero-section::after { display: none; }
     }
 
     @media (max-width: 550px) {
-      .card-grid {
-        grid-template-columns: 1fr;
-      }
-      .main-nav {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 12px;
-      }
-      .nav-links {
-        justify-content: center;
-      }
-      .hero-text h1 {
-        font-size: 2.2rem;
-      }
-      .footer-links {
-        flex-direction: column;
-        gap: 16px;
-      }
-      .stats-section {
-        grid-template-columns: 1fr 1fr;
-      }
-      .unesco-grid {
-        grid-template-columns: 1fr 1fr;
-      }
+      .card-grid { grid-template-columns: 1fr; }
+      .main-nav { flex-direction: column; align-items: stretch; gap: 12px; }
+      .nav-links { justify-content: center; gap: 16px; font-size: 0.85rem; }
+      .hero-text h1 { font-size: 2.3rem; }
+      .footer-links { flex-direction: column; gap: 24px; }
+      .unesco-grid { grid-template-columns: 1fr 1fr; }
+      .stats-section { grid-template-columns: 1fr 1fr; }
+      .copyright { flex-direction: column; gap: 6px; }
+      .back-to-top { bottom: 24px; right: 24px; width: 44px; height: 44px; }
     }
-	
-	/* 回到顶部按钮 */
-	  .back-to-top {
-	    position: fixed;
-	    bottom: 40px;
-	    right: 40px;
-	    width: 50px;
-	    height: 50px;
-	    background: #c0392b;
-	    color: white;
-	    border: none;
-	    border-radius: 50%;
-	    font-size: 24px;
-	    cursor: pointer;
-	    box-shadow: 0 4px 16px rgba(192, 57, 43, 0.35);
-	    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-	    opacity: 0;
-	    visibility: hidden;
-	    transform: translateY(20px);
-	    z-index: 999;
-	    display: flex;
-	    align-items: center;
-	    justify-content: center;
-	    font-family: inherit;
-	  }
-	  .back-to-top:hover {
-	    background: #a83226;
-	    transform: scale(1.08) translateY(-2px);
-	    box-shadow: 0 6px 24px rgba(192, 57, 43, 0.45);
-	  }
-	  .back-to-top.visible {
-	    opacity: 1;
-	    visibility: visible;
-	    transform: translateY(0);
-	  }
-	  .back-to-top:active {
-	    transform: scale(0.92);
-	  }
-	
-	  @media (max-width: 550px) {
-	    .back-to-top {
-	      bottom: 24px;
-	      right: 24px;
-	      width: 44px;
-	      height: 44px;
-	      font-size: 20px;
-	    }
-	  }
-	
   </style>
 </head>
 <body>
@@ -810,7 +859,7 @@
   <!-- ===== 顶部栏 ===== -->
   <div class="top-bar" id="topBar">
     <div class="lang-region">
-      <span>🌏 中国 · 中文</span>
+      <span>中国 · 中文</span>
       <span class="divider">|</span>
       <span>非物质文化遗产</span>
     </div>
@@ -825,41 +874,43 @@
   <!-- ===== 主导航 ===== -->
   <div class="main-nav" id="mainNav">
     <div class="logo-area">
-      <div class="brand-icon">🎋 华夏风物</div>
-      <div class="brand-sub">非遗·传承</div>
+      <div class="brand-icon">数赋黔滇</div>
+      <div class="brand-sub">非遗 · 传承</div>
     </div>
     <div class="nav-links">
-      <a href="#">首页</a>
+      <a href="#" class="active">首页</a>
       <a href="#">非遗名录</a>
       <a href="#">匠人</a>
       <a href="model.html">数字馆</a>
       <a href="/shop/">商城</a>
       <a href="#">活动</a>
       <a href="#">社区</a>
-	  <a href="archive.html" class="active">📖 文化档案</a>
+      <a href="archive.html">文化档案</a>
     </div>
     <div class="nav-actions">
-      <span>🔍</span>
-      <a href="login.html" title="登录"><span>👤</span></a>
+      <span title="搜索">⌕</span>
+      <a href="login.html" title="登录"><span>人</span></a>
     </div>
   </div>
 
   <!-- ===== 主横幅 ===== -->
   <div class="hero-section">
-    <div class="hero-text">
-      <div class="tagline">✦ 华夏非遗 · 新「枫」潮</div>
-      <h1>
-        我的两亿<br>
-        <span class="highlight">非遗传承</span>
-      </h1>
-      <div class="sub-head">匠心 · 技艺 · 记忆</div>
-      <div class="desc">
-        从缫丝造纸到雕版印刷，从昆曲古琴到二十四节气 —— 让千年文脉在数字时代焕发新生。
+    <div class="hero-inner">
+      <div class="hero-text">
+        <div class="tagline">华夏非遗 · 数字传承</div>
+        <h1>
+          我的两亿<br>
+          <span class="highlight">非遗传承</span>
+        </h1>
+        <div class="sub-head">匠心 · 技艺 · 记忆</div>
+        <div class="desc">
+          从缫丝造纸到雕版印刷，从昆曲古琴到二十四节气 —— 让千年文脉在数字时代焕发新生。
+        </div>
+        <a href="#" class="btn-primary">探索非遗 · 了解更多</a>
       </div>
-      <a href="#" class="btn-primary">探索非遗 · 了解更多</a>
-    </div>
-    <div class="hero-image">
-      <div class="icon-symbol">🏮  ✿  🎋</div>
+      <div class="hero-seal" aria-hidden="true">
+        <div class="seal-char">非遗</div>
+      </div>
     </div>
   </div>
 
@@ -886,7 +937,10 @@
   <!-- ===== 联合国教科文组织名录精选 ===== -->
   <div class="unesco-section">
     <div class="section-header">
-      <h2>🌍 联合国教科文组织非物质文化遗产 <span class="unesco-badge">名录（名册）项目</span></h2>
+      <div class="section-heading">
+        <span class="section-en">UNESCO Intangible Cultural Heritage</span>
+        <h2>联合国教科文组织非物质文化遗产 <span class="unesco-badge">名录（名册）项目</span></h2>
+      </div>
       <a href="#" class="more-link">查看全部 45 项 →</a>
     </div>
     <div class="unesco-grid">
@@ -906,7 +960,10 @@
   <!-- ===== 推荐信息卡片 ===== -->
   <div class="recommend-section">
     <div class="section-header">
-      <h2>📌 推荐 · 非遗瑰宝</h2>
+      <div class="section-heading">
+        <span class="section-en">Curated Heritage</span>
+        <h2>推荐 · 非遗瑰宝</h2>
+      </div>
       <a href="#" class="more-link">查看全部 →</a>
     </div>
     <div class="card-grid">
@@ -954,13 +1011,62 @@
         </div>
         <a href="#" class="learn-more">了解技艺 →</a>
       </div>
-	  <div class="card" style="background: linear-gradient(145deg, #f5ede7, #fcf8f5); border-color: #c0392b40;">
-	    <div class="card-emoji" style="background: #c0392b20;">📚</div>
-	    <h3>文化档案 · 非遗宝库</h3>
-	    <div class="sub">贵州 · 四川 · 云南</div>
-	    <p>汇集西南地区国家级非物质文化遗产，苗绣、蜀锦、扎染……一键探索千年匠心。</p>
-	    <a href="archive.html" class="learn-more" style="color:#c0392b; font-weight:600;">进入文化档案 →</a>
-	  </div>
+      <div class="card">
+        <div class="card-emoji">📚</div>
+        <h3>文化档案 · 非遗宝库</h3>
+        <div class="sub">贵州 · 四川 · 云南</div>
+        <p>汇集西南地区国家级非物质文化遗产，苗绣、蜀锦、扎染……一键探索千年匠心。</p>
+        <a href="archive.html" class="learn-more">进入文化档案 →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 非遗资讯 · 新闻展示区 ===== -->
+  <div class="news-section">
+    <div class="section-header">
+      <div class="section-heading">
+        <span class="section-en">Heritage News</span>
+        <h2>非遗资讯</h2>
+      </div>
+      <a href="#" class="more-link">查看全部 →</a>
+    </div>
+    <div class="news-layout">
+      <!-- 头条 -->
+      <div class="news-featured">
+        <div class="news-flag" aria-hidden="true">讯</div>
+        <div class="news-kicker">聚焦 · 数字化保护</div>
+        <h3>首届西南非遗数字文化节启幕</h3>
+        <p class="news-summary">
+          以"数字焕新 · 匠心永续"为主题的首届西南非遗数字文化节在昆明启幕。文化节集中展示三维建模、虚拟展厅等数字化成果，来自黔滇川三省的四十余项非遗项目以数字形态集体亮相，探讨"以用促保、以商养传"的活态传承新路径。
+        </p>
+        <div class="news-meta">
+          <span class="news-date">2026.08.15</span>
+          <a href="#" class="news-more">阅读全文 →</a>
+        </div>
+      </div>
+      <!-- 列表 -->
+      <div class="news-list">
+        <a href="#" class="news-item">
+          <span class="news-date">2026.08.12</span>
+          <h4>苗族银饰锻制技艺三维数字建档完成</h4>
+          <p>黔东南六件银饰珍品完成高精度三维采集，网页端即可 720° 欣赏錾花细节。</p>
+        </a>
+        <a href="#" class="news-item">
+          <span class="news-date">2026.08.09</span>
+          <h4>建水紫陶亮相国际手工艺博览会</h4>
+          <p>"中国四大名陶"之一的建水紫陶携残帖装饰新作参展，现场签订文创合作意向多项。</p>
+        </a>
+        <a href="#" class="news-item">
+          <span class="news-date">2026.08.05</span>
+          <h4>白族扎染文创入选国家非遗转化示范案例</h4>
+          <p>周城村蓝白技艺与现代设计结合，带动当地千余名绣娘增收，入选国家级示范案例。</p>
+        </a>
+        <a href="#" class="news-item">
+          <span class="news-date">2026.08.01</span>
+          <h4>彝族火草纺织技艺走进高校课堂</h4>
+          <p>德昌火草纺织传承人受聘担任高校客座，将"会呼吸的织物"技艺带进校园。</p>
+        </a>
+      </div>
     </div>
   </div>
 
@@ -994,6 +1100,9 @@
   <div class="copyright">
     <span>© 2026 华夏风物 · 非物质文化遗产数字平台</span>
     <span>数据参考：中国非物质文化遗产网 (www.ihchina.cn) | 京ICP备 2026000000 号</span>
+  </div>
+  <div class="copyright">
+    <span>背景画卷：宋 · 李唐《江山小景图》（台北故宫博物院藏 · 公有领域）</span>
   </div>
 </div>
 
@@ -1037,7 +1146,6 @@
     }
 
     window.addEventListener('scroll', animateNumbers);
-    // 页面加载时也尝试触发
     setTimeout(animateNumbers, 300);
 
     // ------ 3. 卡片入场渐显 (Intersection Observer) ------
@@ -1048,10 +1156,9 @@
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry, index) => {
         if (entry.isIntersecting) {
-          // 添加一个简单的渐入类
           entry.target.style.opacity = '0';
-          entry.target.style.transform = 'translateY(20px)';
-          entry.target.style.transition = `opacity 0.6s ease ${index * 0.06}s, transform 0.6s ease ${index * 0.06}s`;
+          entry.target.style.transform = 'translateY(14px)';
+          entry.target.style.transition = `opacity 0.9s ease ${index * 0.08}s, transform 0.9s ease ${index * 0.08}s`;
           requestAnimationFrame(() => {
             entry.target.style.opacity = '1';
             entry.target.style.transform = 'translateY(0)';
@@ -1062,13 +1169,11 @@
     }, { threshold: 0.15 });
 
     allAnimateItems.forEach(item => {
-      // 初始设置透明，但保留可见性以防不支持
       item.style.opacity = '0';
-      item.style.transform = 'translateY(20px)';
+      item.style.transform = 'translateY(14px)';
       observer.observe(item);
     });
 
-    // 如果已经可见，强制触发一次
     setTimeout(() => {
       allAnimateItems.forEach(item => {
         const rect = item.getBoundingClientRect();
@@ -1088,12 +1193,14 @@
     if (token && userStr && loginLink) {
       try {
         const user = JSON.parse(userStr);
-        const dashboardUrl = user.role === 'user' ? 'user-dashboard.html' : 'developer-dashboard.html';
+        // 兼容规范化后的角色名：user/buyer → 用户台，developer/artisan → 开发者台
+        const isBuyer = user.role === 'user' || user.role === 'buyer';
+        const dashboardUrl = isBuyer ? 'user-dashboard.html' : 'developer-dashboard.html';
 
         loginLink.href = dashboardUrl;
         loginLink.title = '个人中心';
         loginLink.style.textDecoration = 'none';
-        loginLink.innerHTML = '<span style="font-size:13px;color:#c0392b;font-weight:500;">' + user.display_name + '</span>';
+        loginLink.innerHTML = '<span style="font-size:13px;color:#a89279;letter-spacing:0.1em;">' + user.display_name + '</span>';
 
         const topLinks = document.querySelector('.top-links');
         if (topLinks && !topLinks.querySelector('.personal-center')) {
@@ -1101,17 +1208,26 @@
           pcLink.href = dashboardUrl;
           pcLink.className = 'personal-center';
           pcLink.textContent = '个人中心';
-          pcLink.style.color = '#c0392b';
-          pcLink.style.fontWeight = '500';
+          pcLink.style.color = '#a89279';
+          pcLink.style.letterSpacing = '0.14em';
           topLinks.appendChild(pcLink);
         }
       } catch(e) {}
     }
 
-    // 增加一个小细节：搜索图标点击反馈
+    // ------ 5. 在线状态心跳（每 30 秒上报一次） ------
+    if (token) {
+      const heartbeat = () => fetch('/api/heartbeat', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token }
+      }).catch(() => {});
+      heartbeat();
+      setInterval(heartbeat, 30000);
+    }
+
     document.querySelector('.nav-actions span')?.addEventListener('click', function() {
-      this.style.transform = 'scale(1.3)';
-      setTimeout(() => { this.style.transform = 'scale(1)'; }, 200);
+      this.style.opacity = '0.4';
+      setTimeout(() => { this.style.opacity = '1'; }, 300);
     });
 
   })();
@@ -1126,7 +1242,6 @@
   (function() {
     const backToTopBtn = document.getElementById('backToTop');
 
-    // 监听滚动事件，控制按钮显示/隐藏
     window.addEventListener('scroll', function() {
       if (window.scrollY > 300) {
         backToTopBtn.classList.add('visible');
@@ -1135,7 +1250,6 @@
       }
     });
 
-    // 点击按钮平滑滚动到顶部
     backToTopBtn.addEventListener('click', function() {
       window.scrollTo({
         top: 0,
