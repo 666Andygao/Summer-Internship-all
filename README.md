@@ -36,7 +36,7 @@
 1. **Node.js ≥ 18** —— <https://nodejs.org/>
 2. **MySQL ≥ 8** —— 安装后确认服务已启动（Windows 服务名通常是 `MySQL90`）
 
-**四步跑起来**
+**五步跑起来**
 
 ```bash
 # 1. 准备配置文件（.env 不入库，必须自己建）
@@ -59,13 +59,18 @@ node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 ```
 
 ```bash
-# 2. 建库建表（自动创建 heritage 数据库，可重复执行）
+# 2. 安装依赖（必做，见下方「依赖说明」）
+npm install
+# 国内网络慢可加镜像：
+# npm install --registry=https://registry.npmmirror.com
+
+# 3. 建库建表（自动创建 heritage 数据库，可重复执行）
 npm run db:init
 
-# 3. 导入演示数据（把 database.json 里的内容写进 MySQL）
+# 4. 导入演示数据（把 database.json 里的内容写进 MySQL）
 npm run db:migrate
 
-# 4. 启动
+# 5. 启动
 npm start
 ```
 
@@ -82,8 +87,13 @@ npm start
 - 登录 <http://localhost:3000/login.html>
 - 商城 <http://localhost:3000/shop/>
 
-> **依赖说明**：本仓库已经把 `node_modules/` 和商城的构建产物 `feiyi-ecommerce/dist/` 一起提交了，
-> 所以正常情况下**不需要执行 `npm install`，也不需要构建商城**。
+> **依赖说明**：⚠️ **必须执行 `npm install`**。
+> 仓库里虽然残留了一份 `node_modules/`，但它是不同时期装出来的、版本互相错乱
+> （`mysql2` 整个包缺失、`iconv-lite` 停在 0.4.x 而 mysql2 需要 ^0.7.3），
+> 直接 clone 下来后端会报 `Cannot find module 'mysql2/promise'` 起不来。
+> 执行一次 `npm install` 即可修正；`deploy/deploy.sh` 也会自动检测并补装。
+>
+> 商城的构建产物 `feiyi-ecommerce/dist/` 是**故意入库**的，所以 /shop/ 无需构建即可访问。
 > 只有在你要改动商城源码（`feiyi-ecommerce/src/`）时，才需要 `cd feiyi-ecommerce && npm install && npm run build`，
 > 并把重新生成的 `dist/` 一并提交。
 

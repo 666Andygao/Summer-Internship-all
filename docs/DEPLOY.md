@@ -45,8 +45,12 @@ node server.js
 start-server.bat
 ```
 
-> **无需 `npm install`**：本仓库已把 `node_modules/` 与商城构建产物 `feiyi-ecommerce/dist/`
-> 一并提交，clone 下来即可运行。只有在你要改动商城源码时才需要重新构建。
+> ⚠️ **必须执行 `npm install`**：仓库里残留的 `node_modules/` 是残缺且版本错乱的
+> （`mysql2` 缺失、`iconv-lite` 停在 0.4.x），clone 下来后端会报
+> `Cannot find module 'mysql2/promise'`。执行一次 `npm install` 即可修正。
+>
+> 商城的构建产物 `feiyi-ecommerce/dist/` 是**故意入库**的（仅 1.7MB），
+> 所以 `/shop/` 无需构建即可访问；只有改动商城源码时才需要重新 build。
 
 启动成功会输出：
 ```
@@ -71,7 +75,7 @@ start-server.bat
 ```bash
 # 建议部署到 /var/www/heritage
 cd /var/www/heritage
-npm install --production     # 只装运行时依赖
+npm install --omit=dev       # 只装运行时依赖（npm 7+ 用 --omit=dev，旧的 --production 已废弃）
 ```
 
 > 若服务器无法访问 npm 官方源，可临时指定国内镜像：

@@ -38,7 +38,7 @@ echo "  项目目录: $APP_DIR"
 echo
 
 # ---------- 1. 前置检查 ----------
-step "1/5 检查前置条件"
+step "1/6 检查前置条件"
 
 command -v node >/dev/null 2>&1 || die "未找到 node，请先执行：sudo bash deploy/setup-server.sh"
 ok "Node.js $(node -v)"
@@ -57,13 +57,42 @@ ok ".env 已配置"
 # PM2 目录（ecosystem.config.js 里把日志写到这里）
 mkdir -p "$APP_DIR/logs"
 
-# ---------- 2. 建库建表 ----------
-step "2/5 初始化数据库结构"
+# ---------- 2. 依赖 ----------
+step "2/6 检查运行依赖"
+
+# 仓库里曾经把 node_modules 一并提交，但那份是不同时间装出来的残次品：
+# mysql2 整个包漏了、iconv-lite 停在 0.4.x 而 mysql2 要求 ^0.7.3，
+# clone 下来后端直接起不来。所以这里不假定依赖齐全，一律用 package.json 校验。
+install_deps() {
+    npm install --omit=dev --no-audit --no-fund \
+        --registry="${NPM_REGISTRY:-https://registry.npmmirror.com}" >/dev/null 2>&1 \
+        || npm install --omit=dev --no-audit --no-fund >/dev/null 2>&1
+}
+
+deps_ok() { node -e "require.resolve('mysql2/promise'); require.resolve('express')" >/dev/null 2>&1; }
+
+if deps_ok; then
+    ok "依赖已就绪，跳过安装"
+else
+    warn "依赖不完整，正在按 package.json 安装（首次约 1 分钟）..."
+    install_deps
+    if ! deps_ok; then
+        # npm 在版本错乱的 node_modules 上不保证收敛，清空重装一次
+        warn "仍未就绪，清空 node_modules 后重装"
+        rm -rf "$APP_DIR/node_modules"
+        install_deps
+        deps_ok || die "依赖仍不完整。请手动执行：cd $APP_DIR && rm -rf node_modules && npm install --registry=https://registry.npmmirror.com"
+    fi
+    ok "依赖安装完成"
+fi
+
+# ---------- 3. 建库建表 ----------
+step "3/6 初始化数据库结构"
 node db/init.js
 ok "表结构已就绪"
 
-# ---------- 3. 导入演示数据 ----------
-step "3/5 导入演示数据"
+# ---------- 4. 导入演示数据 ----------
+step "4/6 导入演示数据"
 
 # 用 users 表是否有数据来判断是否已经初始化过
 seeded="$(node -e "
@@ -87,8 +116,8 @@ else
     ok "演示数据导入完成"
 fi
 
-# ---------- 4. PM2 启动 ----------
-step "4/5 用 PM2 启动服务"
+# ---------- 5. PM2 启动 ----------
+step "5/6 用 PM2 启动服务"
 
 command -v pm2 >/dev/null 2>&1 || die "未找到 pm2，请先执行：sudo bash deploy/setup-server.sh"
 
@@ -103,8 +132,8 @@ fi
 pm2 save >/dev/null
 ok "进程列表已保存（重启服务器后自动恢复）"
 
-# ---------- 5. 健康检查 ----------
-step "5/5 健康检查"
+# ---------- 6. 健康检查 ----------
+step "6/6 健康检查"
 
 PORT="$(grep -E '^PORT=' "$APP_DIR/.env" | head -1 | cut -d= -f2- | tr -d '\r' || true)"
 PORT="${PORT:-3000}"
