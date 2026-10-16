@@ -1743,6 +1743,44 @@ app.get('/api/users/manage', authMiddleware, requireRole([ROLE_TYPES.ARTISAN, RO
     });
 });
 
+// 通过用户名查找用户（用于添加好友）
+// 注意：必须定义在 /api/users/:id 之前，否则 "find" 会被当作 :id 匹配，
+//       前端拿到的会是 :id 的「用户不存在」，而不是本接口的「未找到该用户」。
+app.get('/api/users/find', authMiddleware, (req, res) => {
+    const { username } = req.query;
+    if (!username) return res.status(400).json({ error: '请输入用户名' });
+
+    db = loadDB();
+    const user = db.users.find(u => u.username === username && u.id !== req.user.id);
+    if (!user) return res.status(404).json({ error: '未找到该用户' });
+
+    // 检查是否已经是好友
+    const isFriend = db.friends.some(f =>
+        ((f.from_user_id === req.user.id && f.to_user_id === user.id) ||
+         (f.from_user_id === user.id && f.to_user_id === req.user.id)) &&
+        f.status === 'accepted'
+    );
+
+    // 检查是否有待处理请求
+    const pendingSent = db.friends.find(f =>
+        f.from_user_id === req.user.id && f.to_user_id === user.id && f.status === 'pending'
+    );
+    const pendingReceived = db.friends.find(f =>
+        f.from_user_id === user.id && f.to_user_id === req.user.id && f.status === 'pending'
+    );
+
+    res.json({
+        id: user.id,
+        username: user.username,
+        display_name: user.display_name,
+        role: user.role,
+        avatar: user.avatar,
+        is_friend: isFriend,
+        request_status: pendingSent ? 'sent' : (pendingReceived ? 'received' : 'none'),
+        request_id: pendingSent?.id || pendingReceived?.id || null
+    });
+});
+
 // 查询单个用户信息
 app.get('/api/users/:id', authMiddleware, (req, res) => {
     db = loadDB();
@@ -1797,6 +1835,39 @@ app.get('/api/contacts', authMiddleware, (req, res) => {
     res.json(contacts);
 });
 
+// ============ 会话归属判定 ============
+// conversations 的 user_id / developer_id 只是「这一对用户」的两个槽位，
+// 谁发起对话谁就占哪个槽，并不代表角色。所以判断归属一律按「是不是这一对的任一方」。
+//
+// 背景（已复现的 bug）：旧实现用带方向的精确匹配查找会话
+// （c.user_id === userId && c.developer_id === devId），而 userId / devId 又是按
+// 「发起方的角色」推出来的。于是两个角色相同的账号互相发起时会各建一个方向相反的
+// 镜像会话（A→B 与 B→A），消息从此劈成两半：A 只看得见 A→B 那个，B 只看得见 B→A 那个，
+// 双方都收不到对方发的消息。同样的问题在开发者面板（role=developer/artisan）之间也会出现。
+// 下面统一按「无序对」处理。
+function isConversationParty(conv, userId) {
+    return conv.user_id === userId || conv.developer_id === userId;
+}
+
+// 取出会话里「对方」的 id
+function otherPartyId(conv, userId) {
+    return conv.user_id === userId ? conv.developer_id : conv.user_id;
+}
+
+// 找出两个人之间的全部会话（历史镜像会话可能不止一个）
+function conversationsBetween(db, idA, idB) {
+    return db.conversations.filter(c =>
+        (c.user_id === idA && c.developer_id === idB) ||
+        (c.user_id === idB && c.developer_id === idA)
+    );
+}
+
+// 与某个会话属于「同一对用户」的全部会话 id（含它自己）。
+// 历史数据里同一对用户可能残留多个镜像会话，读取时要一并带上，否则旧消息看不见。
+function siblingConversationIds(db, conv) {
+    return conversationsBetween(db, conv.user_id, conv.developer_id).map(c => c.id);
+}
+
 // 获取或创建对话（需要是好友关系）
 app.post('/api/conversations', authMiddleware, (req, res) => {
     const { target_id } = req.body;
@@ -1818,7 +1889,9 @@ app.post('/api/conversations', authMiddleware, (req, res) => {
     const userId = isBuyerRole(req.user.role) ? req.user.id : target_id;
     const devId = isArtisanRole(req.user.role) ? req.user.id : target_id;
 
-    let conv = db.conversations.find(c => c.user_id === userId && c.developer_id === devId);
+    // 按「无序对」复用已有会话：不论谁先发起、谁占哪个槽，同一对人只有一个会话。
+    // 若按方向精确匹配（旧写法），两个同角色账号会各建一个镜像会话，消息互相看不见。
+    let conv = conversationsBetween(db, req.user.id, target.id)[0];
 
     if (!conv) {
         const id = db.nextId.conversation++;
@@ -1838,53 +1911,41 @@ app.post('/api/conversations', authMiddleware, (req, res) => {
 // 获取我的对话列表
 app.get('/api/conversations', authMiddleware, (req, res) => {
     db = loadDB();
-    let convs;
+    const me = req.user.id;
 
-    if (isBuyerRole(req.user.role)) {
-        convs = db.conversations
-            .filter(c => {
-                // 过滤掉对方用户已被删除的对话
-                if (c.user_id !== req.user.id) return false;
-                const dev = db.users.find(u => u.id === c.developer_id);
-                return dev != null;
-            })
-            .map(c => {
-                const dev = db.users.find(u => u.id === c.developer_id);
-                const unread = db.messages.filter(m =>
-                    m.conversation_id === c.id && m.sender_id !== req.user.id && !m.is_read
-                ).length;
-                return {
-                    ...c,
-                    target_name: dev?.display_name || '',
-                    target_username: dev?.username || '',
-                    target_avatar: dev?.avatar || '',
-                    unread
-                };
-            });
-    } else {
-        convs = db.conversations
-            .filter(c => {
-                // 过滤掉对方用户已被删除的对话
-                if (c.developer_id !== req.user.id) return false;
-                const user = db.users.find(u => u.id === c.user_id);
-                return user != null;
-            })
-            .map(c => {
-                const user = db.users.find(u => u.id === c.user_id);
-                const unread = db.messages.filter(m =>
-                    m.conversation_id === c.id && m.sender_id !== req.user.id && !m.is_read
-                ).length;
-                return {
-                    ...c,
-                    target_name: user?.display_name || '',
-                    target_username: user?.username || '',
-                    target_avatar: user?.avatar || '',
-                    unread
-                };
-            });
-    }
+    // 按「对方」归并，而不是按「我占哪个槽」筛选。
+    // 旧实现买家只看 user_id === 我、开发者只看 developer_id === 我，同角色双方
+    // 各自只能看到自己发起的那一个镜像会话，对方的消息永远不出现。
+    // 同一对用户若残留多个会话（历史 bug），只呈现一个代表（id 最小的），
+    // 未读数跨这些会话合并统计。
+    const byOtherId = new Map();
 
-    convs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    db.conversations.filter(c => isConversationParty(c, me)).forEach(c => {
+        const otherId = otherPartyId(c, me);
+        const other = db.users.find(u => u.id === otherId);
+        if (!other) return;   // 对方账号已被删除，跳过
+
+        const kept = byOtherId.get(otherId);
+        if (kept && kept.id <= c.id) return;
+
+        const ids = siblingConversationIds(db, c);
+        const unread = db.messages.filter(m =>
+            ids.includes(m.conversation_id) && m.sender_id !== me && !m.is_read
+        ).length;
+
+        byOtherId.set(otherId, {
+            ...c,
+            target_id: otherId,
+            target_name: other.display_name || '',
+            target_username: other.username || '',
+            target_avatar: other.avatar || '',
+            unread
+        });
+    });
+
+    const convs = Array.from(byOtherId.values())
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
     res.json(convs);
 });
 
@@ -1896,14 +1957,17 @@ app.get('/api/conversations/:id/messages', authMiddleware, (req, res) => {
     if (!conv) return res.status(404).json({ error: '对话不存在' });
 
     // 验证权限
-    if (conv.user_id !== req.user.id && conv.developer_id !== req.user.id) {
+    if (!isConversationParty(conv, req.user.id)) {
         return res.status(403).json({ error: '无权访问' });
     }
+
+    // 同一对用户之间历史遗留的镜像会话要一起读，否则早期那一半消息在界面上消失
+    const convIds = siblingConversationIds(db, conv);
 
     // 标记已读
     let changed = false;
     db.messages.forEach(m => {
-        if (m.conversation_id === convId && m.sender_id !== req.user.id && !m.is_read) {
+        if (convIds.includes(m.conversation_id) && m.sender_id !== req.user.id && !m.is_read) {
             m.is_read = true;
             changed = true;
         }
@@ -1911,7 +1975,7 @@ app.get('/api/conversations/:id/messages', authMiddleware, (req, res) => {
     if (changed) saveDB(db);
 
     const messages = db.messages
-        .filter(m => m.conversation_id === convId)
+        .filter(m => convIds.includes(m.conversation_id))
         .map(m => {
             const sender = db.users.find(u => u.id === m.sender_id);
             return {
@@ -1932,7 +1996,7 @@ app.post('/api/conversations/:id/messages', authMiddleware, upload.single('file'
     const conv = db.conversations.find(c => c.id === convId);
     if (!conv) return res.status(404).json({ error: '对话不存在' });
 
-    if (conv.user_id !== req.user.id && conv.developer_id !== req.user.id) {
+    if (!isConversationParty(conv, req.user.id)) {
         return res.status(403).json({ error: '无权访问' });
     }
 
@@ -1983,14 +2047,17 @@ app.delete('/api/conversations/:id', authMiddleware, (req, res) => {
     if (!conv) return res.status(404).json({ error: '对话不存在' });
 
     // 验证权限
-    if (conv.user_id !== req.user.id && conv.developer_id !== req.user.id) {
+    if (!isConversationParty(conv, req.user.id)) {
         return res.status(403).json({ error: '无权操作' });
     }
 
+    // 一对用户之间的历史镜像会话要一并删除，否则删掉一个、另一个还会重新出现在列表里
+    const convIds = siblingConversationIds(db, conv);
+
     // 删除相关消息
-    db.messages = db.messages.filter(m => m.conversation_id !== convId);
+    db.messages = db.messages.filter(m => !convIds.includes(m.conversation_id));
     // 删除对话
-    db.conversations = db.conversations.filter(c => c.id !== convId);
+    db.conversations = db.conversations.filter(c => !convIds.includes(c.id));
     saveDB(db);
 
     res.json({ success: true, message: '对话已删除' });
@@ -2038,42 +2105,8 @@ app.post('/api/cleanup', authMiddleware, (req, res) => {
 });
 
 // ============ 好友系统 ============
-
-// 通过用户名查找用户（用于添加好友）
-app.get('/api/users/find', authMiddleware, (req, res) => {
-    const { username } = req.query;
-    if (!username) return res.status(400).json({ error: '请输入用户名' });
-
-    db = loadDB();
-    const user = db.users.find(u => u.username === username && u.id !== req.user.id);
-    if (!user) return res.status(404).json({ error: '未找到该用户' });
-
-    // 检查是否已经是好友
-    const isFriend = db.friends.some(f =>
-        ((f.from_user_id === req.user.id && f.to_user_id === user.id) ||
-         (f.from_user_id === user.id && f.to_user_id === req.user.id)) &&
-        f.status === 'accepted'
-    );
-
-    // 检查是否有待处理请求
-    const pendingSent = db.friends.find(f =>
-        f.from_user_id === req.user.id && f.to_user_id === user.id && f.status === 'pending'
-    );
-    const pendingReceived = db.friends.find(f =>
-        f.from_user_id === user.id && f.to_user_id === req.user.id && f.status === 'pending'
-    );
-
-    res.json({
-        id: user.id,
-        username: user.username,
-        display_name: user.display_name,
-        role: user.role,
-        avatar: user.avatar,
-        is_friend: isFriend,
-        request_status: pendingSent ? 'sent' : (pendingReceived ? 'received' : 'none'),
-        request_id: pendingSent?.id || pendingReceived?.id || null
-    });
-});
+// 注：通过用户名查找用户的 GET /api/users/find 定义在 /api/users/:id 之前
+//（见「查询单个用户信息」上方），否则 find 会被当作 :id 匹配。
 
 // 发送好友请求
 app.post('/api/friends/request', authMiddleware, (req, res) => {
