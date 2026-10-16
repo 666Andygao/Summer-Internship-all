@@ -2,6 +2,13 @@
 
 > 本文档说明如何把「华夏风物志」后端从本地开发环境部署到公网服务器。
 > 内容涵盖：环境准备 → 数据库初始化 → 服务启动 → 进程守护 → 反向代理 → 备份 → 上线检查。
+<<<<<<< HEAD
+=======
+>
+> **第一次部署？** 先看 [`云服务器部署-从零开始.md`](云服务器部署-从零开始.md)，
+> 那份是从买服务器讲起的手把手版本；本文档偏运维细节，适合已经跑起来之后查阅。
+> 想省掉手动配置，可直接用 `deploy/setup-server.sh` + `deploy/deploy.sh` 两个脚本。
+>>>>>>> 35c2fdfad61a3dec5a26fc09907416111b73677d
 
 ---
 
@@ -24,14 +31,19 @@ npm install -g pm2
 ## 二、本地启动（开发）
 
 ```bash
+<<<<<<< HEAD
 # 1. 安装依赖
 npm install
 
 # 2. 准备配置：复制模板并填写数据库密码等
+=======
+# 1. 准备配置：复制模板并填写数据库密码等
+>>>>>>> 35c2fdfad61a3dec5a26fc09907416111b73677d
 copy .env.example .env        # Windows
 cp .env.example .env          # Linux / macOS
 # 编辑 .env，至少修改 JWT_SECRET 与 DB_PASSWORD
 
+<<<<<<< HEAD
 # 3. 初始化数据库（自动建库 + 建表，可重复执行）
 node db/init.js
 
@@ -39,11 +51,30 @@ node db/init.js
 node db/migrate.js
 
 # 5. 启动服务
+=======
+# 2. 初始化数据库（自动建库 + 建表，可重复执行）
+node db/init.js
+
+# 3. 导入现有数据（首次从 database.json 迁移；--force 会先清空目标表）
+node db/migrate.js
+
+# 4. 启动服务
+>>>>>>> 35c2fdfad61a3dec5a26fc09907416111b73677d
 node server.js
 # 或使用一键脚本（Windows）
 start-server.bat
 ```
 
+<<<<<<< HEAD
+=======
+> ⚠️ **必须执行 `npm install`**：仓库里残留的 `node_modules/` 是残缺且版本错乱的
+> （`mysql2` 缺失、`iconv-lite` 停在 0.4.x），clone 下来后端会报
+> `Cannot find module 'mysql2/promise'`。执行一次 `npm install` 即可修正。
+>
+> 商城的构建产物 `feiyi-ecommerce/dist/` 是**故意入库**的（仅 1.7MB），
+> 所以 `/shop/` 无需构建即可访问；只有改动商城源码时才需要重新 build。
+
+>>>>>>> 35c2fdfad61a3dec5a26fc09907416111b73677d
 启动成功会输出：
 ```
 ✅ 已连接 MySQL（heritage，9.0.1），载入用户 6 · 会话 5 · 消息 5 条
@@ -55,7 +86,12 @@ start-server.bat
 - 登录 `http://localhost:3000/login.html`
 - 商城 `http://localhost:3000/shop/`
 
+<<<<<<< HEAD
 > **商城 404？** 商城是 Vue 项目，构建产物不入库。首次需在 `feiyi-ecommerce` 目录执行 `npm install && npm run build`（或双击 `build-shop.bat`）。
+=======
+> **商城 404？** 说明 `feiyi-ecommerce/dist/` 缺失（该构建产物已入库，正常 clone 就有）。
+> 若确实缺失，可在 `feiyi-ecommerce` 目录执行 `npm install && npm run build`（或双击 `build-shop.bat`）重新生成。
+>>>>>>> 35c2fdfad61a3dec5a26fc09907416111b73677d
 
 ---
 
@@ -66,7 +102,11 @@ start-server.bat
 ```bash
 # 建议部署到 /var/www/heritage
 cd /var/www/heritage
+<<<<<<< HEAD
 npm install --production     # 只装运行时依赖
+=======
+npm install --omit=dev       # 只装运行时依赖（npm 7+ 用 --omit=dev，旧的 --production 已废弃）
+>>>>>>> 35c2fdfad61a3dec5a26fc09907416111b73677d
 ```
 
 > 若服务器无法访问 npm 官方源，可临时指定国内镜像：

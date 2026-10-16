@@ -401,6 +401,7 @@
         }
 
         .tab-btn {
+            position: relative;   /* 供左上角未读红点定位 */
             flex: 1;
             padding: 7px 10px;
             border-radius: 8px;
@@ -418,6 +419,21 @@
             color: white;
             border-color: #2f4f4f;
         }
+
+        /* 有未处理的好友请求时，标签左上角亮一个红点。
+           不再改字色，避免激活态（深青底）下同色字看不见。 */
+        .tab-dot {
+            display: none;
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: #e03131;
+            box-shadow: 0 0 0 2px #fffdf7;   /* 浅色描边：深青底上也能看清 */
+        }
+        .tab-dot.show { display: block; }
 
         .request-item {
             display: flex;
@@ -522,7 +538,7 @@
                 <div class="tab-buttons">
                     <button class="tab-btn active" onclick="switchTab('friends', this)">我的好友</button>
                     <button class="tab-btn" onclick="switchTab('addFriend', this)">添加好友</button>
-                    <button class="tab-btn" id="requestsTabBtn" onclick="switchTab('requests', this)">好友请求</button>
+                    <button class="tab-btn" id="requestsTabBtn" onclick="switchTab('requests', this)">好友请求<span class="tab-dot" id="requestsDot"></span></button>
                 </div>
                 <input type="text" class="search-box" id="searchBox" placeholder="🔍 搜索好友..." oninput="renderFriends()">
             </div>
@@ -633,8 +649,10 @@
         }
 
         function updateRequestsBadge() {
-            const btn = document.getElementById('requestsTabBtn');
+            // 标签文字保持「好友请求」不变，只在有未处理请求时于左上角亮红点。
+            // 旧实现改的是内联字色，激活态（深青底）下会与背景同色导致看不见。
             const count = friendRequests.length;
+<<<<<<< HEAD
             btn.textContent = count > 0 ? '好友请求(' + count + ')' : '好友请求';
             if (count > 0) {
                 btn.style.color = '#2f4f4f';
@@ -643,6 +661,12 @@
                 btn.style.color = '';
                 btn.style.fontWeight = '';
             }
+=======
+            const dot = document.getElementById('requestsDot');
+            const btn = document.getElementById('requestsTabBtn');
+            if (dot) dot.classList.toggle('show', count > 0);
+            if (btn) btn.title = count > 0 ? count + ' 条待处理的好友请求' : '暂无好友请求';
+>>>>>>> 35c2fdfad61a3dec5a26fc09907416111b73677d
         }
 
         async function switchTab(tab, btn) {

@@ -15,6 +15,7 @@
  *   - 单进程部署：内存为唯一写入口，多实例部署会出现缓存不一致
  *   - 数据量建议在万级以内（每次启动全量载入）
  */
+<<<<<<< HEAD
 const fs = require('fs');
 const path = require('path');
 const { getPool, toDbDate, fromDbDate, toJson, fromJson } = require('./pool');
@@ -22,6 +23,10 @@ const { getPool, toDbDate, fromDbDate, toJson, fromJson } = require('./pool');
 const JSON_FILE = path.join(__dirname, '..', 'database.json');
 let mode = 'mysql';
 
+=======
+const { getPool, toDbDate, fromDbDate, toJson, fromJson } = require('./pool');
+
+>>>>>>> 35c2fdfad61a3dec5a26fc09907416111b73677d
 // ---------- 表结构映射：内存字段 ↔ MySQL 列 ----------
 // json: 需要序列化为 JSON 的字段；dates: 需要做时间转换的字段
 const TABLES = {
@@ -204,6 +209,7 @@ async function loadAllFromMySQL() {
     return data;
 }
 
+<<<<<<< HEAD
 function loadAllFromJSON() {
     if (!fs.existsSync(JSON_FILE)) {
         const empty = { users: [], conversations: [], messages: [], addresses: [],
@@ -247,6 +253,18 @@ async function init() {
 /** 当前存储模式 ('mysql' | 'json') */
 function getMode() { return mode; }
 
+=======
+/**
+ * 初始化：从 MySQL 载入数据
+ * @returns {Promise<Object>} 内存数据对象
+ */
+async function init() {
+    cache = await loadAllFromMySQL();
+    snapshot = clone(cache);
+    return cache;
+}
+
+>>>>>>> 35c2fdfad61a3dec5a26fc09907416111b73677d
 // ---------- 读取 ----------
 
 /**
@@ -341,6 +359,7 @@ async function syncOrderItems(orders) {
  * @param {Object} current 当前内存数据
  */
 async function persistChanges(current) {
+<<<<<<< HEAD
     if (mode === 'json') {
         fs.writeFileSync(JSON_FILE, JSON.stringify(current, null, 2), 'utf8');
         snapshot = clone(current);
@@ -350,6 +369,12 @@ async function persistChanges(current) {
         const before = JSON.stringify(snapshot[table] || []);
         const after = JSON.stringify(current[table] || []);
         if (before === after) continue;
+=======
+    for (const table of Object.keys(TABLES)) {
+        const before = JSON.stringify(snapshot[table] || []);
+        const after = JSON.stringify(current[table] || []);
+        if (before === after) continue;   // 该表无变化，跳过
+>>>>>>> 35c2fdfad61a3dec5a26fc09907416111b73677d
         await syncTable(table, current[table] || []);
         if (table === 'orders') {
             await syncOrderItems(current.orders || []);
@@ -368,6 +393,7 @@ async function persistChanges(current) {
  * @returns {Promise<void>} 本次写入完成的 Promise（不 await 也不影响流程）
  */
 function saveDB(data) {
+<<<<<<< HEAD
     cache = data;
     const task = writeQueue.then(() => persistChanges(data)).catch(e => {
         lastError = e;
@@ -377,6 +403,14 @@ function saveDB(data) {
             console.error('❌ 数据持久化到 MySQL 失败：', e.message);
             console.error('   内存数据仍然有效，但数据库可能未同步。请检查 MySQL 连接。');
         }
+=======
+    // 更新内存引用（业务代码可能传入新的 db 对象）
+    cache = data;
+    const task = writeQueue.then(() => persistChanges(data)).catch(e => {
+        lastError = e;
+        console.error('❌ 数据持久化到 MySQL 失败：', e.message);
+        console.error('   内存数据仍然有效，但数据库可能未同步。请检查 MySQL 连接。');
+>>>>>>> 35c2fdfad61a3dec5a26fc09907416111b73677d
     });
     writeQueue = task;
     return task;
@@ -404,14 +438,26 @@ module.exports = {
     saveDB,
     flush,
     getLastError,
+<<<<<<< HEAD
     getMode,
     TABLES,
     NEXT_ID_KEYS,
     _internal: {
         loadAllFromMySQL,
         loadAllFromJSON,
+=======
+    TABLES,
+    NEXT_ID_KEYS,
+    // 供测试使用
+    _internal: {
+        loadAllFromMySQL,
+>>>>>>> 35c2fdfad61a3dec5a26fc09907416111b73677d
         persistChanges,
         getSnapshot: () => snapshot,
         reset: () => { cache = null; snapshot = null; writeQueue = Promise.resolve(); lastError = null; }
     }
+<<<<<<< HEAD
 };
+=======
+};
+>>>>>>> 35c2fdfad61a3dec5a26fc09907416111b73677d
