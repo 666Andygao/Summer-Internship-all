@@ -1,7 +1,8 @@
 # 依赖目录
 node_modules
 # 构建产物
-dist
+# 注：dist 故意不忽略——server.js 找不到 dist 就不挂载 /shop/，而本机网络访问不了
+#     npm 源，队友和服务器都没法自己构建。改完商城源码请 npm run build 后把 dist 一起提交。
 dist-ssr
 # 本地环境变量
 *.local

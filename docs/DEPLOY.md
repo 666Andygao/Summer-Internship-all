@@ -2,6 +2,10 @@
 
 > 本文档说明如何把「华夏风物志」后端从本地开发环境部署到公网服务器。
 > 内容涵盖：环境准备 → 数据库初始化 → 服务启动 → 进程守护 → 反向代理 → 备份 → 上线检查。
+>
+> **第一次部署？** 先看 [`云服务器部署-从零开始.md`](云服务器部署-从零开始.md)，
+> 那份是从买服务器讲起的手把手版本；本文档偏运维细节，适合已经跑起来之后查阅。
+> 想省掉手动配置，可直接用 `deploy/setup-server.sh` + `deploy/deploy.sh` 两个脚本。
 
 ---
 
@@ -24,25 +28,25 @@ npm install -g pm2
 ## 二、本地启动（开发）
 
 ```bash
-# 1. 安装依赖
-npm install
-
-# 2. 准备配置：复制模板并填写数据库密码等
+# 1. 准备配置：复制模板并填写数据库密码等
 copy .env.example .env        # Windows
 cp .env.example .env          # Linux / macOS
 # 编辑 .env，至少修改 JWT_SECRET 与 DB_PASSWORD
 
-# 3. 初始化数据库（自动建库 + 建表，可重复执行）
+# 2. 初始化数据库（自动建库 + 建表，可重复执行）
 node db/init.js
 
-# 4. 导入现有数据（首次从 database.json 迁移；--force 会先清空目标表）
+# 3. 导入现有数据（首次从 database.json 迁移；--force 会先清空目标表）
 node db/migrate.js
 
-# 5. 启动服务
+# 4. 启动服务
 node server.js
 # 或使用一键脚本（Windows）
 start-server.bat
 ```
+
+> **无需 `npm install`**：本仓库已把 `node_modules/` 与商城构建产物 `feiyi-ecommerce/dist/`
+> 一并提交，clone 下来即可运行。只有在你要改动商城源码时才需要重新构建。
 
 启动成功会输出：
 ```
@@ -55,7 +59,8 @@ start-server.bat
 - 登录 `http://localhost:3000/login.html`
 - 商城 `http://localhost:3000/shop/`
 
-> **商城 404？** 商城是 Vue 项目，构建产物不入库。首次需在 `feiyi-ecommerce` 目录执行 `npm install && npm run build`（或双击 `build-shop.bat`）。
+> **商城 404？** 说明 `feiyi-ecommerce/dist/` 缺失（该构建产物已入库，正常 clone 就有）。
+> 若确实缺失，可在 `feiyi-ecommerce` 目录执行 `npm install && npm run build`（或双击 `build-shop.bat`）重新生成。
 
 ---
 
