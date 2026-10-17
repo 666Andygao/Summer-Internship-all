@@ -516,6 +516,137 @@
             font-size: 36px;
             cursor: pointer;
         }
+
+        .dashboard-action {
+            padding: 8px 12px;
+            border: 1px solid #2f4f4f;
+            border-radius: 18px;
+            background: white;
+            color: #2f4f4f;
+            cursor: pointer;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        .dashboard-action:hover { background: #f3f6f3; }
+        .dashboard-action[hidden] { display: none; }
+
+        .application-count {
+            display: inline-flex;
+            min-width: 18px;
+            height: 18px;
+            align-items: center;
+            justify-content: center;
+            margin-left: 4px;
+            padding: 0 5px;
+            border-radius: 10px;
+            background: #a5372f;
+            color: white;
+            font-size: 11px;
+        }
+        .application-count[hidden] { display: none; }
+
+        .merchant-status {
+            display: none;
+            padding: 10px 24px;
+            background: #fffdf7;
+            border-bottom: 1px solid #e6dcc8;
+            color: #555;
+            font-size: 13px;
+        }
+        .merchant-status.show { display: block; }
+
+        .merchant-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.52);
+        }
+        .merchant-modal[hidden] { display: none; }
+        .merchant-modal-content {
+            width: min(100%, 760px);
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 26px;
+            border: 1px solid #e6dcc8;
+            border-radius: 14px;
+            background: #fffdf7;
+            box-shadow: 0 18px 48px rgba(30, 20, 10, 0.25);
+        }
+        .merchant-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+        .merchant-modal-header h2 { color: #2f4f4f; font-size: 20px; }
+        .merchant-modal-close {
+            width: 34px;
+            height: 34px;
+            border: 1px solid #d8cdb8;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        .application-list, .merchant-product-list { display: grid; gap: 12px; }
+        .application-card, .merchant-product-card {
+            padding: 16px;
+            border: 1px solid #e6dcc8;
+            border-radius: 10px;
+            background: white;
+        }
+        .application-card h3, .merchant-product-card h3 { margin-bottom: 8px; color: #243f3f; }
+        .application-card p, .merchant-product-card p {
+            margin: 5px 0;
+            color: #666;
+            font-size: 13px;
+            line-height: 1.6;
+            overflow-wrap: anywhere;
+        }
+        .merchant-primary-btn, .merchant-secondary-btn {
+            padding: 8px 14px;
+            border: 1px solid #2f4f4f;
+            border-radius: 7px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .merchant-primary-btn { background: #2f4f4f; color: white; }
+        .merchant-secondary-btn { background: white; color: #2f4f4f; }
+        .merchant-primary-btn:disabled, .merchant-secondary-btn:disabled { opacity: .6; cursor: wait; }
+        .merchant-form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+        .merchant-form label { display: grid; gap: 6px; color: #555; font-size: 13px; }
+        .merchant-form label.full-width, .merchant-form .form-actions { grid-column: 1 / -1; }
+        .merchant-form input, .merchant-form textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d8cdb8;
+            border-radius: 7px;
+            background: white;
+            font: inherit;
+        }
+        .merchant-form textarea { min-height: 78px; resize: vertical; }
+        .merchant-form .form-actions { display: flex; justify-content: flex-end; }
+        .merchant-products-heading { margin: 18px 0 12px; color: #2f4f4f; }
+        .merchant-feedback { min-height: 20px; margin: 8px 0; color: #a5372f; font-size: 13px; }
+
+        @media (max-width: 760px) {
+            .top-nav { padding: 10px 14px; }
+            .nav-user { gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+            .nav-user > a { display: none; }
+            .nav-user .user-badge { padding: 6px 9px; }
+            .dashboard-action { padding: 7px 9px; font-size: 12px; }
+            .merchant-modal-content { padding: 20px 16px; }
+        }
+        @media (max-width: 480px) {
+            .merchant-form { grid-template-columns: 1fr; }
+            .merchant-form label.full-width, .merchant-form .form-actions { grid-column: auto; }
+        }
     </style>
   <link rel="stylesheet" href="theme/gufeng.css">
 </head>
@@ -524,11 +655,74 @@
         <div class="nav-brand">🎋 华夏风物 · 开发者中心</div>
         <div class="nav-user">
             <span class="user-badge">👨‍💻 开发者：<span id="displayName"></span></span>
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+            <button class="dashboard-action" id="merchantApplicationsButton" type="button" onclick="openMerchantApplications()" hidden>
+                商家申请<span class="application-count" id="merchantApplicationCount" hidden>0</span>
+            </button>
+            <button class="dashboard-action" id="merchantProductsButton" type="button" onclick="openMerchantProducts()" hidden>商品管理</button>
+=======
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
+>>>>>>> 8f4aae9ea20839b655018b479d45434fa8db2a1b
             <a href="manage-users.html" style="text-decoration:none;color:#666;font-size:13px;">管理用户</a>
             <a href="MainPage.html" style="text-decoration:none;color:#666;font-size:13px;">返回首页</a>
             <button class="logout-btn" onclick="logout()">退出登录</button>
         </div>
     </nav>
+
+    <div class="merchant-status" id="merchantStatusBanner" role="status"></div>
+
+    <div class="merchant-modal" id="merchantApplicationsModal" hidden onclick="if(event.target===this) closeMerchantApplications()">
+        <section class="merchant-modal-content" role="dialog" aria-modal="true" aria-labelledby="merchantApplicationsTitle">
+            <div class="merchant-modal-header">
+                <h2 id="merchantApplicationsTitle">商家入驻申请</h2>
+                <button class="merchant-modal-close" type="button" aria-label="关闭" onclick="closeMerchantApplications()">×</button>
+            </div>
+            <div class="merchant-feedback" id="merchantApplicationsFeedback" role="status"></div>
+            <h3>待审核申请</h3>
+            <div class="application-list" id="merchantApplicationsList">正在加载申请...</div>
+            <h3>已批准商家</h3>
+            <div class="application-list" id="approvedMerchantsList">正在加载已批准商家...</div>
+        </section>
+    </div>
+
+    <div class="merchant-modal" id="merchantProductsModal" hidden onclick="if(event.target===this) closeMerchantProducts()">
+        <section class="merchant-modal-content" role="dialog" aria-modal="true" aria-labelledby="merchantProductsTitle">
+            <div class="merchant-modal-header">
+                <h2 id="merchantProductsTitle">商品管理与上架</h2>
+                <button class="merchant-modal-close" type="button" aria-label="关闭" onclick="closeMerchantProducts()">×</button>
+            </div>
+            <form class="merchant-form" id="merchantProductForm">
+                <label>商品名称 *
+                    <input name="title" maxlength="255" required>
+                </label>
+                <label>商品分类
+                    <input name="category" maxlength="128" value="非遗手作">
+                </label>
+                <label class="full-width">商品介绍 *
+                    <textarea name="description" maxlength="5000" required></textarea>
+                </label>
+                <label>售价（元） *
+                    <input name="price" type="text" inputmode="decimal" maxlength="11" autocomplete="off"
+                        placeholder="例如：128 或 128.50" required>
+                </label>
+                <label>库存 *
+                    <input name="stock" type="text" inputmode="numeric" maxlength="10" autocomplete="off"
+                        placeholder="请输入非负整数" required>
+                </label>
+                <label class="full-width">商品封面图片地址
+                    <input name="cover_image" type="url" maxlength="500" placeholder="可选，填写图片 URL">
+                </label>
+                <div class="form-actions">
+                    <button class="merchant-primary-btn" id="merchantProductSubmit" type="submit">创建并上架商品</button>
+                </div>
+            </form>
+            <div class="merchant-feedback" id="merchantProductsFeedback" role="status"></div>
+            <h3 class="merchant-products-heading">我的商品</h3>
+            <div class="merchant-product-list" id="merchantProductList">正在加载商品...</div>
+        </section>
+    </div>
 
     <div class="main-layout">
         <!-- 左侧：用户列表 -->
@@ -537,6 +731,7 @@
                 <h2>💬 用户消息</h2>
                 <div class="tab-buttons">
                     <button class="tab-btn active" onclick="switchTab('friends', this)">我的好友</button>
+                    <button class="tab-btn" onclick="switchTab('productInquiries', this)">商品咨询</button>
                     <button class="tab-btn" onclick="switchTab('addFriend', this)">添加好友</button>
                     <button class="tab-btn" id="requestsTabBtn" onclick="switchTab('requests', this)">好友请求<span class="tab-dot" id="requestsDot"></span></button>
                 </div>
@@ -568,7 +763,7 @@
                 <div class="contact-avatar" id="chatAvatar" style="background:linear-gradient(135deg, #a5372f, #a5372f)">U</div>
                 <div>
                     <div class="contact-name" id="chatName"></div>
-                    <div style="font-size:12px;color:#999;">用户</div>
+                    <div style="font-size:12px;color:#999;" id="chatContext">用户</div>
                 </div>
             </div>
 
@@ -589,10 +784,14 @@
         const API = '/api';
         let token, currentUser;
         let friends = [];
+        let productInquiries = [];
         let friendRequests = [];
         let activeConversation = null;
         let messagesPolling = null;
         let currentTab = 'friends';
+        let merchantApplications = [];
+        let approvedMerchants = [];
+        let merchantStatus = null;
 
         function init() {
             token = localStorage.getItem('token');
@@ -613,6 +812,7 @@
             document.getElementById('displayName').textContent = currentUser.display_name;
             loadFriends();
             loadFriendRequests();
+            loadMerchantWorkspace();
             startPolling();
         }
 
@@ -627,6 +827,296 @@
             return fetch(API + path, { ...options, headers });
         }
 
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, character => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            })[character]);
+        }
+
+        async function loadMerchantWorkspace() {
+            const applicationsButton = document.getElementById('merchantApplicationsButton');
+            try {
+                const response = await api('/me');
+                const user = await response.json();
+                if (!response.ok) throw new Error(user.error || '读取账号身份失败');
+
+                currentUser = user;
+                localStorage.setItem('user', JSON.stringify(user));
+                const canReviewApplications = user.registration_role === 'artisan' || user.registration_role === 'admin';
+                applicationsButton.hidden = !canReviewApplications;
+                await Promise.all([
+                    loadMerchantStatus(),
+                    canReviewApplications ? loadMerchantApplications() : Promise.resolve()
+                ]);
+            } catch (error) {
+                console.error('读取开发者权限失败', error);
+                applicationsButton.hidden = true;
+                await loadMerchantStatus();
+            }
+        }
+
+        async function loadMerchantStatus() {
+            const banner = document.getElementById('merchantStatusBanner');
+            const productsButton = document.getElementById('merchantProductsButton');
+            try {
+                const response = await api('/merchants/me');
+                if (response.status === 404) {
+                    merchantStatus = null;
+                    banner.classList.remove('show');
+                    productsButton.hidden = true;
+                    return;
+                }
+                const merchant = await response.json();
+                if (!response.ok) throw new Error(merchant.error || '读取商家审核状态失败');
+
+                merchantStatus = merchant.status;
+                productsButton.hidden = merchantStatus !== 'approved';
+                banner.textContent = merchantStatus === 'approved'
+                    ? `店铺「${merchant.shop_name}」已通过审核，现在可以在商品管理中发布商品。批准开发者：${merchant.approver_name || '历史记录未保存批准人'}。`
+                    : merchantStatus === 'rejected'
+                        ? '商家申请未通过，请联系平台工作人员了解详情。'
+                        : `店铺「${merchant.shop_name}」申请正在审核中，通过后即可上架商品。`;
+                banner.classList.add('show');
+            } catch (error) {
+                console.error('读取商家审核状态失败', error);
+                banner.textContent = error.message || '读取商家审核状态失败，请刷新重试。';
+                banner.classList.add('show');
+                productsButton.hidden = true;
+            }
+        }
+
+        async function loadMerchantApplications() {
+            const list = document.getElementById('merchantApplicationsList');
+            try {
+                const response = await api('/merchants/applications');
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || '加载商家申请失败');
+
+                merchantApplications = result;
+                const count = document.getElementById('merchantApplicationCount');
+                count.textContent = String(merchantApplications.length);
+                count.hidden = merchantApplications.length === 0;
+                renderMerchantApplications();
+            } catch (error) {
+                console.error('加载商家申请失败', error);
+                if (list) list.textContent = error.message || '加载申请失败，请稍后重试。';
+            }
+
+            await loadApprovedMerchants();
+        }
+
+        async function loadApprovedMerchants() {
+            const list = document.getElementById('approvedMerchantsList');
+            try {
+                const response = await api('/merchants/approved');
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || '加载已批准商家失败');
+
+                approvedMerchants = result;
+                renderApprovedMerchants();
+            } catch (error) {
+                console.error('加载已批准商家失败', error);
+                if (list) list.textContent = error.message || '加载已批准商家失败，请稍后重试。';
+            }
+        }
+
+        function renderMerchantApplications() {
+            const list = document.getElementById('merchantApplicationsList');
+            if (!merchantApplications.length) {
+                list.innerHTML = '<div class="no-contacts">目前没有待审核的商家申请。</div>';
+                return;
+            }
+            list.innerHTML = merchantApplications.map(application => `
+                <article class="application-card">
+                    <h3>${escapeHtml(application.shop_name)}</h3>
+                    <p>申请人：${escapeHtml(application.applicant_name)}（@${escapeHtml(application.applicant_username)}）</p>
+                    <p>非遗类别：${escapeHtml(application.heritage_category)}</p>
+                    <p>联系电话：${escapeHtml(application.contact_phone)}</p>
+                    <p>店铺简介：${escapeHtml(application.intro)}</p>
+                    <p>资质/传承说明：${escapeHtml(application.qualification_note || '未填写')}</p>
+                    <button class="merchant-primary-btn" type="button" data-approve-merchant="${escapeHtml(application.id)}">同意入驻</button>
+                </article>
+            `).join('');
+        }
+
+        function renderApprovedMerchants() {
+            const list = document.getElementById('approvedMerchantsList');
+            if (!approvedMerchants.length) {
+                list.innerHTML = '<div class="no-contacts">目前没有已批准的商家。</div>';
+                return;
+            }
+            list.innerHTML = approvedMerchants.map(merchant => `
+                <article class="application-card">
+                    <h3>${escapeHtml(merchant.shop_name)}</h3>
+                    <p>商家：${escapeHtml(merchant.applicant_name)}（@${escapeHtml(merchant.applicant_username)}）</p>
+                    <p>批准开发者：${escapeHtml(merchant.approver_name || '历史记录未保存批准人')}</p>
+                    <p>批准时间：${escapeHtml(merchant.updated_at || '未知')}</p>
+                </article>
+            `).join('');
+        }
+
+        function openMerchantApplications() {
+            document.getElementById('merchantApplicationsFeedback').textContent = '';
+            document.getElementById('merchantApplicationsModal').hidden = false;
+            loadMerchantApplications();
+        }
+
+        function closeMerchantApplications() {
+            document.getElementById('merchantApplicationsModal').hidden = true;
+        }
+
+        document.getElementById('merchantApplicationsList').addEventListener('click', async event => {
+            const button = event.target.closest('[data-approve-merchant]');
+            if (!button) return;
+
+            button.disabled = true;
+            const feedback = document.getElementById('merchantApplicationsFeedback');
+            feedback.textContent = '';
+            try {
+                const response = await api('/merchants/' + encodeURIComponent(button.dataset.approveMerchant) + '/approve', {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || '审核失败');
+                feedback.textContent = `已同意「${result.merchant.shop_name}」入驻，该商家现在可以上架商品。`;
+                await loadMerchantApplications();
+            } catch (error) {
+                feedback.textContent = error.message || '审核失败，请稍后重试。';
+                if (error.message && error.message.includes('其他开发者处理')) {
+                    await loadMerchantApplications();
+                }
+            } finally {
+                button.disabled = false;
+            }
+        });
+
+        async function openMerchantProducts() {
+            document.getElementById('merchantProductsModal').hidden = false;
+            document.getElementById('merchantProductsFeedback').textContent = '';
+            await loadMerchantProducts();
+        }
+
+        function closeMerchantProducts() {
+            document.getElementById('merchantProductsModal').hidden = true;
+        }
+
+        async function loadMerchantProducts() {
+            const list = document.getElementById('merchantProductList');
+            try {
+                const response = await api('/merchant/products');
+                const products = await response.json();
+                if (!response.ok) throw new Error(products.error || '加载商品失败');
+                if (!products.length) {
+                    list.innerHTML = '<div class="no-contacts">还没有商品，填写上方表单即可创建并上架。</div>';
+                    return;
+                }
+                list.innerHTML = products.map(product => `
+                    <article class="merchant-product-card">
+                        <h3>${escapeHtml(product.title)}</h3>
+                        <p>${escapeHtml(product.category || '非遗手作')} · ¥${Number(product.price).toFixed(2)} · 库存 ${Number(product.stock)}</p>
+                        <p>${escapeHtml(product.description || product.brief || '')}</p>
+                        <p>状态：${product.status === 'published' ? '已上架' : '未上架'}</p>
+                        <button class="merchant-secondary-btn" type="button"
+                            data-toggle-product="${escapeHtml(product.id)}"
+                            data-published="${product.status === 'published'}">${product.status === 'published' ? '下架' : '上架'}</button>
+                    </article>
+                `).join('');
+            } catch (error) {
+                console.error('加载商品失败', error);
+                list.textContent = error.message || '加载商品失败，请稍后重试。';
+            }
+        }
+
+        document.getElementById('merchantProductForm').addEventListener('submit', async event => {
+            event.preventDefault();
+            if (merchantStatus !== 'approved') return;
+
+            const form = event.currentTarget;
+            const button = document.getElementById('merchantProductSubmit');
+            const feedback = document.getElementById('merchantProductsFeedback');
+            const fields = new FormData(form);
+            const product = Object.fromEntries(fields.entries());
+            const priceInput = form.elements.price;
+            const stockInput = form.elements.stock;
+            if (!/^\d+(?:\.\d{1,2})?$/.test(product.price) || Number(product.price) > 99999999.99) {
+                feedback.textContent = '售价请输入不超过 8 位整数、最多 2 位小数的非负数字。';
+                priceInput.focus();
+                return;
+            }
+            if (!/^\d+$/.test(product.stock) || Number(product.stock) > 2147483647) {
+                feedback.textContent = '库存请输入不超过 2147483647 的非负整数。';
+                stockInput.focus();
+                return;
+            }
+            product.price = Number(product.price);
+            product.stock = Number(product.stock);
+            button.disabled = true;
+            feedback.textContent = '';
+            try {
+                const response = await api('/products', {
+                    method: 'POST',
+                    body: JSON.stringify(product)
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || '商品上架失败');
+                form.reset();
+                form.elements.category.value = '非遗手作';
+                feedback.textContent = `商品「${result.title}」已成功上架。`;
+                await loadMerchantProducts();
+            } catch (error) {
+                feedback.textContent = error.message || '商品上架失败，请稍后重试。';
+            } finally {
+                button.disabled = false;
+            }
+        });
+
+        const productPriceInput = document.querySelector('#merchantProductForm [name="price"]');
+        productPriceInput.addEventListener('input', () => {
+            const original = productPriceInput.value;
+            let filtered = original.replace(/[^\d.]/g, '');
+            const decimalIndex = filtered.indexOf('.');
+            if (decimalIndex !== -1) {
+                filtered = filtered.slice(0, decimalIndex + 1) +
+                    filtered.slice(decimalIndex + 1).replace(/\./g, '').slice(0, 2);
+            }
+            if (filtered !== original) productPriceInput.value = filtered;
+        });
+
+        const productStockInput = document.querySelector('#merchantProductForm [name="stock"]');
+        productStockInput.addEventListener('input', () => {
+            const original = productStockInput.value;
+            const filtered = original.replace(/\D/g, '').slice(0, 10);
+            if (filtered !== original) productStockInput.value = filtered;
+        });
+
+        document.getElementById('merchantProductList').addEventListener('click', async event => {
+            const button = event.target.closest('[data-toggle-product]');
+            if (!button) return;
+
+            button.disabled = true;
+            const isPublished = button.dataset.published === 'true';
+            const action = isPublished ? 'unpublish' : 'publish';
+            const feedback = document.getElementById('merchantProductsFeedback');
+            feedback.textContent = '';
+            try {
+                const response = await api('/products/' + encodeURIComponent(button.dataset.toggleProduct) + '/' + action, {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || '商品状态更新失败');
+                feedback.textContent = isPublished ? '商品已下架。' : '商品已上架。';
+                await loadMerchantProducts();
+            } catch (error) {
+                feedback.textContent = error.message || '商品状态更新失败，请稍后重试。';
+            } finally {
+                button.disabled = false;
+            }
+        });
+
         async function loadFriends() {
             try {
                 const res = await api('/friends');
@@ -635,6 +1125,65 @@
             } catch (e) {
                 console.error('加载好友失败', e);
             }
+        }
+
+        async function loadProductInquiries() {
+            try {
+                const res = await api('/conversations?product_only=true');
+                if (!res.ok) throw new Error('加载商品咨询失败');
+                productInquiries = await res.json();
+                if (currentTab === 'productInquiries') renderProductInquiries();
+            } catch (e) {
+                console.error('加载商品咨询失败', e);
+                if (currentTab === 'productInquiries') {
+                    document.getElementById('contactList').innerHTML =
+                        '<div class="no-contacts">商品咨询加载失败，请稍后重试</div>';
+                }
+            }
+        }
+
+        function renderProductInquiries() {
+            const list = document.getElementById('contactList');
+            const filter = document.getElementById('searchBox').value.trim().toLowerCase();
+            const filtered = productInquiries.filter(conversation =>
+                (conversation.target_name || conversation.target_username || '').toLowerCase().includes(filter) ||
+                (conversation.target_product_name || '').toLowerCase().includes(filter));
+            if (!filtered.length) {
+                list.innerHTML = '<div class="no-contacts">暂无商品咨询</div>';
+                return;
+            }
+            list.innerHTML = filtered.map(conversation => `
+                <button class="contact-item ${activeConversation?.id === conversation.id ? 'active' : ''}"
+                        style="width:100%;text-align:left;border:0;cursor:pointer;"
+                        onclick="openProductConversation(${Number(conversation.id)})">
+                    <div class="contact-avatar" style="background:linear-gradient(135deg,#2f4f4f,#243f3f)">
+                        ${escapeHtml((conversation.target_name || conversation.target_username || '?').slice(0, 1))}
+                    </div>
+                    <div class="contact-info">
+                        <div class="contact-name">${escapeHtml(conversation.target_name || conversation.target_username)}</div>
+                        <div class="contact-role">商品：${escapeHtml(conversation.target_product_name || '已下架商品')}</div>
+                    </div>
+                    ${conversation.unread ? `<span class="contact-badge">${Number(conversation.unread)}</span>` : ''}
+                </button>
+            `).join('');
+        }
+
+        async function openProductConversation(conversationId) {
+            const conversation = productInquiries.find(item => Number(item.id) === conversationId);
+            if (!conversation) return;
+            activeConversation = conversation;
+            document.getElementById('chatEmpty').style.display = 'none';
+            document.getElementById('chatHeader').classList.add('show');
+            document.getElementById('chatMessages').classList.add('show');
+            document.getElementById('chatInputArea').classList.add('show');
+            document.getElementById('chatName').textContent =
+                conversation.target_name || conversation.target_username;
+            document.getElementById('chatAvatar').textContent =
+                (conversation.target_name || conversation.target_username || '?').slice(0, 1);
+            document.getElementById('chatContext').textContent =
+                '商品咨询 · ' + (conversation.target_product_name || '已下架商品');
+            renderProductInquiries();
+            await loadMessages();
         }
 
         async function loadFriendRequests() {
@@ -664,8 +1213,11 @@
             btn.classList.add('active');
             document.getElementById('addFriendPanel').style.display = (tab === 'addFriend') ? 'block' : 'none';
             document.getElementById('requestsPanel').style.display = (tab === 'requests') ? 'block' : 'none';
-            document.getElementById('searchBox').placeholder = tab === 'friends' ? '🔍 搜索好友...' : '';
+            document.getElementById('searchBox').placeholder =
+                tab === 'friends' ? '🔍 搜索好友...' :
+                tab === 'productInquiries' ? '🔍 搜索商品或客户...' : '';
             if (tab === 'friends') await loadFriends();
+            else if (tab === 'productInquiries') await loadProductInquiries();
             else if (tab === 'requests') { await loadFriendRequests(); renderRequests(); }
         }
 
@@ -794,6 +1346,7 @@
                 document.getElementById('chatInputArea').classList.add('show');
                 document.getElementById('chatName').textContent = targetName;
                 document.getElementById('chatAvatar').textContent = targetName[0];
+                document.getElementById('chatContext').textContent = '用户';
 
                 renderFriends();
                 loadMessages();
@@ -952,12 +1505,14 @@
             messagesPolling = setInterval(() => {
                 if (activeConversation) loadMessages();
                 if (currentTab === 'friends') loadFriends();
+                if (currentTab === 'productInquiries') loadProductInquiries();
                 loadFriendRequests();
             }, 5000);
         }
 
         document.getElementById('searchBox').addEventListener('input', (e) => {
             if (currentTab === 'friends') renderFriends(e.target.value.trim());
+            else if (currentTab === 'productInquiries') renderProductInquiries();
         });
 
         function logout() {

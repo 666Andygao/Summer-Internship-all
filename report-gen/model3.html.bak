@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>云南瓦猫 - 3D模型展示</title>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-kai), var(--font-song), serif;
+            background: linear-gradient(160deg, #f6ecea 0%, #f0e2dd 30%, #d9b3a6 70%, #c07a6a 100%);
+            min-height: 100vh;
+            color: #3a3226;
+            overflow: hidden;
+        }
+
+        .top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 24px;
+            background: rgba(255, 253, 247, 0.92);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid rgba(233, 30, 99, 0.15);
+            box-shadow: 0 4px 20px rgba(233, 30, 99, 0.08);
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .nav-back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 18px;
+            background: linear-gradient(135deg, #c07a6a 0%, #a5372f 100%);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.88em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 12px rgba(233, 30, 99, 0.25);
+            letter-spacing: 0.5px;
+        }
+
+        .nav-back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(233, 30, 99, 0.4);
+        }
+
+        .nav-center {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 22px;
+            background: transparent;
+            color: #a5372f;
+            text-decoration: none;
+            border-radius: 10px;
+            font-size: 0.92em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(233, 30, 99, 0.2);
+            letter-spacing: 0.5px;
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(135deg, #c07a6a 0%, #a5372f 100%);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 4px 14px rgba(233, 30, 99, 0.35);
+        }
+
+        .nav-tab:not(.active):hover {
+            background: rgba(233, 30, 99, 0.08);
+            border-color: rgba(233, 30, 99, 0.35);
+            transform: translateY(-1px);
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .fullscreen-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: linear-gradient(135deg, #f0e2dd 0%, #d9b3a6 100%);
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.2em;
+            color: #a5372f;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(233, 30, 99, 0.15);
+        }
+
+        .fullscreen-btn:hover {
+            transform: scale(1.08);
+            background: linear-gradient(135deg, #d9b3a6 0%, #c07a6a 100%);
+            box-shadow: 0 4px 14px rgba(233, 30, 99, 0.3);
+        }
+
+        header {
+            text-align: center;
+            padding: 24px 20px 20px;
+            background: rgba(255, 253, 247, 0.75);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(233, 30, 99, 0.12);
+            box-shadow: 0 2px 16px rgba(233, 30, 99, 0.06);
+        }
+
+        header h1 {
+            font-size: 1.6em;
+            font-weight: 700;
+            color: #a5372f;
+            letter-spacing: 1px;
+        }
+
+        header p {
+            color: #ad7a8b;
+            font-size: 0.85em;
+            margin-top: 4px;
+        }
+
+        .main-container {
+            display: flex;
+            height: calc(100vh - 80px);
+            margin-top: 0;
+            gap: 0;
+        }
+
+        .model-display-section {
+            flex: 6;
+            position: relative;
+            background: linear-gradient(135deg, rgba(244, 143, 177, 0.15) 0%, rgba(233, 30, 99, 0.08) 50%, rgba(194, 24, 91, 0.12) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .model-3d-wrapper {
+            width: 90%;
+            height: 90%;
+            background: rgba(255, 253, 247, 0.9);
+            border-radius: 20px;
+            box-shadow: 0 8px 40px rgba(233, 30, 99, 0.2), 0 2px 8px rgba(0, 0, 0, 0.04);
+            border: 2px solid rgba(233, 30, 99, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .model-3d-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .model-loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 253, 247, 0.95);
+            z-index: 10;
+            transition: opacity 0.5s ease;
+        }
+
+        .model-loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid rgba(233, 30, 99, 0.15);
+            border-top-color: #a5372f;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            margin-top: 16px;
+            color: #a5372f;
+            font-size: 0.95em;
+            font-weight: 500;
+        }
+
+        .model-controls-hint {
+            position: absolute;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(233, 30, 99, 0.08);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.82em;
+            color: #a5372f;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(233, 30, 99, 0.15);
+            white-space: nowrap;
+        }
+
+        .zoom-controls {
+            position: absolute;
+            bottom: 60px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 5;
+        }
+
+        .zoom-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: rgba(255, 253, 247, 0.9);
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            color: #a5372f;
+            box-shadow: 0 2px 8px rgba(233, 30, 99, 0.2);
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .zoom-btn:hover {
+            transform: scale(1.1);
+            background: #fff;
+            box-shadow: 0 4px 12px rgba(233, 30, 99, 0.35);
+        }
+
+        .fullscreen-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: linear-gradient(135deg, #c07a6a 0%, #a5372f 100%);
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            color: #fff;
+            box-shadow: 0 3px 12px rgba(233, 30, 99, 0.35);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .fullscreen-btn:hover {
+            transform: scale(1.15) rotate(90deg);
+            background: linear-gradient(135deg, #c07a6a 0%, #a5372f 100%);
+            box-shadow: 0 6px 20px rgba(233, 30, 99, 0.5);
+        }
+
+        .info-section {
+            flex: 4;
+            background: rgba(255, 253, 247, 0.75);
+            backdrop-filter: blur(12px);
+            border-left: 1px solid rgba(233, 30, 99, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .info-header {
+            padding: 28px 32px 20px;
+            border-bottom: 1px solid rgba(233, 30, 99, 0.1);
+            background: rgba(255, 253, 247, 0.5);
+        }
+
+        .info-header h2 {
+            font-size: 1.5em;
+            color: #a5372f;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .info-header .subtitle {
+            font-size: 0.92em;
+            color: #ad7a8b;
+            font-weight: 500;
+        }
+
+        .info-content-scrollable {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 28px 32px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(233, 30, 99, 0.3) transparent;
+        }
+
+        .info-content-scrollable::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .info-content-scrollable::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .info-content-scrollable::-webkit-scrollbar-thumb {
+            background: rgba(233, 30, 99, 0.3);
+            border-radius: 3px;
+        }
+
+        .info-content-scrollable::-webkit-scrollbar-thumb:hover {
+            background: rgba(233, 30, 99, 0.5);
+        }
+
+        .info-block {
+            margin-bottom: 22px;
+        }
+
+        .info-block-title {
+            font-size: 1.05em;
+            font-weight: 600;
+            color: #a5372f;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-text {
+            line-height: 1.75;
+            color: #5a4050;
+            font-size: 0.93em;
+        }
+
+        .info-text strong {
+            color: #a5372f;
+            font-weight: 600;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        .feature-item {
+            background: rgba(233, 30, 99, 0.06);
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 0.88em;
+            color: #a5372f;
+            text-align: center;
+            font-weight: 600;
+            border: 1px solid rgba(233, 30, 99, 0.12);
+            transition: all 0.25s ease;
+        }
+
+        .feature-item:hover {
+            background: rgba(233, 30, 99, 0.12);
+            transform: translateY(-2px);
+        }
+
+        .process-link-section {
+            padding: 24px 32px;
+            background: linear-gradient(135deg, rgba(244, 143, 177, 0.2) 0%, rgba(233, 30, 99, 0.15) 100%);
+            border-top: 1px solid rgba(233, 30, 99, 0.15);
+        }
+
+        .process-link-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 16px 24px;
+            background: linear-gradient(135deg, #c07a6a 0%, #a5372f 100%);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 14px;
+            font-size: 1.05em;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 16px rgba(233, 30, 99, 0.35);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: none;
+            cursor: pointer;
+        }
+
+        .process-link-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 28px rgba(233, 30, 99, 0.5);
+            background: linear-gradient(135deg, #c07a6a 0%, #a5372f 100%);
+        }
+
+        .process-link-button:active {
+            transform: translateY(-1px);
+        }
+
+        .process-icon {
+            font-size: 1.3em;
+        }
+
+        @media (max-width: 1024px) {
+            .main-container {
+                flex-direction: column;
+            }
+
+            .model-display-section {
+                flex: 1;
+                min-height: 45vh;
+            }
+
+            .info-section {
+                flex: 1;
+                border-left: none;
+                border-top: 1px solid rgba(233, 30, 99, 0.1);
+            }
+        }
+    </style>
+  <link rel="stylesheet" href="theme/gufeng.css">
+</head>
+<body>
+    <header>
+        <h1>🐱 云南瓦猫 - 传统非遗文化</h1>
+        <p>3D数字模型展示 · 交互式浏览体验</p>
+    </header>
+
+    <div class="main-container">
+        <div class="model-display-section" id="modelDisplaySection">
+            <div class="model-3d-wrapper" id="model3DWrapper">
+                <canvas id="threeCanvas" class="model-3d-canvas"></canvas>
+
+                <div class="model-loading-overlay" id="loadingOverlay">
+                    <div class="loading-spinner"></div>
+                    <div class="loading-text">正在加载3D瓦猫模型...</div>
+                </div>
+
+                <div class="model-controls-hint">
+                    🖱 拖拽旋转 · 滚轮缩放 · 右键平移
+                </div>
+
+                <div class="zoom-controls">
+                    <button class="zoom-btn" id="zoomInBtn" title="放大">+</button>
+                    <button class="zoom-btn" id="zoomOutBtn" title="缩小">−</button>
+                    <button class="fullscreen-btn" id="fullscreenBtn" title="全屏展示">⛶</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <div class="info-header">
+                <h2>模型三 · 云南瓦猫</h2>
+                <div class="subtitle">云南省省级非物质文化遗产</div>
+            </div>
+
+            <div class="info-content-scrollable" id="infoContentScrollable">
+                <div class="info-block">
+                    <div class="info-block-title">🏛️ 地区分布</div>
+                    <div class="info-text">
+                        云南省，广泛流传于<strong>昆明、大理、玉溪、曲靖、楚雄、丽江（永胜）</strong>等地
+                    </div>
+                </div>
+
+                <div class="info-block">
+                    <div class="info-block-title">📜 非遗等级</div>
+                    <div class="info-text">
+                        云南省省级非物质文化遗产（2022年12月入选第五批名录）。<br><br>
+                        昆明瓦猫、永胜瓦猫为省级项目，大理瓦猫列入州级名录。
+                    </div>
+                </div>
+
+                <div class="info-block">
+                    <div class="info-block-title">🐱 文化简介</div>
+                    <div class="info-text">
+                        瓦猫是云南地区特有的传统民居建筑装饰，通常安放在正门头的瓦脊或屋檐上，是一种用于<strong>镇宅、辟邪、纳福</strong>的陶制神兽，历史最早可追溯至南诏时期。<br><br>
+
+                        虽然名字带"猫"，但实际以<strong>老虎</strong>为原型，取"猫容虎劲"之意，融合汉族"镇宅狮"与彝族"虎图腾"文化内涵。<br><br>
+
+                        <strong>典型特征：</strong>额头刻有"王"字、前足执八卦、大口獠牙<br><br>
+
+                        制作工艺以手工捏制泥坯后与砖瓦同窑烧制为主，成品多为素胎灰陶。因地域文化差异，造型各具特色：<br>
+                        • 大理鹤庆瓦猫以夸张大嘴著称<br>
+                        • 昆明呈贡瓦猫则偏向"圆头圆脑"风格
+                    </div>
+                </div>
+
+                <div class="features-grid">
+                    <div class="feature-item">✨ 非遗传承</div>
+                    <div class="feature-item">🏠 镇宅辟邪</div>
+                    <div class="feature-item">🎨 手工陶艺</div>
+                    <div class="feature-item">🌸 民族文化</div>
+                </div>
+            </div>
+
+            <div class="process-link-section">
+                <a href="process3.html" class="process-link-button" id="processLinkButton">
+                    <span class="process-icon">🔧</span>
+                    <span>查看瓦猫制作流程</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+        const canvas = document.getElementById('threeCanvas');
+        const wrapper = document.getElementById('model3DWrapper');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const zoomInBtn = document.getElementById('zoomInBtn');
+        const zoomOutBtn = document.getElementById('zoomOutBtn');
+
+        let scene, camera, renderer, controls;
+        let isInitialized = false;
+
+        function initThreeJS() {
+            if (isInitialized) return;
+            isInitialized = true;
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xffffff);
+
+            const aspect = canvas.clientWidth / canvas.clientHeight;
+            camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
+            camera.position.set(5, 3, 5);
+
+            renderer = new THREE.WebGLRenderer({
+                canvas: canvas,
+                antialias: true,
+                alpha: true
+            });
+            renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.2;
+
+            const ambientLight = new THREE.AmbientLight(0xfff5e0, 1.5);
+            scene.add(ambientLight);
+
+            const keyLight = new THREE.DirectionalLight(0xffffff, 4);
+            keyLight.position.set(5, 8, 5);
+            keyLight.castShadow = true;
+            keyLight.shadow.mapSize.width = 2048;
+            keyLight.shadow.mapSize.height = 2048;
+            keyLight.shadow.camera.near = 0.5;
+            keyLight.shadow.camera.far = 50;
+            keyLight.shadow.camera.left = -10;
+            keyLight.shadow.camera.right = 10;
+            keyLight.shadow.camera.top = 10;
+            keyLight.shadow.camera.bottom = -10;
+            keyLight.shadow.bias = -0.0001;
+            scene.add(keyLight);
+
+            const fillLight = new THREE.DirectionalLight(0xffe0b0, 2);
+            fillLight.position.set(-3, 2, -3);
+            scene.add(fillLight);
+
+            const rimLight = new THREE.DirectionalLight(0xffffff, 1.5);
+            rimLight.position.set(0, 1, -5);
+            scene.add(rimLight);
+
+            const groundGeometry = new THREE.PlaneGeometry(20, 20);
+            const groundMaterial = new THREE.ShadowMaterial({ opacity: 0.3 });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.position.y = -2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.target.set(0, 0.5, 0);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.08;
+            controls.minDistance = 2.5;
+            controls.maxDistance = 12;
+            controls.maxPolarAngle = Math.PI * 0.75;
+            controls.minPolarAngle = 0.2;
+            controls.autoRotate = true;
+            controls.autoRotateSpeed = 0.5;
+            controls.enableZoom = false;
+
+            wrapper.addEventListener('wheel', handleWheelZoom, { passive: false });
+
+            controls.update();
+
+            loadingOverlay.classList.remove('hidden');
+
+            const loader = new GLTFLoader();
+            const modelPath = '模型三模型/stone statue 3d model.glb';
+
+            console.log('开始加载模型:', modelPath);
+
+            loader.load(
+                modelPath,
+                (gltf) => {
+                    console.log('模型加载成功');
+
+                    const model = gltf.scene;
+
+                    model.traverse((child) => {
+                        if (child.isMesh) {
+                            child.castShadow = true;
+                            child.receiveShadow = true;
+                            if (child.material) {
+                                child.material.side = THREE.DoubleSide;
+                            }
+                        }
+                    });
+
+                    const box = new THREE.Box3().setFromObject(model);
+                    const size = box.getSize(new THREE.Vector3());
+
+                    if (size.x === 0 && size.y === 0 && size.z === 0) {
+                        console.warn('模型尺寸为空，使用默认缩放');
+                        model.scale.setScalar(1);
+                    } else {
+                        const maxDim = Math.max(size.x, size.y, size.z);
+                        const scale = 4 / maxDim;
+                        model.scale.multiplyScalar(scale);
+                    }
+
+                    box.setFromObject(model);
+                    const center = box.getCenter(new THREE.Vector3());
+                    model.position.sub(center);
+
+                    scene.add(model);
+
+                    setTimeout(() => {
+                        loadingOverlay.classList.add('hidden');
+                        console.log('模型显示完成');
+                    }, 500);
+                },
+                (xhr) => {
+                    if (xhr.lengthComputable) {
+                        const percent = Math.round((xhr.loaded / xhr.total) * 100);
+                        const textEl = loadingOverlay.querySelector('.loading-text');
+                        if (textEl) {
+                            const loadedMB = (xhr.loaded / 1024 / 1024).toFixed(2);
+                            const totalMB = (xhr.total / 1024 / 1024).toFixed(2);
+                            textEl.textContent = `正在加载3D瓦猫模型... ${percent}% (${loadedMB}MB / ${totalMB}MB)`;
+                        }
+                        console.log(`加载进度: ${percent}%`);
+                    } else {
+                        const loadedKB = (xhr.loaded / 1024).toFixed(0);
+                        const textEl = loadingOverlay.querySelector('.loading-text');
+                        if (textEl) textEl.textContent = `正在加载3D瓦猫模型... ${loadedKB}KB`;
+                    }
+                },
+                (error) => {
+                    console.error('模型加载错误:', error);
+
+                    const textEl = loadingOverlay.querySelector('.loading-text');
+                    if (textEl) {
+                        textEl.innerHTML = '⚠️ 模型加载失败<br><span style="font-size: 0.85em; color: #666;">请检查文件路径或刷新页面重试</span>';
+                    }
+                    const spinnerEl = loadingOverlay.querySelector('.loading-spinner');
+                    if (spinnerEl) spinnerEl.style.borderTopColor = '#a5372f';
+
+                    alert('模型加载失败！\n\n请确保：\n1. 文件 "stone statue 3d model.glb" 存在于 "模型三模型" 文件夹中\n2. 通过本地服务器访问（如 VS Code Live Server）\n\n错误信息: ' + error.message);
+                }
+            );
+
+            function animate() {
+                if (!isInitialized) return;
+                requestAnimationFrame(animate);
+                controls.update();
+                renderer.render(scene, camera);
+            }
+
+            animate();
+        }
+
+        function handleWheelZoom(event) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const delta = event.deltaY * 0.001;
+            const direction = new THREE.Vector3().subVectors(camera.position, controls.target).normalize();
+            const distance = camera.position.distanceTo(controls.target);
+            let newDistance;
+
+            if (delta > 0) {
+                newDistance = Math.min(distance * 1.15, controls.maxDistance);
+            } else {
+                newDistance = Math.max(distance * 0.85, controls.minDistance);
+            }
+
+            camera.position.copy(controls.target).add(direction.multiplyScalar(newDistance));
+            controls.update();
+        }
+
+        function handleResize() {
+            if (!camera || !renderer || !canvas) return;
+
+            const width = canvas.clientWidth || window.innerWidth;
+            const height = canvas.clientHeight || window.innerHeight;
+
+            if (width <= 0 || height <= 0) return;
+
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height, false);
+
+            if (controls) {
+                controls.target.set(0, 0.5, 0);
+                controls.update();
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        zoomInBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (controls && camera) {
+                const direction = new THREE.Vector3().subVectors(camera.position, controls.target).normalize();
+                const distance = camera.position.distanceTo(controls.target);
+                const newDistance = Math.max(distance * 0.8, controls.minDistance);
+                camera.position.copy(controls.target).add(direction.multiplyScalar(newDistance));
+                controls.update();
+            }
+        });
+
+        zoomOutBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (controls && camera) {
+                const direction = new THREE.Vector3().subVectors(camera.position, controls.target).normalize();
+                const distance = camera.position.distanceTo(controls.target);
+                const newDistance = Math.min(distance * 1.25, controls.maxDistance);
+                camera.position.copy(controls.target).add(direction.multiplyScalar(newDistance));
+                controls.update();
+            }
+        });
+
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+
+        fullscreenBtn.addEventListener('click', () => {
+            window.location.href = 'model3_fullscreen.html';
+        });
+
+        initThreeJS();
+    </script>
+</body>
+</html>

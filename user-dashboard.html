@@ -522,6 +522,70 @@
             font-size: 36px;
             cursor: pointer;
         }
+
+        .merchant-apply-btn {
+            padding: 8px 14px;
+            border: 1px solid #a5372f;
+            border-radius: 20px;
+            background: #a5372f;
+            color: white;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .merchant-apply-btn:hover { background: #842b25; }
+        .merchant-status { color: #666; font-size: 12px; }
+        .merchant-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, .48);
+        }
+        .merchant-modal[hidden] { display: none; }
+        .merchant-form {
+            width: min(100%, 520px);
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 28px;
+            border: 1px solid #e6dcc8;
+            border-radius: 14px;
+            background: #fffdf7;
+            box-shadow: 0 18px 48px rgba(30, 20, 10, .25);
+        }
+        .merchant-form h2 { margin-bottom: 8px; color: #a5372f; }
+        .merchant-form p { margin-bottom: 18px; color: #777; font-size: 13px; line-height: 1.6; }
+        .merchant-form label { display: block; margin: 12px 0 6px; font-size: 13px; color: #444; }
+        .merchant-form input, .merchant-form textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d8cdb8;
+            border-radius: 8px;
+            background: white;
+            font: inherit;
+        }
+        .merchant-form textarea { min-height: 82px; resize: vertical; }
+        .merchant-form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+        .merchant-form-actions button {
+            padding: 9px 18px;
+            border: 1px solid #d8cdb8;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+        }
+        .merchant-form-actions .submit-btn { border-color: #a5372f; background: #a5372f; color: white; }
+        .merchant-form-actions button:disabled { opacity: .6; cursor: wait; }
+        .merchant-form-error { min-height: 18px; margin-top: 10px; color: #b42318; font-size: 13px; }
+
+        @media (max-width: 600px) {
+            .top-nav { padding: 10px 14px; }
+            .nav-user { gap: 7px; }
+            .nav-user .user-badge { padding: 6px 9px; }
+            .merchant-apply-btn { padding: 8px 10px; white-space: nowrap; }
+            .merchant-form { padding: 22px 18px; }
+        }
     </style>
   <link rel="stylesheet" href="theme/gufeng.css">
 </head>
@@ -530,10 +594,35 @@
         <div class="nav-brand">🎋 华夏风物 · 用户中心</div>
         <div class="nav-user">
             <span class="user-badge">👤 用户：<span id="displayName"></span></span>
+            <button class="merchant-apply-btn" id="merchantApplyButton" type="button" onclick="openMerchantApplication()">成为商家</button>
+            <span class="merchant-status" id="merchantApplicationStatus" role="status"></span>
             <a href="MainPage.html" style="text-decoration:none;color:#666;font-size:13px;">返回首页</a>
             <button class="logout-btn" onclick="logout()">退出登录</button>
         </div>
     </nav>
+
+    <div class="merchant-modal" id="merchantModal" hidden onclick="if(event.target===this) closeMerchantApplication()">
+        <form class="merchant-form" id="merchantApplicationForm">
+            <h2>申请成为商家</h2>
+            <p>填写店铺与非遗项目资料，提交后由开发者审核；任一开发者批准即可成为商家。</p>
+            <label for="merchantShopName">店铺名称 *</label>
+            <input id="merchantShopName" name="shop_name" maxlength="128" required>
+            <label for="merchantIntro">店铺简介 *</label>
+            <textarea id="merchantIntro" name="intro" maxlength="2000" required></textarea>
+            <label for="merchantCategory">非遗类别 *</label>
+            <input id="merchantCategory" name="heritage_category" maxlength="128" placeholder="例如：云南白族扎染" required>
+            <label for="merchantPhone">联系电话 *</label>
+            <input id="merchantPhone" name="contact_phone" type="tel" inputmode="numeric" maxlength="11"
+                pattern="[0-9]{11}" placeholder="请输入11位手机号码" title="联系电话必须为11位数字" required>
+            <label for="merchantQualification">资质/传承情况说明</label>
+            <textarea id="merchantQualification" name="qualification_note" maxlength="2000"></textarea>
+            <div class="merchant-form-error" id="merchantApplicationError" role="alert"></div>
+            <div class="merchant-form-actions">
+                <button type="button" onclick="closeMerchantApplication()">取消</button>
+                <button class="submit-btn" id="merchantSubmitBtn" type="submit">提交申请</button>
+            </div>
+        </form>
+    </div>
 
     <div class="main-layout">
         <!-- 左侧：开发者列表 -->
@@ -593,6 +682,7 @@
     <script>
         const API = '/api';
         let token, currentUser;
+        let merchantStatusPoll;
         let friends = [];
         let friendRequests = [];
         let activeConversation = null;
@@ -619,6 +709,8 @@
             document.getElementById('displayName').textContent = currentUser.display_name;
             loadFriends();
             loadFriendRequests();
+            loadMerchantApplicationStatus();
+            merchantStatusPoll = setInterval(loadMerchantApplicationStatus, 5000);
             startPolling();
             startHeartbeat();   // 定时上报在线状态
         }
@@ -646,6 +738,101 @@
             }
             return fetch(API + path, { ...options, headers });
         }
+
+        function openMerchantApplication() {
+            document.getElementById('merchantApplicationError').textContent = '';
+            document.getElementById('merchantModal').hidden = false;
+            document.getElementById('merchantShopName').focus();
+        }
+
+        function closeMerchantApplication() {
+            document.getElementById('merchantModal').hidden = true;
+        }
+
+        async function loadMerchantApplicationStatus() {
+            const button = document.getElementById('merchantApplyButton');
+            const statusMessage = document.getElementById('merchantApplicationStatus');
+            try {
+                const response = await api('/merchants/me');
+                if (response.status === 404) {
+                    button.disabled = false;
+                    button.hidden = false;
+                    button.textContent = '成为商家';
+                    statusMessage.textContent = '';
+                    return;
+                }
+                const merchant = await response.json();
+                if (!response.ok) throw new Error(merchant.error || '读取商家申请状态失败');
+
+                if (merchant.status === 'approved') {
+                    const userResponse = await api('/me');
+                    const user = await userResponse.json();
+                    if (!userResponse.ok) throw new Error(user.error || '读取商家身份失败');
+                    localStorage.setItem('user', JSON.stringify(user));
+                    clearInterval(merchantStatusPoll);
+                    localStorage.setItem('merchantApproval', JSON.stringify({
+                        shop_name: merchant.shop_name,
+                        approver_name: merchant.approver_name || ''
+                    }));
+                    statusMessage.textContent = '审核已通过，正在进入商家中心...';
+                    window.location.href = 'developer-dashboard.html';
+                    return;
+                }
+                if (merchant.status === 'pending') {
+                    button.disabled = true;
+                    button.textContent = '申请审核中';
+                    statusMessage.textContent = '任一开发者批准后即可成为商家';
+                    return;
+                }
+                button.disabled = false;
+                button.textContent = '重新申请商家';
+                statusMessage.textContent = '上次申请未通过，可修改资料后重新申请';
+            } catch (error) {
+                console.error('读取商家申请状态失败', error);
+                statusMessage.textContent = error.message || '读取申请状态失败，请稍后重试';
+            }
+        }
+
+        document.getElementById('merchantApplicationForm').addEventListener('submit', async event => {
+            event.preventDefault();
+            const form = event.currentTarget;
+            const submitButton = document.getElementById('merchantSubmitBtn');
+            const errorMessage = document.getElementById('merchantApplicationError');
+            const application = Object.fromEntries(new FormData(form).entries());
+            if (!/^\d{11}$/.test(application.contact_phone)) {
+                errorMessage.textContent = '联系电话必须为11位数字';
+                document.getElementById('merchantPhone').focus();
+                return;
+            }
+            submitButton.disabled = true;
+            submitButton.textContent = '提交中...';
+            errorMessage.textContent = '';
+            try {
+                const response = await api('/merchants/apply', {
+                    method: 'POST',
+                    body: JSON.stringify(application)
+                });
+                const result = await response.json();
+                if (!response.ok) {
+                    errorMessage.textContent = result.error || '申请提交失败，请稍后重试';
+                    return;
+                }
+
+                token = result.token;
+                currentUser = result.user;
+                localStorage.setItem('token', result.token);
+                localStorage.setItem('user', JSON.stringify(result.user));
+                form.reset();
+                closeMerchantApplication();
+                await loadMerchantApplicationStatus();
+            } catch (error) {
+                console.error('提交商家申请失败', error);
+                errorMessage.textContent = '网络错误，申请未能提交，请检查服务器后重试';
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = '提交申请';
+            }
+        });
 
         // 加载好友列表
         async function loadFriends() {

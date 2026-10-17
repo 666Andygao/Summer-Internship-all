@@ -1,7 +1,9 @@
 ﻿<script setup>
 // 筛选侧边栏：民族 / 品类 / 价格区间 多条件筛选
 import { reactive, watch } from 'vue'
-import { ETHNICS, CATEGORIES } from '@/mock/goods'
+
+const ETHNICS = ['苗族', '彝族', '布依族']
+const CATEGORIES = ['银饰', '蜡染', '刺绣', '织锦', '漆器', '陶器', '乐器', '编织']
 
 // 价格区间预设
 const priceRanges = [
@@ -19,12 +21,6 @@ const heritageTips = [
   '侗锦多用经纬交错织出几何纹，记录族群迁徙与生活记忆。',
   '彝族漆器以黑、红、黄三色为主，寓意土地、火焰与阳光。',
   '手作器物的细微差异，正是非遗“活态传承”的温度。'
-]
-
-const hotPicks = [
-  { label: '苗族银饰', ethnic: '苗族', category: '银饰', priceIndex: 0 },
-  { label: '百元蜡染', ethnic: '', category: '蜡染', priceIndex: 2 },
-  { label: '彝族漆器', ethnic: '彝族', category: '漆器', priceIndex: 0 }
 ]
 
 // 双向绑定：把筛选条件变化通过 update:filters 抛给父组件
@@ -59,13 +55,6 @@ function reset() {
   local.category = ''
   local.priceIndex = 0
   apply()
-}
-
-// 热门推荐一键带入筛选
-function useHotPick(pick) {
-  local.ethnic = pick.ethnic
-  local.category = pick.category
-  local.priceIndex = pick.priceIndex
 }
 
 watch(() => [local.ethnic, local.category, local.priceIndex], apply)
@@ -133,18 +122,6 @@ watch(() => [local.ethnic, local.category, local.priceIndex], apply)
     </div>
 
     <!-- 侧边栏补充信息 -->
-    <div class="hot-panel">
-      <div class="panel-kicker">热门推荐</div>
-      <div class="hot-list">
-        <button
-          v-for="pick in hotPicks"
-          :key="pick.label"
-          class="hot-chip"
-          @click="useHotPick(pick)"
-        >{{ pick.label }}</button>
-      </div>
-    </div>
-
     <div class="heritage-panel">
       <div class="panel-kicker">非遗小知识</div>
       <p v-for="tip in heritageTips" :key="tip">{{ tip }}</p>

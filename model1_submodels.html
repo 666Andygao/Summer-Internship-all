@@ -1,4 +1,12 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
+=======
+<<<<<<< HEAD
+<!DOCTYPE html>
+=======
+﻿<!DOCTYPE html>
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
+>>>>>>> 8f4aae9ea20839b655018b479d45434fa8db2a1b
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -463,7 +471,15 @@
         }
     </style>
   <link rel="stylesheet" href="theme/gufeng.css">
+<<<<<<< HEAD
 </head>
+=======
+<<<<<<< HEAD
+</head>
+=======
+  <link rel="stylesheet" href="theme/model-ui.css"></head>
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
+>>>>>>> 8f4aae9ea20839b655018b479d45434fa8db2a1b
 <body>
     <div class="header-section">
         <a href="model1.html" class="back-nav">← 返回主模型</a>
@@ -639,38 +655,93 @@
     <script type="module">
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+<<<<<<< HEAD
         import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
         import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
+=======
+<<<<<<< HEAD
+        import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+        import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
+=======
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
+>>>>>>> 8f4aae9ea20839b655018b479d45434fa8db2a1b
 
         const modelConfigs = {
             metal_heart: {
                 title: '装饰性金属心形',
+<<<<<<< HEAD
                 mtlPath: encodeURI('模型一模型/ornamental metal heart 3d model/ornamental+metal+heart+3d+model.mtl'),
                 objPath: encodeURI('模型一模型/ornamental metal heart 3d model/ornamental+metal+heart+3d+model.obj'),
+=======
+<<<<<<< HEAD
+                mtlPath: encodeURI('模型一模型/ornamental metal heart 3d model/ornamental+metal+heart+3d+model.mtl'),
+                objPath: encodeURI('模型一模型/ornamental metal heart 3d model/ornamental+metal+heart+3d+model.obj'),
+=======
+                glbPath: encodeURI('模型一模型/ornamental metal heart 3d model/ornamental+metal+heart+3d+model.glb'),
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
+>>>>>>> 8f4aae9ea20839b655018b479d45434fa8db2a1b
                 description: '精美的心形银饰挂件，融合了苗族独特的纹样设计，象征着爱情与美好'
             },
             floral_crown: {
                 title: '华丽花卉皇冠',
+<<<<<<< HEAD
                 mtlPath: encodeURI('模型一模型/ornate floral crown 3d model/ornate+floral+crown+3d+model.mtl'),
                 objPath: encodeURI('模型一模型/ornate floral crown 3d model/ornate+floral+crown+3d+model.obj'),
+=======
+<<<<<<< HEAD
+                mtlPath: encodeURI('模型一模型/ornate floral crown 3d model/ornate+floral+crown+3d+model.mtl'),
+                objPath: encodeURI('模型一模型/ornate floral crown 3d model/ornate+floral+crown+3d+model.obj'),
+=======
+                glbPath: encodeURI('模型一模型/ornate floral crown 3d model/ornate+floral+crown+3d+model.glb'),
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
+>>>>>>> 8f4aae9ea20839b655018b479d45434fa8db2a1b
                 description: '以花卉为主题的苗族银冠，工艺复杂精美，镶嵌有细致的花卉图案'
             },
             metal_bracelet: {
                 title: '华丽金属手镯',
+<<<<<<< HEAD
                 mtlPath: encodeURI('模型一模型/ornate metal bracelet 3d model/ornate+metal+bracelet+3d+model.mtl'),
                 objPath: encodeURI('模型一模型/ornate metal bracelet 3d model/ornate+metal+bracelet+3d+model.obj'),
+=======
+<<<<<<< HEAD
+                mtlPath: encodeURI('模型一模型/ornate metal bracelet 3d model/ornate+metal+bracelet+3d+model.mtl'),
+                objPath: encodeURI('模型一模型/ornate metal bracelet 3d model/ornate+metal+bracelet+3d+model.obj'),
+=======
+                glbPath: encodeURI('模型一模型/ornate metal bracelet 3d model/ornate+metal+bracelet+3d+model.glb'),
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
+>>>>>>> 8f4aae9ea20839b655018b479d45434fa8db2a1b
                 description: '苗族传统银手镯，雕刻着寓意吉祥的传统纹样，既是装饰品也是护身符'
             },
             metal_pendant: {
                 title: '华丽金属吊坠',
+<<<<<<< HEAD
                 mtlPath: encodeURI('模型一模型/ornate metal pendant 3dmodel/tripo_convert_849bd368-f9c7-4109-b019-91f94462c9e7.mtl'),
                 objPath: encodeURI('模型一模型/ornate metal pendant 3dmodel/tripo_convert_849bd368-f9c7-4109-b019-91f94462c9e7.obj'),
+=======
+<<<<<<< HEAD
+                mtlPath: encodeURI('模型一模型/ornate metal pendant 3dmodel/tripo_convert_849bd368-f9c7-4109-b019-91f94462c9e7.mtl'),
+                objPath: encodeURI('模型一模型/ornate metal pendant 3dmodel/tripo_convert_849bd368-f9c7-4109-b019-91f94462c9e7.obj'),
+=======
+                glbPath: encodeURI('模型一模型/ornate metal pendant 3dmodel/ornate_metal_pendant_3d_model.glb'),
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
+>>>>>>> 8f4aae9ea20839b655018b479d45434fa8db2a1b
                 description: '精致的苗族银质吊坠，造型独特，工艺精湛，是苗族服饰文化中不可或缺的重要配饰'
             },
             silver_necklace: {
                 title: '华丽银项链',
+<<<<<<< HEAD
                 mtlPath: encodeURI('模型一模型/ornate silver necklace 3d model/ornate+silver+necklace+3d+model.mtl'),
                 objPath: encodeURI('模型一模型/ornate silver necklace 3d model/ornate+silver+necklace+3d+model.obj'),
+=======
+<<<<<<< HEAD
+                mtlPath: encodeURI('模型一模型/ornate silver necklace 3d model/ornate+silver+necklace+3d+model.mtl'),
+                objPath: encodeURI('模型一模型/ornate silver necklace 3d model/ornate+silver+necklace+3d+model.obj'),
+=======
+                glbPath: encodeURI('模型一模型/ornate silver necklace 3d model/ornate+silver+necklace+3d+model.glb'),
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
+>>>>>>> 8f4aae9ea20839b655018b479d45434fa8db2a1b
                 description: '精美的苗族银质项链，工艺繁复，是苗族女性盛装时佩戴的重要饰品'
             }
         };
@@ -727,15 +798,32 @@
 
         function loadModelToPreview(modelId) {
             const config = modelConfigs[modelId];
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 8f4aae9ea20839b655018b479d45434fa8db2a1b
             if (!config || !config.objPath) {
                 showPlaceholder(modelId);
                 return;
             }
 
+<<<<<<< HEAD
+=======
+=======
+            if (!config || !config.glbPath) {
+                showPlaceholder(modelId);
+                return;
+            }
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
+>>>>>>> 8f4aae9ea20839b655018b479d45434fa8db2a1b
             const loadingEl = document.getElementById(`loading_${modelId}`);
             const sceneData = previewScenes[modelId];
             if (!sceneData) return;
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 8f4aae9ea20839b655018b479d45434fa8db2a1b
             const mtlLoader = new MTLLoader();
             const objLoader = new OBJLoader();
 
@@ -781,6 +869,33 @@
                     showPlaceholder(modelId);
                 }
             );
+<<<<<<< HEAD
+=======
+=======
+            const gltfLoader = new GLTFLoader();
+            const dracoLoader = new DRACOLoader();
+            dracoLoader.setDecoderPath('theme/draco/');
+            gltfLoader.setDRACOLoader(dracoLoader);
+
+            gltfLoader.load(config.glbPath, (gltf) => {
+                const object = gltf.scene;
+                const box = new THREE.Box3().setFromObject(object);
+                const center = box.getCenter(new THREE.Vector3());
+                object.position.sub(center);
+                const size = box.getSize(new THREE.Vector3());
+                const maxDim = Math.max(size.x, size.y, size.z);
+                object.scale.setScalar(2 / maxDim);
+                sceneData.scene.add(object);
+                if (loadingEl) loadingEl.classList.add('hidden');
+            }, (xhr) => {
+                console.log(`Loading ${modelId}...`);
+            }, (error) => {
+                console.error(`Error loading ${modelId}:`, error);
+                if (loadingEl) loadingEl.classList.add('hidden');
+                showPlaceholder(modelId);
+            });
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
+>>>>>>> 8f4aae9ea20839b655018b479d45434fa8db2a1b
         }
 
         function showPlaceholder(modelId) {
