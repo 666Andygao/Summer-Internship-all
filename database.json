@@ -53,6 +53,67 @@
       "display_name": "新开发者",
       "avatar": "",
       "created_at": "2026-08-25T08:00:01.000Z"
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+    },
+    {
+      "id": 7,
+      "username": "alice_new",
+      "password": "$2a$12$cy3oUvaR5sTZJe5neLPq7ubE6yECe6unTf1TN3DoVknLUEsB4BdwG",
+      "role": "buyer",
+      "display_name": "Alice???",
+      "phone": "",
+      "avatar": "",
+      "addresses": [],
+      "created_at": "2026-10-16T14:31:50.288Z"
+    },
+    {
+      "id": 8,
+      "username": "dev_new2",
+      "password": "$2a$12$9q53ibUbpcVrdMr2E/mmAOqbSwY8kPrjQyLO7xJCox1tjV4oJJfe6",
+      "role": "artisan",
+      "display_name": "新匠人",
+      "phone": "",
+      "avatar": "",
+      "addresses": [],
+      "created_at": "2026-10-16T14:32:32.569Z"
+    },
+    {
+      "id": 9,
+      "username": "good_u23",
+      "password": "$2a$12$KYt3Av969m/PqGKj8pM/muQVBC9ylKIQNrDyOkXkE5k50Fu4miyUO",
+      "role": "buyer",
+      "display_name": "好的",
+      "phone": "",
+      "avatar": "",
+      "addresses": [],
+      "created_at": "2026-10-16T14:35:12.334Z"
+    },
+    {
+      "id": 10,
+      "username": "newtestxx_826",
+      "password": "$2a$12$GppIiFIMDaxwtUO6A3Yagej.5.50q6fiAvKl63sRTubr4ERyiVjqG",
+      "role": "buyer",
+      "display_name": "测试",
+      "phone": "",
+      "avatar": "",
+      "addresses": [],
+      "created_at": "2026-10-16T15:01:50.997Z"
+    },
+    {
+      "id": 11,
+      "username": "final_1877",
+      "password": "$2a$12$BEUJwx3BTgieT9mES29PQ.Kt89YxdkeyaXfifk50/ecdDnK0/..Ie",
+      "role": "artisan",
+      "display_name": "最终测试",
+      "phone": "",
+      "avatar": "",
+      "addresses": [],
+      "created_at": "2026-10-16T15:03:57.120Z"
+=======
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
+>>>>>>> 8f4aae9ea20839b655018b479d45434fa8db2a1b
     }
   ],
   "conversations": [
@@ -145,7 +206,15 @@
     }
   ],
   "nextId": {
+<<<<<<< HEAD
     "user": 7,
+=======
+<<<<<<< HEAD
+    "user": 12,
+=======
+    "user": 7,
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
+>>>>>>> 8f4aae9ea20839b655018b479d45434fa8db2a1b
     "conversation": 7,
     "message": 12,
     "address": 1,

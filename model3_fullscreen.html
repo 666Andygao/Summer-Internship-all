@@ -1,4 +1,12 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
+=======
+<<<<<<< HEAD
+<!DOCTYPE html>
+=======
+﻿<!DOCTYPE html>
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
+>>>>>>> 8f4aae9ea20839b655018b479d45434fa8db2a1b
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -189,7 +197,15 @@
         }
     </style>
   <link rel="stylesheet" href="theme/gufeng.css">
+<<<<<<< HEAD
 </head>
+=======
+<<<<<<< HEAD
+</head>
+=======
+  <link rel="stylesheet" href="theme/model-ui.css"></head>
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
+>>>>>>> 8f4aae9ea20839b655018b479d45434fa8db2a1b
 <body>
     <div class="top-bar">
         <a href="model3.html" class="back-button">← 返回详情页</a>
@@ -222,6 +238,13 @@
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+        import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
+>>>>>>> 8f4aae9ea20839b655018b479d45434fa8db2a1b
 
         const canvas = document.getElementById('fullscreenCanvas');
         const loadingOverlay = document.getElementById('loadingOverlay');
@@ -306,7 +329,18 @@
             loadingOverlay.classList.remove('hidden');
 
             const loader = new GLTFLoader();
+<<<<<<< HEAD
             const modelPath = '模型三模型/stone statue 3d model.glb';
+=======
+<<<<<<< HEAD
+            const modelPath = '模型三模型/stone statue 3d model.glb';
+=======
+            const dracoLoader = new DRACOLoader();
+            dracoLoader.setDecoderPath('theme/draco/');
+            loader.setDRACOLoader(dracoLoader);
+            const modelPath = '模型三模型/stone statue 3d model_draco.glb';
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
+>>>>>>> 8f4aae9ea20839b655018b479d45434fa8db2a1b
 
             console.log('开始加载模型:', modelPath);
 

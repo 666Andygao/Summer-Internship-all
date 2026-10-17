@@ -36,7 +36,7 @@ const total = ref(0)
 const goods = ref([])
 const loading = ref(false)
 
-// 拉取商品列表（调用 api 层，内部走前端假数据）
+// 拉取后端中真实上架的商品列表
 async function loadGoods() {
   loading.value = true
   try {

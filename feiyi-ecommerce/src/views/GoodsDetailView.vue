@@ -4,18 +4,33 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { fetchGoodsDetail, fetchRelatedGoods, fetchGoodsReviews } from '@/api/goods'
+import {
+  fetchGoodsDetail,
+  fetchRelatedGoods,
+  fetchGoodsReviews,
+  submitGoodsReview,
+  contactProductMerchant
+} from '@/api/goods'
 import { useCartStore } from '@/store/cart'
+import { useAuthStore } from '@/store/auth'
 import GoodsCard from '@/components/GoodsCard.vue'
 
 const route = useRoute()
 const router = useRouter()
 const cartStore = useCartStore()
+const auth = useAuthStore()
 
 const goods = ref(null)          // 当前商品
 const related = ref([])          // 同类推荐
 const reviews = ref([])          // 评价列表
+const reviewStats = ref({ total: 0, average_rating: 0 })
+const reviewEligibility = ref({ eligible: false, reason: 'login_required' })
 const loading = ref(true)
+const submittingReview = ref(false)
+const reviewRating = ref(5)
+const reviewContent = ref('')
+const reviewAnonymous = ref(false)
+const reviewSubmitError = ref('')
 
 const activeImage = ref(0)       // 当前主图索引
 const selectedSpec = ref('')     // 选中规格
@@ -24,29 +39,85 @@ const activeTab = ref('archive') // 当前 Tab
 
 // 评分均值
 const avgRating = computed(() => {
-  if (!reviews.value.length) return 5
-  const sum = reviews.value.reduce((s, r) => s + r.rating, 0)
-  return (sum / reviews.value.length).toFixed(1)
+  return Number(reviewStats.value.average_rating || 0).toFixed(1)
+})
+
+const reviewEligibilityMessage = computed(() => {
+  const messages = {
+    buyer_account_required: '仅用户注册账号可以发表商品评价。',
+    purchase_required: '提交包含该商品的订单后，即可发表评价。',
+    order_not_submitted: '包含该商品的订单已取消或退款，暂时无法评价。',
+    already_reviewed: '你已评价该订单中的商品。',
+    login_required: '登录后查看评价资格。'
+  }
+  return messages[reviewEligibility.value.reason] || '暂时无法评价该商品。'
 })
 
 // 加载详情数据
 async function loadDetail(id) {
   loading.value = true
   try {
-    const [detail, rel, rev] = await Promise.all([
+    const [detail, rel, reviewResult] = await Promise.all([
       fetchGoodsDetail(id),
       fetchRelatedGoods(id),
       fetchGoodsReviews(id)
     ])
     goods.value = detail
     related.value = rel
-    reviews.value = rev
+    reviews.value = reviewResult.reviews
+    reviewStats.value = reviewResult.stats
+    reviewEligibility.value = reviewResult.eligibility
     // 默认选中第一个规格与第一张图
     selectedSpec.value = detail?.specs?.[0] || ''
     activeImage.value = 0
     quantity.value = 1
   } finally {
     loading.value = false
+  }
+}
+
+async function submitReview() {
+  if (!auth.isLoggedIn) {
+    auth.goLogin()
+    return
+  }
+  if (!reviewContent.value.trim()) {
+    ElMessage.warning('请填写评价内容')
+    return
+  }
+
+  submittingReview.value = true
+  reviewSubmitError.value = ''
+  try {
+    const result = await submitGoodsReview(goods.value.id, {
+      rating: reviewRating.value,
+      content: reviewContent.value.trim(),
+      anonymous: reviewAnonymous.value
+    })
+    reviews.value = [result.review, ...reviews.value].slice(0, 100)
+    reviewStats.value = result.stats
+    reviewEligibility.value = { eligible: false, reason: 'already_reviewed' }
+    reviewContent.value = ''
+    reviewRating.value = 5
+    reviewAnonymous.value = false
+    ElMessage.success('评价已发布')
+  } catch (error) {
+    reviewSubmitError.value = error.response?.data?.error || error.message || '评价提交失败，请稍后重试'
+  } finally {
+    submittingReview.value = false
+  }
+}
+
+async function contactMerchant() {
+  if (!auth.isLoggedIn) {
+    auth.goLogin()
+    return
+  }
+  try {
+    const conversation = await contactProductMerchant(goods.value.id)
+    await router.push({ path: '/user', query: { conversation: conversation.id } })
+  } catch (error) {
+    ElMessage.error(error.response?.data?.error || error.message || '暂时无法联系商家，请稍后重试')
   }
 }
 
@@ -148,6 +219,9 @@ onMounted(() => loadDetail(route.params.id))
             <el-button size="large" type="primary" class="btn-buy" @click="buyNow">
               立即购买
             </el-button>
+            <el-button size="large" class="btn-contact" @click="contactMerchant">
+              联系商家
+            </el-button>
           </div>
         </div>
       </div>
@@ -240,13 +314,44 @@ onMounted(() => loadDetail(route.params.id))
           <!-- ④ 游客评价 -->
           <el-tab-pane name="reviews">
             <template #label>
-              游客评价<span class="tab-count">（{{ reviews.length }}）</span>
+              游客评价<span class="tab-count">（{{ reviewStats.total }}）</span>
             </template>
             <div class="reviews">
               <div class="reviews-summary">
                 <div class="score">{{ avgRating }}<small>分</small></div>
                 <el-rate :model-value="Number(avgRating)" disabled />
-                <span class="summary-tip">综合 {{ reviews.length }} 条真实评价</span>
+                <span class="summary-tip">综合 {{ reviewStats.total }} 条评价</span>
+              </div>
+              <div class="review-composer">
+                <h3>发表评价</h3>
+                <template v-if="auth.isLoggedIn && reviewEligibility.eligible">
+                  <div class="review-rating">
+                    <span>商品满意度</span>
+                    <el-rate v-model="reviewRating" />
+                  </div>
+                  <el-input
+                    v-model="reviewContent"
+                    type="textarea"
+                    :rows="4"
+                    maxlength="1000"
+                    show-word-limit
+                    placeholder="分享你对这件商品的感受"
+                  />
+                  <div class="review-compose-actions">
+                    <el-checkbox v-model="reviewAnonymous">匿名评价</el-checkbox>
+                    <el-button type="primary" :loading="submittingReview" @click="submitReview">
+                      发布评价
+                    </el-button>
+                  </div>
+                  <p v-if="reviewSubmitError" class="review-submit-error">{{ reviewSubmitError }}</p>
+                </template>
+                <div v-else-if="auth.isLoggedIn" class="review-login-prompt">
+                  <span>{{ reviewEligibilityMessage }}</span>
+                </div>
+                <div v-else class="review-login-prompt">
+                  <span>登录后即可评价，也可以选择匿名展示。</span>
+                  <el-button type="primary" @click="auth.goLogin">登录并评价</el-button>
+                </div>
               </div>
               <ul class="review-list">
                 <li v-for="r in reviews" :key="r.id">
@@ -257,6 +362,7 @@ onMounted(() => loadDetail(route.params.id))
                   </div>
                   <p class="review-content">{{ r.content }}</p>
                 </li>
+                <li v-if="!reviews.length" class="review-empty">还没有评价，来发表第一条评价吧。</li>
               </ul>
             </div>
           </el-tab-pane>
@@ -636,6 +742,40 @@ onMounted(() => loadDetail(route.params.id))
 }
 .reviews-summary .score small {
   font-size: 14px;
+}
+.review-composer {
+  padding: 20px;
+  margin-bottom: 18px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+.review-composer h3 {
+  margin-bottom: 16px;
+  font-size: 16px;
+}
+.review-rating,
+.review-compose-actions,
+.review-login-prompt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.review-rating {
+  margin-bottom: 14px;
+}
+.review-compose-actions,
+.review-login-prompt {
+  justify-content: space-between;
+  margin-top: 14px;
+}
+.review-login-prompt,
+.review-submit-error,
+.review-empty {
+  color: var(--color-text-muted);
+}
+.review-submit-error {
+  margin-top: 12px;
+  color: var(--el-color-danger);
 }
 .summary-tip {
   color: var(--color-text-muted);

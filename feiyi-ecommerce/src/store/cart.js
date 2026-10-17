@@ -6,11 +6,13 @@
 import { defineStore } from 'pinia'
 
 const STORAGE_KEY = 'feiyi_cart'
+const MERCHANT_GOODS_ID_OFFSET = 1_000_000_000
 
 // 从本地存储读取初始购物车数据
 function loadFromStorage() {
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []
+    const items = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []
+    return items.filter((item) => Number(item.id) >= MERCHANT_GOODS_ID_OFFSET)
   } catch {
     return []
   }
