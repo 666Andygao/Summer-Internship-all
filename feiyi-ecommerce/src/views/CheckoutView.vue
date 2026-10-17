@@ -1,6 +1,6 @@
 ﻿<script setup>
 // 页面4：订单结算页面
-// 收货地址（新增/切换）+ 订单清单 + 费用汇总 + 提交订单（前端弹窗提示）
+// 收货地址（新增/切换）+ 订单清单 + 费用汇总 + 提交后端订单
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
@@ -18,8 +18,8 @@ const { list: addressList } = storeToRefs(addressStore)
 const checkoutItems = computed(() => cartStore.checkedItems)
 // 商品总额
 const goodsAmount = computed(() => cartStore.checkedAmount)
-// 运费：满 99 包邮，否则 12 元（纯前端演示规则）
-const freight = computed(() => (goodsAmount.value >= 99 || goodsAmount.value === 0 ? 0 : 12))
+// 运费规则与服务端 calculateSettlement 保持一致
+const freight = computed(() => (goodsAmount.value >= 200 || goodsAmount.value === 0 ? 0 : 10))
 // 应付总额
 const payAmount = computed(() => goodsAmount.value + freight.value)
 
@@ -76,20 +76,21 @@ async function onSubmit() {
   }
   submitting.value = true
   try {
-    // 调用 api 层（内部为前端模拟，返回假订单号）
-    // TODO(后端对接): 替换为真实下单接口 POST /api/orders，并跳转真实支付
+    const shippingAddress = addressList.value.find((address) => address.id === selectedAddressId.value)
+    if (!shippingAddress) {
+      ElMessage.warning('收货地址不存在，请重新选择')
+      return
+    }
     const res = await submitOrder({
       items: checkoutItems.value,
-      addressId: selectedAddressId.value,
-      remark: remark.value,
-      totalAmount: payAmount.value
+      shippingAddress,
+      remark: remark.value
     })
-    // 下单成功弹窗
     await ElMessageBox.alert(
       `<div style="line-height:1.9">
-        <p>订单号：<strong>${res.orderNo}</strong></p>
-        <p>应付金额：<strong style="color:#a5372f">¥${payAmount.value.toFixed(0)}</strong></p>
-        <p style="color:#9a9284;font-size:13px">（本页为前端演示，未接入真实支付渠道）</p>
+        <p>订单号：<strong>${res.order_no}</strong></p>
+        <p>应付金额：<strong style="color:#a5372f">¥${Number(res.total_amount).toFixed(2)}</strong></p>
+        <p style="color:#9a9284;font-size:13px">订单已提交，现在可以在商品详情页发表评价。</p>
       </div>`,
       '订单提交成功',
       { dangerouslyUseHTMLString: true, confirmButtonText: '返回首页', type: 'success' }

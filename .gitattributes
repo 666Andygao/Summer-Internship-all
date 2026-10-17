@@ -4,10 +4,16 @@
 *.png filter=lfs diff=lfs merge=lfs -text
 *.jpg filter=lfs diff=lfs merge=lfs -text
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> 35c2fdfad61a3dec5a26fc09907416111b73677d
 
 # Shell 脚本必须存成 LF。开发机是 Windows（core.autocrlf=true），
 # 若存成 CRLF，Linux 服务器上解出来的 shebang 会变成 "#!/usr/bin/env bash\r"，
 # 执行时报 /usr/bin/env: 'bash\r': No such file or directory。
 *.sh text eol=lf
+<<<<<<< HEAD
+>>>>>>> 35c2fdfad61a3dec5a26fc09907416111b73677d
+=======
 >>>>>>> 35c2fdfad61a3dec5a26fc09907416111b73677d

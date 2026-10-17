@@ -94,11 +94,22 @@ async function main() {
         }
 
         // ---------- 1. users ----------
+        const approvedMerchantUserIds = new Set(
+            (data.merchants || [])
+                .filter(merchant => merchant.status === 'approved')
+                .map(merchant => String(merchant.user_id))
+        );
         for (const u of data.users || []) {
+            const role = s(u.role, 'user');
+            const registrationRole = u.registration_role ||
+                (['developer', 'artisan'].includes(role) && approvedMerchantUserIds.has(String(u.id))
+                    ? 'buyer'
+                    : role);
             await conn.execute(
-                `INSERT INTO users (id, username, password, role, display_name, phone, avatar, addresses, created_at)
-                 VALUES (?,?,?,?,?,?,?,?,?)`,
-                [u.id, s(u.username), s(u.password), s(u.role, 'user'), s(u.display_name),
+                `INSERT INTO users (id, username, password, role, registration_role, display_name, phone, avatar, addresses, created_at)
+                 VALUES (?,?,?,?,?,?,?,?,?,?)`,
+                [u.id, s(u.username), s(u.password), role,
+                 registrationRole, s(u.display_name),
                  s(u.phone), s(u.avatar), toJson(u.addresses || []), toDate(u.created_at)]
             );
         }
@@ -108,10 +119,10 @@ async function main() {
         for (const m of data.merchants || []) {
             await conn.execute(
                 `INSERT INTO merchants (id, user_id, shop_name, intro, heritage_category, contact_phone,
-                                        qualification_note, status, permissions, created_at, updated_at)
-                 VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+                                        qualification_note, status, approved_by, permissions, created_at, updated_at)
+                 VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
                 [m.id, m.user_id, s(m.shop_name), s(m.intro), s(m.heritage_category), s(m.contact_phone),
-                 s(m.qualification_note), s(m.status, 'pending'), toJson(m.permissions || []),
+                 s(m.qualification_note), s(m.status, 'pending'), m.approved_by || null, toJson(m.permissions || []),
                  toDate(m.created_at), toDate(m.updated_at)]
             );
         }

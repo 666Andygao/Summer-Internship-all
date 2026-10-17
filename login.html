@@ -3,11 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<<<<<<< HEAD
-    <title>登录 · 华夏风物 · 非遗传承</title>
-=======
     <title>统一身份认证 - 华夏风物 · 非遗传承</title>
->>>>>>> 35c2fdfad61a3dec5a26fc09907416111b73677d
     <style>
         /* ============================================================
            统一身份认证 —— 全屏水墨底图 · 右侧认证卡 · 左上角艺术字
@@ -20,10 +16,6 @@
         html, body { height: 100%; }
 
         body {
-<<<<<<< HEAD
-            font-family: 'KaiTi', 'STKaiti', '楷体', 'Inter', -apple-system, sans-serif;
-            background: linear-gradient(135deg, #f2ebe4 0%, #e8d5c4 50%, #f5f2ef 100%);
-=======
             color: #1f2328;
             min-height: 100vh;
             -webkit-font-smoothing: antialiased;
@@ -82,7 +74,6 @@
         .auth-shell {
             position: relative;
             z-index: 1;              /* 压在底图之上 */
->>>>>>> 35c2fdfad61a3dec5a26fc09907416111b73677d
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -101,13 +92,6 @@
             z-index: 2;
         }
 
-<<<<<<< HEAD
-        .login-header {
-            background: linear-gradient(135deg, #2f4f4f 0%, #243f3f 100%);
-            color: white;
-            padding: 36px 36px 28px;
-            text-align: center;
-=======
         .brand-bar {
             flex: none;
             width: 3px;
@@ -115,7 +99,6 @@
             border-radius: 1px;
             background: linear-gradient(180deg, #d8ab55 0%, #a97c2c 100%);
             box-shadow: 0 1px 3px rgba(72, 50, 16, .3);
->>>>>>> 35c2fdfad61a3dec5a26fc09907416111b73677d
         }
 
         .brand-title {
@@ -221,162 +204,12 @@
         .role-tab:hover:not(.active) { color: #3f3529; }
 
         .role-tab.active {
-<<<<<<< HEAD
-            background: white;
-            color: #2f4f4f;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-
-        .role-tab:hover:not(.active) {
-            color: #4d3e36;
-        }
-
-        .role-tab .role-icon {
-            display: block;
-            font-size: 20px;
-            margin-bottom: 2px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-            position: relative;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 13px;
-            font-weight: 500;
-            color: #4d3e36;
-            margin-bottom: 6px;
-            letter-spacing: 0.3px;
-        }
-
-        .input-wrap {
-            position: relative;
-        }
-
-        .input-wrap input {
-            width: 100%;
-            padding: 14px 44px 14px 16px;
-            border: 2px solid #e0d8d1;
-            border-radius: 12px;
-            font-size: 15px;
-            transition: all 0.3s ease;
-            background: #faf8f6;
-            color: #1a1a1a;
-            outline: none;
-        }
-
-        .input-wrap input:focus {
-            border-color: #2f4f4f;
-            background: #fff;
-            box-shadow: 0 0 0 4px rgba(47, 79, 79, 0.08);
-        }
-
-        .eye-btn {
-            position: absolute;
-            right: 4px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 36px;
-            height: 36px;
-            border: none;
-            background: transparent;
-            cursor: pointer;
-            font-size: 18px;
-            color: #999;
-            border-radius: 8px;
-            transition: color 0.2s, background 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .eye-btn:hover {
-            color: #2f4f4f;
-            background: #f0ebe3;
-        }
-
-        .strength-wrap {
-            margin-top: 8px;
-            padding: 0 2px;
-        }
-
-        .strength-wrap .bar {
-            display: flex;
-            gap: 4px;
-            height: 4px;
-        }
-
-        .strength-wrap .bar span {
-            flex: 1;
-            background: #e0d8d1;
-            border-radius: 2px;
-            transition: background 0.3s;
-        }
-
-        .strength-wrap .bar span.on-1 { background: #dc2626; }
-        .strength-wrap .bar span.on-2 { background: #f59e0b; }
-        .strength-wrap .bar span.on-3 { background: #22c55e; }
-        .strength-wrap .bar span.on-4 { background: #16a34a; }
-
-        .strength-wrap .label {
-            font-size: 12px;
-            color: #6b6255;
-            margin-top: 4px;
-            display: block;
-        }
-
-        .checkbox-group {
-            display: flex;
-            align-items: flex-start;
-            gap: 8px;
-            margin-bottom: 20px;
-            font-size: 13px;
-            color: #6b6255;
-            cursor: pointer;
-            line-height: 1.5;
-        }
-
-        .checkbox-group input[type="checkbox"] {
-            margin-top: 3px;
-            width: 16px;
-            height: 16px;
-            accent-color: #2f4f4f;
-            cursor: pointer;
-        }
-
-        .checkbox-group a {
-            color: #2f4f4f;
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .checkbox-group a:hover {
-            text-decoration: underline;
-        }
-
-        .submit-btn {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #2f4f4f 0%, #243f3f 100%);
-            color: white;
-            border: none;
-            border-radius: 14px;
-            font-size: 16px;
-=======
             background: #fff;
             color: #a5372f;
->>>>>>> 35c2fdfad61a3dec5a26fc09907416111b73677d
             font-weight: 600;
             box-shadow: 0 1px 3px rgba(60, 42, 18, .14);
         }
 
-<<<<<<< HEAD
-        .submit-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 8px 24px rgba(47, 79, 79, 0.3);
-=======
         /* ---------------- 表单 ---------------- */
         .field { margin-bottom: 15px; }
 
@@ -385,7 +218,6 @@
             margin-bottom: 6px;
             font-size: 13px;
             color: #6b6255;
->>>>>>> 35c2fdfad61a3dec5a26fc09907416111b73677d
         }
 
         .input-wrap {
@@ -398,17 +230,6 @@
             transition: border-color .15s ease, box-shadow .15s ease;
         }
 
-<<<<<<< HEAD
-        .submit-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .switch-mode {
-            text-align: center;
-            margin-top: 20px;
-=======
         .input-wrap:focus-within {
             border-color: #a5372f;
             box-shadow: 0 0 0 3px rgba(165, 55, 47, .09);
@@ -435,7 +256,6 @@
             outline: none;
             background: transparent;
             font-family: inherit;
->>>>>>> 35c2fdfad61a3dec5a26fc09907416111b73677d
             font-size: 14px;
             color: #1f2328;
         }
@@ -547,12 +367,8 @@
         }
 
         .switch-mode a {
-<<<<<<< HEAD
-            color: #2f4f4f;
-=======
             color: #a5372f;
             font-weight: 600;
->>>>>>> 35c2fdfad61a3dec5a26fc09907416111b73677d
             text-decoration: none;
             cursor: pointer;
         }
@@ -580,40 +396,6 @@
             }
         }
 
-<<<<<<< HEAD
-        .error-msg.show { display: block; }
-
-        .success-msg {
-            background: #f0fdf4;
-            color: #16a34a;
-            padding: 12px 16px;
-            border-radius: 10px;
-            font-size: 13px;
-            margin-bottom: 16px;
-            display: none;
-            border: 1px solid #bbf7d0;
-        }
-
-        .success-msg.show { display: block; }
-
-        .field-hint {
-            font-size: 12px;
-            color: #9a8f7e;
-            margin-top: 4px;
-            padding-left: 2px;
-        }
-
-        .back-home {
-            display: block;
-            text-align: center;
-            margin-top: 16px;
-            font-size: 13px;
-            color: #7a6b61;
-            text-decoration: none;
-        }
-
-        .back-home:hover { color: #2f4f4f; }
-=======
         @media (max-width: 560px) {
             .brand-corner { top: 24px; left: 20px; gap: 10px; }
             .brand-title { font-size: 20px; letter-spacing: .1em; white-space: normal; }
@@ -623,20 +405,10 @@
             .auth-panel-head { padding: 20px 20px 16px; }
             .auth-panel-body { padding: 20px 20px 22px; }
         }
->>>>>>> 35c2fdfad61a3dec5a26fc09907416111b73677d
     </style>
     <link rel="stylesheet" href="theme/gufeng.css">
 </head>
 <body>
-<<<<<<< HEAD
-    <div id="protocolWarning" style="display:none; position:fixed; top:0; left:0; right:0; background:#fff3cd; color:#856404; padding:14px 20px; text-align:center; z-index:9999; font-size:14px; border-bottom:2px solid #ffc107;">
-        请使用 <b>http://localhost:3000/login.html</b> 访问，而不是直接双击打开文件！
-    </div>
-    <div class="login-container">
-        <div class="login-header">
-            <div class="logo">华夏风物</div>
-            <div class="subtitle">非遗传承 · 数字平台</div>
-=======
     <!-- 协议检测提示 -->
     <div id="protocolWarning" style="display:none; position:fixed; top:0; left:0; right:0; background:#fff8e1; color:#8a6d1f; padding:12px 20px; text-align:center; z-index:9999; font-size:13px; border-bottom:1px solid #e6d18a;">
         ⚠️ 请通过 <b>http://localhost:3000/login.html</b> 访问，不要直接双击打开文件
@@ -653,77 +425,8 @@
         <div class="brand-corner">
             <span class="brand-bar" aria-hidden="true"></span>
             <span class="brand-title">华夏风物，非遗传承</span>
->>>>>>> 35c2fdfad61a3dec5a26fc09907416111b73677d
         </div>
 
-<<<<<<< HEAD
-            <div class="role-tabs" id="roleTabs">
-                <button class="role-tab active" data-role="user">
-                    <span class="role-icon">👤</span> 用户
-                </button>
-                <button class="role-tab" data-role="developer">
-                    <span class="role-icon">👨‍💻</span> 开发者
-                </button>
-            </div>
-
-            <form id="loginForm">
-                <div class="form-group">
-                    <label>用户名</label>
-                    <div class="input-wrap">
-                        <input type="text" id="loginUsername" placeholder="请输入用户名" required autocomplete="username">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>密码</label>
-                    <div class="input-wrap">
-                        <input type="password" id="loginPassword" placeholder="请输入密码" required autocomplete="current-password">
-                        <button type="button" class="eye-btn" id="toggleLoginPwd" title="显示/隐藏密码">👁</button>
-                    </div>
-                </div>
-                <input type="hidden" id="loginRole" value="user">
-                <button type="submit" class="submit-btn">登 录</button>
-            </form>
-
-            <form id="registerForm" style="display:none;">
-                <div class="form-group">
-                    <label>显示名称</label>
-                    <div class="input-wrap">
-                        <input type="text" id="regDisplayName" placeholder="您的昵称或艺名" required maxlength="30">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>用户名</label>
-                    <div class="input-wrap">
-                        <input type="text" id="regUsername" placeholder="3-20 位字母/数字/下划线" required autocomplete="username" pattern="[A-Za-z0-9_]{3,20}">
-                    </div>
-                    <div class="field-hint">3-20 位，只能包含字母、数字和下划线</div>
-                </div>
-                <div class="form-group">
-                    <label>密码</label>
-                    <div class="input-wrap">
-                        <input type="password" id="regPassword" placeholder="至少 6 位，建议混合大小写和数字" required minlength="6" autocomplete="new-password">
-                        <button type="button" class="eye-btn" id="toggleRegPwd" title="显示/隐藏密码">👁</button>
-                    </div>
-                    <div class="strength-wrap" id="pwdStrength" style="display:none;">
-                        <div class="bar"><span></span><span></span><span></span><span></span></div>
-                        <span class="label"></span>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>确认密码</label>
-                    <div class="input-wrap">
-                        <input type="password" id="regConfirmPassword" placeholder="请再次输入密码" required autocomplete="new-password">
-                        <button type="button" class="eye-btn" id="toggleConfirmPwd" title="显示/隐藏密码">👁</button>
-                    </div>
-                </div>
-                <input type="hidden" id="regRole" value="user">
-                <label class="checkbox-group">
-                    <input type="checkbox" id="agreeTerms" required>
-                    <span>我已阅读并同意 <a href="#" onclick="alert('用户协议详情页');return false;">《用户协议》</a> 和 <a href="#" onclick="alert('隐私政策详情页');return false;">《隐私政策》</a></span>
-                </label>
-                <button type="submit" class="submit-btn" id="registerBtn">注 册</button>
-            </form>
-=======
         <!-- 右侧统一身份认证卡 -->
         <main class="auth-panel">
             <div class="auth-panel-head">
@@ -740,7 +443,6 @@
                     <button type="button" class="role-tab active" data-role="user">用户</button>
                     <button type="button" class="role-tab" data-role="developer">开发者</button>
                 </div>
->>>>>>> 35c2fdfad61a3dec5a26fc09907416111b73677d
 
                 <!-- 登录表单 -->
                 <form id="loginForm">
@@ -851,6 +553,7 @@
     </div>
 
     <script>
+        // 检测是否通过 file:// 协议打开
         if (window.location.protocol === 'file:') {
             document.getElementById('protocolWarning').style.display = 'block';
         }
@@ -860,6 +563,7 @@
         let isLoginMode = true;
         let selectedRole = 'user';
 
+        // 角色切换
         document.querySelectorAll('.role-tab').forEach(tab => {
             tab.addEventListener('click', () => {
                 document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
@@ -870,10 +574,7 @@
             });
         });
 
-<<<<<<< HEAD
-=======
         // 登录 / 注册切换
->>>>>>> 35c2fdfad61a3dec5a26fc09907416111b73677d
         function toggleMode() {
             isLoginMode = !isLoginMode;
             document.getElementById('loginForm').style.display = isLoginMode ? 'block' : 'none';
@@ -925,8 +626,6 @@
             localStorage.setItem('user', JSON.stringify(data.user));
         }
 
-<<<<<<< HEAD
-=======
         // 记住用户名（仅存用户名，绝不保存密码）
         function rememberUsername(username) {
             if (document.getElementById('rememberMe').checked) {
@@ -945,7 +644,6 @@
         })();
 
         // 读取 ?redirect= 回跳地址（仅允许站内相对路径，防止开放重定向）
->>>>>>> 35c2fdfad61a3dec5a26fc09907416111b73677d
         function getRedirect() {
             try {
                 const r = new URLSearchParams(window.location.search).get('redirect');
@@ -954,53 +652,6 @@
             return null;
         }
 
-<<<<<<< HEAD
-        function successDestination(user) {
-            const redirect = getRedirect();
-            if (redirect) return redirect;
-            return user.role === 'user' ? 'user-dashboard.html' : 'developer-dashboard.html';
-        }
-
-        function bindEyeToggle(btnId, inputId) {
-            document.getElementById(btnId).addEventListener('click', () => {
-                const input = document.getElementById(inputId);
-                input.type = input.type === 'password' ? 'text' : 'password';
-            });
-        }
-        bindEyeToggle('toggleLoginPwd', 'loginPassword');
-        bindEyeToggle('toggleRegPwd', 'regPassword');
-        bindEyeToggle('toggleConfirmPwd', 'regConfirmPassword');
-
-        const STRENGTH_LABELS = ['', '弱', '中等', '强', '很强'];
-        function checkPasswordStrength(pwd) {
-            let score = 0;
-            if (pwd.length >= 6) score++;
-            if (pwd.length >= 10) score++;
-            if (/[A-Z]/.test(pwd) && /[a-z]/.test(pwd)) score++;
-            if (/\d/.test(pwd)) score++;
-            if (/[^A-Za-z0-9]/.test(pwd)) score++;
-            return Math.min(score, 4);
-        }
-
-        const strengthEl = document.getElementById('pwdStrength');
-        const strengthBars = strengthEl.querySelectorAll('.bar span');
-        const strengthLabel = strengthEl.querySelector('.label');
-
-        document.getElementById('regPassword').addEventListener('input', (e) => {
-            const pwd = e.target.value;
-            if (pwd.length === 0) {
-                strengthEl.style.display = 'none';
-                return;
-            }
-            strengthEl.style.display = 'block';
-            const score = checkPasswordStrength(pwd);
-            strengthBars.forEach((bar, i) => {
-                bar.className = i < score ? 'on-' + score : '';
-            });
-            strengthLabel.textContent = STRENGTH_LABELS[score] || '';
-        });
-
-=======
         // 登录/注册成功后的跳转目标：优先回跳（如商城登录后返回商城），否则进角色仪表盘
         function successDestination(user) {
             const redirect = getRedirect();
@@ -1011,7 +662,6 @@
         }
 
         // 登录
->>>>>>> 35c2fdfad61a3dec5a26fc09907416111b73677d
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             hideMessages();
@@ -1058,6 +708,7 @@
             }
         });
 
+        // 注册
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             hideMessages();
@@ -1066,19 +717,14 @@
             const display_name = document.getElementById('regDisplayName').value.trim();
             const username = document.getElementById('regUsername').value.trim();
             const password = document.getElementById('regPassword').value;
-            const confirm = document.getElementById('regConfirmPassword').value;
             const role = selectedRole;
-            const agree = document.getElementById('agreeTerms').checked;
 
-            if (!display_name) return showError('请填写显示名称');
-            if (!/^[A-Za-z0-9_]{3,20}$/.test(username)) return showError('用户名须为 3–20 位字母、数字或下划线');
-            if (password.length < 6) return showError('密码至少 6 位');
-            if (password !== confirm) return showError('两次输入的密码不一致');
-            if (!agree) return showError('请先同意用户协议和隐私政策');
-
-            const btn = document.getElementById('registerBtn');
-            btn.disabled = true;
-            btn.textContent = '注册中...';
+            if (!display_name || !username || !password) {
+                return showError('请填写所有字段');
+            }
+            if (password.length < 6) {
+                return showError('密码至少6位');
+            }
 
             const btn = e.target.querySelector('.auth-submit');
             btn.disabled = true;
@@ -1108,10 +754,6 @@
                 }, 800);
             } catch (err) {
                 showError('网络错误，请检查服务器是否启动');
-<<<<<<< HEAD
-            } finally {
-=======
->>>>>>> 35c2fdfad61a3dec5a26fc09907416111b73677d
                 btn.disabled = false;
                 btn.textContent = '注 册';
             }

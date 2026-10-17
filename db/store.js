@@ -15,7 +15,6 @@
  *   - 单进程部署：内存为唯一写入口，多实例部署会出现缓存不一致
  *   - 数据量建议在万级以内（每次启动全量载入）
  */
-<<<<<<< HEAD
 const fs = require('fs');
 const path = require('path');
 const { getPool, toDbDate, fromDbDate, toJson, fromJson } = require('./pool');
@@ -23,21 +22,17 @@ const { getPool, toDbDate, fromDbDate, toJson, fromJson } = require('./pool');
 const JSON_FILE = path.join(__dirname, '..', 'database.json');
 let mode = 'mysql';
 
-=======
-const { getPool, toDbDate, fromDbDate, toJson, fromJson } = require('./pool');
-
->>>>>>> 35c2fdfad61a3dec5a26fc09907416111b73677d
 // ---------- 表结构映射：内存字段 ↔ MySQL 列 ----------
 // json: 需要序列化为 JSON 的字段；dates: 需要做时间转换的字段
 const TABLES = {
     users: {
-        columns: ['id', 'username', 'password', 'role', 'display_name', 'phone', 'avatar', 'addresses', 'created_at'],
+        columns: ['id', 'username', 'password', 'role', 'registration_role', 'display_name', 'phone', 'avatar', 'addresses', 'created_at'],
         json: ['addresses'],
         dates: ['created_at']
     },
     merchants: {
         columns: ['id', 'user_id', 'shop_name', 'intro', 'heritage_category', 'contact_phone',
-            'qualification_note', 'status', 'permissions', 'created_at', 'updated_at'],
+            'qualification_note', 'status', 'approved_by', 'permissions', 'created_at', 'updated_at'],
         json: ['permissions'],
         dates: ['created_at', 'updated_at']
     },
@@ -98,7 +93,7 @@ const TABLES = {
         dates: ['created_at', 'updated_at']
     },
     conversations: {
-        columns: ['id', 'user_id', 'developer_id', 'created_at'],
+        columns: ['id', 'user_id', 'developer_id', 'product_id', 'product_name', 'created_at'],
         json: [],
         dates: ['created_at']
     },
@@ -209,7 +204,6 @@ async function loadAllFromMySQL() {
     return data;
 }
 
-<<<<<<< HEAD
 function loadAllFromJSON() {
     if (!fs.existsSync(JSON_FILE)) {
         const empty = { users: [], conversations: [], messages: [], addresses: [],
@@ -231,40 +225,85 @@ function loadAllFromJSON() {
     }
 }
 
+async function ensureRegistrationRoleColumn() {
+    const pool = getPool();
+    const [columns] = await pool.query("SHOW COLUMNS FROM `users` LIKE 'registration_role'");
+    if (columns.length) return;
+
+    await pool.query(
+        "ALTER TABLE `users` ADD COLUMN `registration_role` VARCHAR(32) NULL AFTER `role`"
+    );
+    await pool.query(`
+        UPDATE users u
+        SET registration_role = CASE
+            WHEN u.role IN ('user', 'buyer') THEN 'buyer'
+            WHEN u.role IN ('developer', 'artisan') AND EXISTS (
+                SELECT 1 FROM merchants m WHERE m.user_id = u.id AND m.status = 'approved'
+            ) THEN 'buyer'
+            WHEN u.role IN ('developer', 'artisan') THEN 'artisan'
+            ELSE u.role
+        END
+        WHERE registration_role IS NULL OR registration_role = ''
+    `);
+    await pool.query(
+        "ALTER TABLE `users` MODIFY COLUMN `registration_role` VARCHAR(32) NOT NULL DEFAULT 'buyer'"
+    );
+}
+
+async function ensureMerchantApprovedByColumn() {
+    const pool = getPool();
+    const [columns] = await pool.query("SHOW COLUMNS FROM `merchants` LIKE 'approved_by'");
+    if (columns.length) return;
+
+    await pool.query(
+        "ALTER TABLE `merchants` ADD COLUMN `approved_by` BIGINT NULL AFTER `status`"
+    );
+}
+
+async function ensureConversationProductColumns() {
+    const pool = getPool();
+    const [columns] = await pool.query("SHOW COLUMNS FROM `conversations` LIKE 'product_id'");
+    if (!columns.length) {
+        await pool.query(
+            "ALTER TABLE `conversations` ADD COLUMN `product_id` BIGINT NULL AFTER `developer_id`"
+        );
+    }
+    const [productNameColumns] = await pool.query("SHOW COLUMNS FROM `conversations` LIKE 'product_name'");
+    if (!productNameColumns.length) {
+        await pool.query(
+            "ALTER TABLE `conversations` ADD COLUMN `product_name` VARCHAR(255) NOT NULL DEFAULT '' AFTER `product_id`"
+        );
+    }
+}
+
 /**
  * 初始化：优先从 MySQL 载入，失败则降级为 JSON 文件模式
  * @returns {Promise<Object>} 内存数据对象
  */
 async function init() {
+    if ((process.env.DB_MODE || 'mysql').toLowerCase() === 'json') {
+        cache = loadAllFromJSON();
+        snapshot = clone(cache);
+        mode = 'json';
+        return cache;
+    }
+
     try {
+        await ensureRegistrationRoleColumn();
+        await ensureMerchantApprovedByColumn();
+        await ensureConversationProductColumns();
         cache = await loadAllFromMySQL();
         snapshot = clone(cache);
         mode = 'mysql';
         return cache;
     } catch (mysqlErr) {
-        console.warn('⚠️  MySQL 连接失败，自动降级为 JSON 文件存储模式：', mysqlErr.message);
-        cache = loadAllFromJSON();
-        snapshot = clone(cache);
-        mode = 'json';
-        return cache;
+        throw new Error(`MySQL 数据层初始化失败；为防止切换到另一份数据库导致账号“丢失”，已停止启动而非回退到 JSON：${mysqlErr.message}`);
     }
 }
 
 /** 当前存储模式 ('mysql' | 'json') */
 function getMode() { return mode; }
 
-=======
-/**
- * 初始化：从 MySQL 载入数据
- * @returns {Promise<Object>} 内存数据对象
- */
-async function init() {
-    cache = await loadAllFromMySQL();
-    snapshot = clone(cache);
-    return cache;
-}
-
->>>>>>> 35c2fdfad61a3dec5a26fc09907416111b73677d
 // ---------- 读取 ----------
 
 /**
@@ -359,7 +398,6 @@ async function syncOrderItems(orders) {
  * @param {Object} current 当前内存数据
  */
 async function persistChanges(current) {
-<<<<<<< HEAD
     if (mode === 'json') {
         fs.writeFileSync(JSON_FILE, JSON.stringify(current, null, 2), 'utf8');
         snapshot = clone(current);
@@ -369,12 +407,6 @@ async function persistChanges(current) {
         const before = JSON.stringify(snapshot[table] || []);
         const after = JSON.stringify(current[table] || []);
         if (before === after) continue;
-=======
-    for (const table of Object.keys(TABLES)) {
-        const before = JSON.stringify(snapshot[table] || []);
-        const after = JSON.stringify(current[table] || []);
-        if (before === after) continue;   // 该表无变化，跳过
->>>>>>> 35c2fdfad61a3dec5a26fc09907416111b73677d
         await syncTable(table, current[table] || []);
         if (table === 'orders') {
             await syncOrderItems(current.orders || []);
@@ -392,10 +424,14 @@ async function persistChanges(current) {
  * @param {Object} data 内存数据对象
  * @returns {Promise<void>} 本次写入完成的 Promise（不 await 也不影响流程）
  */
-function saveDB(data) {
-<<<<<<< HEAD
+function queueSave(data) {
+    // 更新内存引用（业务代码可能传入新的 db 对象）
     cache = data;
-    const task = writeQueue.then(() => persistChanges(data)).catch(e => {
+    const task = writeQueue.then(async () => {
+        await persistChanges(data);
+        lastError = null;
+    });
+    writeQueue = task.catch(e => {
         lastError = e;
         if (mode === 'json') {
             console.error('❌ 写入 database.json 失败：', e.message);
@@ -403,17 +439,16 @@ function saveDB(data) {
             console.error('❌ 数据持久化到 MySQL 失败：', e.message);
             console.error('   内存数据仍然有效，但数据库可能未同步。请检查 MySQL 连接。');
         }
-=======
-    // 更新内存引用（业务代码可能传入新的 db 对象）
-    cache = data;
-    const task = writeQueue.then(() => persistChanges(data)).catch(e => {
-        lastError = e;
-        console.error('❌ 数据持久化到 MySQL 失败：', e.message);
-        console.error('   内存数据仍然有效，但数据库可能未同步。请检查 MySQL 连接。');
->>>>>>> 35c2fdfad61a3dec5a26fc09907416111b73677d
     });
-    writeQueue = task;
     return task;
+}
+
+function saveDB(data) {
+    return queueSave(data).catch(() => {});
+}
+
+function saveDBDurable(data) {
+    return queueSave(data);
 }
 
 /**
@@ -436,28 +471,17 @@ module.exports = {
     init,
     loadDB,
     saveDB,
+    saveDBDurable,
     flush,
     getLastError,
-<<<<<<< HEAD
     getMode,
     TABLES,
     NEXT_ID_KEYS,
     _internal: {
         loadAllFromMySQL,
         loadAllFromJSON,
-=======
-    TABLES,
-    NEXT_ID_KEYS,
-    // 供测试使用
-    _internal: {
-        loadAllFromMySQL,
->>>>>>> 35c2fdfad61a3dec5a26fc09907416111b73677d
         persistChanges,
         getSnapshot: () => snapshot,
         reset: () => { cache = null; snapshot = null; writeQueue = Promise.resolve(); lastError = null; }
     }
-<<<<<<< HEAD
 };
-=======
-};
->>>>>>> 35c2fdfad61a3dec5a26fc09907416111b73677d

@@ -106,6 +106,15 @@ function isValidRole(role) {
     return Object.values(ROLE_TYPES).includes(normalizeRole(role));
 }
 
+function getRegistrationRole(user, db = loadDB()) {
+    if (user.registration_role) return normalizeRole(user.registration_role);
+    const isApprovedMerchant = db.merchants.some(merchant =>
+        String(merchant.user_id) === String(user.id) && merchant.status === 'approved');
+    return normalizeRole(user.role) === ROLE_TYPES.ARTISAN && isApprovedMerchant
+        ? ROLE_TYPES.BUYER
+        : normalizeRole(user.role);
+}
+
 function requireRole(requiredRoles) {
     return (req, res, next) => {
         if (!req.user) return res.status(401).json({ error: '请先登录' });
@@ -115,6 +124,36 @@ function requireRole(requiredRoles) {
         }
         next();
     };
+}
+
+function requireDeveloperApprover(req, res, next) {
+    const db = loadDB();
+    const user = db.users.find(item => String(item.id) === String(req.user.id));
+    if (!user) return res.status(401).json({ error: '用户不存在，请重新登录' });
+
+    const registrationRole = getRegistrationRole(user, db);
+    if (![ROLE_TYPES.ARTISAN, ROLE_TYPES.ADMIN].includes(registrationRole)) {
+        return res.status(403).json({ error: '只有开发者或管理员可以审核商家申请' });
+    }
+    next();
+}
+
+function requireApprovedMerchant(req, res, next) {
+    const db = loadDB();
+    const merchant = db.merchants.find(m => m.user_id === req.user.id);
+    if (!merchant) return res.status(403).json({ error: '请先提交商家入驻申请' });
+    if (merchant.status !== 'approved') {
+        return res.status(403).json({ error: '商家申请通过审核后才能管理或上架商品' });
+    }
+    req.merchant = merchant;
+    next();
+}
+
+function isPublishedMerchantProduct(db, product) {
+    const merchant = db.merchants.find(item =>
+        (product.merchant_user_id != null && item.user_id === product.merchant_user_id) ||
+        (product.merchant_id != null && item.id === product.merchant_id));
+    return product.status === 'published' && !product.is_deleted && merchant?.status === 'approved';
 }
 
 const BUSINESS_FLOW = {
@@ -1018,12 +1057,29 @@ function saveDB(data) {
     return store.saveDB(data);
 }
 
+function saveDBDurable(data) {
+    return store.saveDBDurable(data);
+}
+
 // 内存数据对象，由 store.init() 在服务启动时填充
 let db = null;
 
 // ============ 健康检查 ============
 // 供 PM2 / Nginx / 负载均衡探活：无需鉴权，返回服务与数据库状态
 app.get('/api/health', async (req, res) => {
+    const mode = store.getMode();
+    if (mode === 'json') {
+        const lastErr = store.getLastError();
+        return res.status(lastErr ? 503 : 200).json({
+            status: lastErr ? 'degraded' : 'ok',
+            uptime_seconds: Math.round(process.uptime()),
+            db: 'json',
+            db_version: null,
+            last_persist_error: lastErr ? lastErr.message : null,
+            time: new Date().toISOString()
+        });
+    }
+
     const ping = await dbPool.ping();
     const lastErr = store.getLastError();
     // 仅以数据库连通性判定健康；持久化错误作为诊断信息返回（避免一次性错误永久置为不健康）
@@ -1069,8 +1125,15 @@ function authMiddleware(req, res, next) {
 
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
-        req.user = decoded;
-        touchPresence(decoded.id);   // 任意携带有效令牌的请求都刷新在线状态
+        const user = loadDB().users.find(item => String(item.id) === String(decoded.id));
+        if (!user) return res.status(401).json({ error: '用户不存在，请重新登录' });
+        req.user = {
+            ...decoded,
+            id: user.id,
+            role: user.role,
+            display_name: user.display_name || decoded.display_name
+        };
+        touchPresence(user.id);   // 任意携带有效令牌的请求都刷新在线状态
         next();
     } catch (e) {
         return res.status(401).json({ error: '登录已过期，请重新登录' });
@@ -1141,9 +1204,9 @@ function buildCartResponse(req, db, items) {
         let availableStock = 0;
         let currentPrice = Number(item.price) || 0;
 
-        if (!product || product.is_deleted || product.status === 'deleted') {
+        if (!product || !isPublishedMerchantProduct(db, product)) {
             productStatus = 'invalid';
-            warning = '该商品已下架或不存在';
+            warning = '该商品已下架、商家尚未通过审核或不存在';
         } else {
             availableStock = Number(product.stock) || 0;
             currentPrice = Number(product.price) || currentPrice;
@@ -1432,6 +1495,76 @@ function buildReviewStats(reviews = []) {
     };
 }
 
+function createProductReview({ order, user, productId, rating, content, anonymous }) {
+    const now = new Date().toISOString();
+    return {
+        id: `review_${uuidv4()}`,
+        order_id: order.id,
+        order_no: order.order_no || '',
+        user_id: user.id,
+        user_name: anonymous ? '匿名用户' : (user.display_name || user.username || '商城用户'),
+        product_id: productId,
+        rating,
+        content,
+        experience: '',
+        files: [],
+        parent_review_id: null,
+        created_at: now,
+        updated_at: now,
+        status: 'approved',
+        reply: null,
+        reply_at: null,
+        is_hidden: false,
+        is_blocked: false
+    };
+}
+
+function getProductReviewEligibility(db, userId, productId) {
+    const user = db.users.find(item => String(item.id) === String(userId));
+    if (!user) return { eligible: false, reason: 'login_required' };
+    if (getRegistrationRole(user, db) !== ROLE_TYPES.BUYER) {
+        return { eligible: false, reason: 'buyer_account_required' };
+    }
+
+    const matchingOrders = db.orders.filter(order =>
+        (String(order.user_id) === String(user.id) || String(order.buyer_id) === String(user.id)) &&
+        Array.isArray(order.items) &&
+        order.items.some(item => String(item.product_id) === String(productId)));
+    const submittedOrders = matchingOrders.filter(order =>
+        !['cancelled', 'refund_pending', 'refunded'].includes(order.status) && !order.is_closed);
+    if (!submittedOrders.length) {
+        return {
+            eligible: false,
+            reason: matchingOrders.length ? 'order_not_submitted' : 'purchase_required'
+        };
+    }
+
+    const order = submittedOrders.find(candidate =>
+        !db.reviews.some(review =>
+            String(review.order_id) === String(candidate.id) &&
+            String(review.product_id) === String(productId) &&
+            !review.parent_review_id));
+    if (!order) return { eligible: false, reason: 'already_reviewed' };
+    return { eligible: true, reason: '', order };
+}
+
+function isPublicProductReview(review, productId) {
+    return Number(review.product_id) === Number(productId) &&
+        (!review.status || review.status === 'approved') &&
+        !review.is_hidden &&
+        !review.is_blocked;
+}
+
+function toPublicProductReview(review) {
+    return {
+        id: review.id,
+        user_name: review.user_name,
+        rating: review.rating,
+        content: review.content || review.experience || review.additional_content || '',
+        created_at: review.created_at
+    };
+}
+
 function getReviewVisibilityState(review) {
     return {
         is_hidden: Boolean(review.is_hidden),
@@ -1448,9 +1581,9 @@ function createOrderFromItems(db, user, address, items, options = {}) {
     }
 
     for (const item of settlement.selectedItems) {
-        const product = db.products.find(p => p.id === item.product_id && !p.is_deleted && p.status !== 'deleted');
+        const product = db.products.find(p => p.id === item.product_id && isPublishedMerchantProduct(db, p));
         if (!product) {
-            throw new Error(`商品 ${item.title} 已下架或不存在`);
+            throw new Error(`商品 ${item.title} 已下架、商家尚未通过审核或不存在`);
         }
         if (product.stock < (Number(item.quantity) || 0)) {
             throw new Error(`商品 ${item.title} 库存不足`);
@@ -1599,6 +1732,7 @@ app.post('/api/register', async (req, res) => {
             username,
             password: hashedPassword,
             role: normalizedRole,
+            registration_role: normalizedRole,
             display_name,
             phone: phone || '',
             avatar: '',
@@ -1606,7 +1740,12 @@ app.post('/api/register', async (req, res) => {
             created_at: now
         };
         db.users.push(newUser);
-        saveDB(db);
+        try {
+            await saveDBDurable(db);
+        } catch (error) {
+            db.users = db.users.filter(user => String(user.id) !== String(id));
+            throw error;
+        }
         touchPresence(id);   // 注册即视为在线
 
         const token = jwt.sign(
@@ -1617,7 +1756,7 @@ app.post('/api/register', async (req, res) => {
 
         res.json({
             token,
-            user: { id, username, role: normalizedRole, display_name, phone }
+            user: { id, username, role: normalizedRole, registration_role: normalizedRole, display_name, phone }
         });
     } catch (e) {
         res.status(500).json({ error: '注册失败: ' + e.message });
@@ -1643,8 +1782,14 @@ app.post('/api/login', async (req, res) => {
         }
 
         const normalizedRole = normalizeRole(role);
+        if (![ROLE_TYPES.BUYER, ROLE_TYPES.ARTISAN, ROLE_TYPES.ADMIN].includes(normalizedRole)) {
+            return res.status(400).json({ error: '登录身份无效，请重新选择用户或开发者' });
+        }
+
         db = loadDB();
-        const user = db.users.find(u => u.username === username && normalizeRole(u.role) === normalizedRole);
+        const user = db.users.find(u => {
+            return u.username === username && getRegistrationRole(u, db) === normalizedRole;
+        });
 
         if (!user) {
             recordLoginFailure(failKey);
@@ -1685,6 +1830,7 @@ app.post('/api/login', async (req, res) => {
                 id: user.id,
                 username: user.username,
                 role: user.role,
+                registration_role: getRegistrationRole(user, db),
                 display_name: user.display_name,
                 phone: user.phone || ''
             }
@@ -1700,7 +1846,7 @@ app.get('/api/me', authMiddleware, (req, res) => {
     const user = db.users.find(u => u.id === req.user.id);
     if (!user) return res.status(404).json({ error: '用户不存在' });
     const { password, ...userInfo } = user;
-    res.json(userInfo);
+    res.json({ ...userInfo, registration_role: getRegistrationRole(user, db) });
 });
 
 // 获取用户列表（管理员可查看全部，其他角色仅看自己）
@@ -1747,8 +1893,7 @@ app.get('/api/users/manage', authMiddleware, requireRole([ROLE_TYPES.ARTISAN, RO
     });
 });
 
-<<<<<<< HEAD
-=======
+
 // 通过用户名查找用户（用于添加好友）
 // 注意：必须定义在 /api/users/:id 之前，否则 "find" 会被当作 :id 匹配，
 //       前端拿到的会是 :id 的「用户不存在」，而不是本接口的「未找到该用户」。
@@ -1787,7 +1932,6 @@ app.get('/api/users/find', authMiddleware, (req, res) => {
     });
 });
 
->>>>>>> 35c2fdfad61a3dec5a26fc09907416111b73677d
 // 查询单个用户信息
 app.get('/api/users/:id', authMiddleware, (req, res) => {
     db = loadDB();
@@ -1853,26 +1997,30 @@ app.get('/api/contacts', authMiddleware, (req, res) => {
 // 双方都收不到对方发的消息。同样的问题在开发者面板（role=developer/artisan）之间也会出现。
 // 下面统一按「无序对」处理。
 function isConversationParty(conv, userId) {
-    return conv.user_id === userId || conv.developer_id === userId;
+    return String(conv.user_id) === String(userId) || String(conv.developer_id) === String(userId);
 }
 
 // 取出会话里「对方」的 id
 function otherPartyId(conv, userId) {
-    return conv.user_id === userId ? conv.developer_id : conv.user_id;
+    return String(conv.user_id) === String(userId) ? conv.developer_id : conv.user_id;
 }
 
 // 找出两个人之间的全部会话（历史镜像会话可能不止一个）
-function conversationsBetween(db, idA, idB) {
-    return db.conversations.filter(c =>
-        (c.user_id === idA && c.developer_id === idB) ||
-        (c.user_id === idB && c.developer_id === idA)
-    );
+function conversationsBetween(db, idA, idB, productId) {
+    return db.conversations.filter(c => {
+        const samePair = (
+            (String(c.user_id) === String(idA) && String(c.developer_id) === String(idB)) ||
+            (String(c.user_id) === String(idB) && String(c.developer_id) === String(idA))
+        );
+        if (!samePair || productId === undefined) return samePair;
+        return String(c.product_id || '') === String(productId || '');
+    });
 }
 
 // 与某个会话属于「同一对用户」的全部会话 id（含它自己）。
 // 历史数据里同一对用户可能残留多个镜像会话，读取时要一并带上，否则旧消息看不见。
 function siblingConversationIds(db, conv) {
-    return conversationsBetween(db, conv.user_id, conv.developer_id).map(c => c.id);
+    return conversationsBetween(db, conv.user_id, conv.developer_id, conv.product_id ?? null).map(c => c.id);
 }
 
 // 获取或创建对话（需要是好友关系）
@@ -1898,7 +2046,7 @@ app.post('/api/conversations', authMiddleware, (req, res) => {
 
     // 按「无序对」复用已有会话：不论谁先发起、谁占哪个槽，同一对人只有一个会话。
     // 若按方向精确匹配（旧写法），两个同角色账号会各建一个镜像会话，消息互相看不见。
-    let conv = conversationsBetween(db, req.user.id, target.id)[0];
+    let conv = conversationsBetween(db, req.user.id, target.id, null)[0];
 
     if (!conv) {
         const id = db.nextId.conversation++;
@@ -1906,6 +2054,8 @@ app.post('/api/conversations', authMiddleware, (req, res) => {
             id,
             user_id: userId,
             developer_id: devId,
+            product_id: null,
+            product_name: '',
             created_at: new Date().toISOString()
         };
         db.conversations.push(conv);
@@ -1915,10 +2065,66 @@ app.post('/api/conversations', authMiddleware, (req, res) => {
     res.json(conv);
 });
 
+app.post('/api/products/:id/contact', authMiddleware, async (req, res) => {
+    db = loadDB();
+    const productId = Number(req.params.id);
+    const product = db.products.find(item =>
+        Number(item.id) === productId && isPublishedMerchantProduct(db, item));
+    if (!product) return res.status(404).json({ error: '商品不存在或已下架' });
+
+    const buyer = db.users.find(item => String(item.id) === String(req.user.id));
+    if (!buyer || getRegistrationRole(buyer, db) !== ROLE_TYPES.BUYER) {
+        return res.status(403).json({ error: '请使用用户账号联系商家' });
+    }
+
+    const merchant = db.users.find(item => String(item.id) === String(product.merchant_user_id));
+    if (!merchant) return res.status(404).json({ error: '商家账号不存在' });
+    if (String(merchant.id) === String(buyer.id)) {
+        return res.status(400).json({ error: '不能联系自己的商家账号' });
+    }
+
+    let conversation = db.conversations.find(item =>
+        String(item.product_id || '') === String(product.id) &&
+        ((String(item.user_id) === String(buyer.id) && String(item.developer_id) === String(merchant.id)) ||
+         (String(item.user_id) === String(merchant.id) && String(item.developer_id) === String(buyer.id))));
+    if (!conversation) {
+        const nextConversationId = db.nextId.conversation;
+        conversation = {
+            id: nextConversationId,
+            user_id: buyer.id,
+            developer_id: merchant.id,
+            product_id: product.id,
+            product_name: product.title,
+            created_at: new Date().toISOString()
+        };
+        db.nextId.conversation += 1;
+        db.conversations.push(conversation);
+        try {
+            await saveDBDurable(db);
+        } catch (error) {
+            db.conversations = db.conversations.filter(item => item.id !== conversation.id);
+            db.nextId.conversation = nextConversationId;
+            console.error('❌ 创建商品咨询会话失败：', error.message);
+            return res.status(500).json({ error: '暂时无法创建商家会话，请稍后重试' });
+        }
+    }
+
+    return res.json({
+        ...conversation,
+        target_id: merchant.id,
+        target_name: merchant.display_name || merchant.username,
+        target_username: merchant.username || '',
+        target_product_id: product.id,
+        target_product_name: product.title,
+        unread: 0
+    });
+});
+
 // 获取我的对话列表
 app.get('/api/conversations', authMiddleware, (req, res) => {
     db = loadDB();
     const me = req.user.id;
+    const productOnly = req.query.product_only === 'true';
 
     // 按「对方」归并，而不是按「我占哪个槽」筛选。
     // 旧实现买家只看 user_id === 我、开发者只看 developer_id === 我，同角色双方
@@ -1927,25 +2133,31 @@ app.get('/api/conversations', authMiddleware, (req, res) => {
     // 未读数跨这些会话合并统计。
     const byOtherId = new Map();
 
-    db.conversations.filter(c => isConversationParty(c, me)).forEach(c => {
+    db.conversations.filter(c =>
+        isConversationParty(c, me) && (!productOnly || c.product_id)).forEach(c => {
         const otherId = otherPartyId(c, me);
-        const other = db.users.find(u => u.id === otherId);
+        const other = db.users.find(u => String(u.id) === String(otherId));
         if (!other) return;   // 对方账号已被删除，跳过
 
-        const kept = byOtherId.get(otherId);
+        const contextKey = `${otherId}:${c.product_id || ''}`;
+        const kept = byOtherId.get(contextKey);
         if (kept && kept.id <= c.id) return;
 
         const ids = siblingConversationIds(db, c);
         const unread = db.messages.filter(m =>
-            ids.includes(m.conversation_id) && m.sender_id !== me && !m.is_read
+            ids.some(id => String(id) === String(m.conversation_id)) &&
+            String(m.sender_id) !== String(me) &&
+            !m.is_read
         ).length;
 
-        byOtherId.set(otherId, {
+        byOtherId.set(contextKey, {
             ...c,
             target_id: otherId,
             target_name: other.display_name || '',
             target_username: other.username || '',
             target_avatar: other.avatar || '',
+            target_product_id: c.product_id || null,
+            target_product_name: c.product_name || '',
             unread
         });
     });
@@ -1997,7 +2209,7 @@ app.get('/api/conversations/:id/messages', authMiddleware, (req, res) => {
 });
 
 // 发送消息
-app.post('/api/conversations/:id/messages', authMiddleware, upload.single('file'), (req, res) => {
+app.post('/api/conversations/:id/messages', authMiddleware, upload.single('file'), async (req, res) => {
     db = loadDB();
     const convId = parseInt(req.params.id);
     const conv = db.conversations.find(c => c.id === convId);
@@ -2022,7 +2234,8 @@ app.post('/api/conversations/:id/messages', authMiddleware, upload.single('file'
         return res.status(400).json({ error: '消息内容不能为空' });
     }
 
-    const id = db.nextId.message++;
+    const id = db.nextId.message;
+    db.nextId.message += 1;
     const now = new Date().toISOString();
     const msg = {
         id,
@@ -2036,7 +2249,14 @@ app.post('/api/conversations/:id/messages', authMiddleware, upload.single('file'
         created_at: now
     };
     db.messages.push(msg);
-    saveDB(db);
+    try {
+        await saveDBDurable(db);
+    } catch (error) {
+        db.messages = db.messages.filter(message => message.id !== id);
+        db.nextId.message = id;
+        console.error('❌ 保存聊天消息失败：', error.message);
+        return res.status(500).json({ error: '消息发送失败，请稍后重试' });
+    }
 
     const sender = db.users.find(u => u.id === req.user.id);
     res.json({
@@ -2301,56 +2521,147 @@ app.get('/api/search', authMiddleware, (req, res) => {
 });
 
 // ============ 商家入驻与店铺接口 ============
-app.post('/api/merchants/apply', authMiddleware, (req, res) => {
-    db = loadDB();
-    const user = db.users.find(u => u.id === req.user.id);
-    if (!user) return res.status(404).json({ error: '用户不存在' });
-    if (!isArtisanRole(user.role)) {
-        return res.status(403).json({ error: '只有非遗手艺人商家可申请入驻' });
-    }
+app.post('/api/merchants/apply', authMiddleware, async (req, res) => {
+    try {
+        db = loadDB();
+        const user = db.users.find(u => String(u.id) === String(req.user.id));
+        if (!user) return res.status(404).json({ error: '用户不存在' });
+        if (!isBuyerRole(user.role) && !isArtisanRole(user.role)) {
+            return res.status(403).json({ error: '当前账号不能申请商家入驻' });
+        }
 
-    const { shop_name, intro, heritage_category, contact_phone, qualification_note } = req.body;
-    if (!shop_name || !intro || !heritage_category || !contact_phone) {
-        return res.status(400).json({ error: '店铺名称、简介、非遗类别和联系方式不能为空' });
-    }
-
-    let merchant = db.merchants.find(m => m.user_id === req.user.id);
-    const now = new Date().toISOString();
-
-    if (!merchant) {
-        merchant = {
-            id: db.nextId.merchant ? db.nextId.merchant++ : 1,
-            user_id: req.user.id,
+        const {
             shop_name,
             intro,
             heritage_category,
             contact_phone,
-            qualification_note: qualification_note || '',
-            status: 'pending',
-            created_at: now,
-            updated_at: now,
-            permissions: ['shop:view', 'product:manage', 'order:manage']
+            qualification_note = ''
+        } = req.body;
+        const application = {
+            shop_name: typeof shop_name === 'string' ? shop_name.trim() : '',
+            intro: typeof intro === 'string' ? intro.trim() : '',
+            heritage_category: typeof heritage_category === 'string' ? heritage_category.trim() : '',
+            contact_phone: typeof contact_phone === 'string' ? contact_phone.trim() : '',
+            qualification_note: typeof qualification_note === 'string' ? qualification_note.trim() : ''
         };
-        db.merchants.push(merchant);
-    } else {
-        merchant.shop_name = shop_name;
-        merchant.intro = intro;
-        merchant.heritage_category = heritage_category;
-        merchant.contact_phone = contact_phone;
-        merchant.qualification_note = qualification_note || merchant.qualification_note || '';
-        merchant.updated_at = now;
-    }
+        if (!application.shop_name || !application.intro || !application.heritage_category) {
+            return res.status(400).json({ error: '店铺名称、简介和非遗类别不能为空' });
+        }
+        if (!/^\d{11}$/.test(application.contact_phone)) {
+            return res.status(400).json({ error: '联系电话必须为11位数字' });
+        }
 
-    saveDB(db);
-    res.json(merchant);
+        let merchant = db.merchants.find(m => String(m.user_id) === String(req.user.id));
+        const now = new Date().toISOString();
+
+        if (merchant && merchant.status === 'pending') {
+            return res.status(409).json({ error: '商家申请已提交，正在等待开发者审核' });
+        }
+        if (merchant && merchant.status === 'approved') {
+            return res.status(409).json({ error: '该账号已成为商家' });
+        }
+
+        if (!merchant) {
+            merchant = {
+                id: db.nextId.merchant ? db.nextId.merchant++ : 1,
+                user_id: req.user.id,
+                ...application,
+                status: 'pending',
+                approved_by: null,
+                created_at: now,
+                updated_at: now,
+                permissions: ['shop:view', 'product:manage', 'order:manage']
+            };
+            db.merchants.push(merchant);
+        } else {
+            Object.assign(merchant, application);
+            merchant.status = 'pending';
+            merchant.approved_by = null;
+            merchant.updated_at = now;
+        }
+
+        await saveDBDurable(db);
+        const token = jwt.sign(
+            { id: user.id, username: user.username, role: user.role, display_name: user.display_name },
+            JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+        const { password, ...userInfo } = user;
+        res.json({ merchant, token, user: userInfo });
+    } catch (error) {
+        console.error('❌ 保存商家申请失败：', error.message);
+        res.status(500).json({ error: '商家申请保存失败，请稍后重试' });
+    }
+});
+
+app.get('/api/merchants/applications', authMiddleware, requireRole([ROLE_TYPES.ARTISAN, ROLE_TYPES.ADMIN]), requireDeveloperApprover, (req, res) => {
+    db = loadDB();
+    const applications = db.merchants
+        .filter(merchant => merchant.status === 'pending')
+        .map(merchant => {
+            const applicant = db.users.find(user => user.id === merchant.user_id);
+            return {
+                ...merchant,
+                applicant_name: applicant?.display_name || applicant?.username || '未知用户',
+                applicant_username: applicant?.username || ''
+            };
+        })
+        .sort((a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0));
+    res.json(applications);
+});
+
+app.get('/api/merchants/approved', authMiddleware, requireRole([ROLE_TYPES.ARTISAN, ROLE_TYPES.ADMIN]), requireDeveloperApprover, (req, res) => {
+    db = loadDB();
+    const applications = db.merchants
+        .filter(merchant => merchant.status === 'approved')
+        .map(merchant => {
+            const applicant = db.users.find(user => String(user.id) === String(merchant.user_id));
+            const approver = db.users.find(user => String(user.id) === String(merchant.approved_by));
+            return {
+                ...merchant,
+                applicant_name: applicant?.display_name || applicant?.username || '未知用户',
+                applicant_username: applicant?.username || '',
+                approver_name: approver?.display_name || approver?.username || ''
+            };
+        })
+        .sort((a, b) => new Date(b.updated_at || b.created_at || 0) - new Date(a.updated_at || a.created_at || 0));
+    res.json(applications);
+});
+
+app.post('/api/merchants/:id/approve', authMiddleware, requireRole([ROLE_TYPES.ARTISAN, ROLE_TYPES.ADMIN]), requireDeveloperApprover, async (req, res) => {
+    try {
+        db = loadDB();
+        const merchant = db.merchants.find(m => Number(m.id) === Number(req.params.id));
+        if (!merchant) return res.status(404).json({ error: '商家申请不存在' });
+        if (String(merchant.user_id) === String(req.user.id)) {
+            return res.status(403).json({ error: '不能审核自己的商家申请' });
+        }
+        if (merchant.status !== 'pending') {
+            return res.status(409).json({ error: '该申请已由其他开发者处理' });
+        }
+
+        const applicant = db.users.find(user => String(user.id) === String(merchant.user_id));
+        if (!applicant) return res.status(404).json({ error: '申请人账号不存在' });
+        merchant.status = 'approved';
+        merchant.approved_by = req.user.id;
+        merchant.updated_at = new Date().toISOString();
+        applicant.role = ROLE_TYPES.ARTISAN;
+        await saveDBDurable(db);
+        res.json({ success: true, merchant });
+    } catch (error) {
+        console.error('❌ 保存商家审批结果失败：', error.message);
+        res.status(500).json({ error: '审批结果保存失败，请稍后重试' });
+    }
 });
 
 app.get('/api/merchants/me', authMiddleware, (req, res) => {
     db = loadDB();
     const merchant = db.merchants.find(m => m.user_id === req.user.id);
     if (!merchant) return res.status(404).json({ error: '尚未申请入驻' });
+    const approver = db.users.find(user => String(user.id) === String(merchant.approved_by));
     res.json({
         ...merchant,
+        approver_name: approver?.display_name || approver?.username || '',
         certification: merchant.certification || {
             status: merchant.status || 'pending',
             note: merchant.qualification_note || '',
@@ -2463,10 +2774,10 @@ app.put('/api/merchants/permissions', authMiddleware, (req, res) => {
 });
 
 // ============ 商品基础管理接口 ============
-app.post('/api/products', authMiddleware, requireRole([ROLE_TYPES.ARTISAN]), (req, res) => {
+app.post('/api/products', authMiddleware, requireRole([ROLE_TYPES.ARTISAN]), requireApprovedMerchant, async (req, res) => {
+    let product;
     db = loadDB();
-    const merchant = db.merchants.find(m => m.user_id === req.user.id);
-    if (!merchant) return res.status(404).json({ error: '请先完成商家入驻' });
+    const merchant = req.merchant;
 
     const {
         title,
@@ -2495,8 +2806,22 @@ app.post('/api/products', authMiddleware, requireRole([ROLE_TYPES.ARTISAN]), (re
     if (!title || !description || price === undefined || stock === undefined) {
         return res.status(400).json({ error: '商品标题、描述、价格和库存不能为空' });
     }
+    const priceText = typeof price === 'number' || typeof price === 'string' ? String(price).trim() : '';
+    const stockText = typeof stock === 'number' || typeof stock === 'string' ? String(stock).trim() : '';
+    if (!/^\d+(?:\.\d{1,2})?$/.test(priceText) || Number(priceText) > 99999999.99) {
+        return res.status(400).json({ error: '售价必须为不超过 8 位整数、最多 2 位小数的非负数字' });
+    }
+    if (!/^\d+$/.test(stockText) || Number(stockText) > 2147483647) {
+        return res.status(400).json({ error: '库存必须为不超过 2147483647 的非负整数' });
+    }
+    const productPrice = Number(priceText);
+    const productStock = Number(stockText);
+    const productStatus = status || 'published';
+    if (!['draft', 'published'].includes(productStatus)) {
+        return res.status(400).json({ error: '商品状态无效' });
+    }
 
-    const product = {
+    product = {
         id: db.nextId.product ? db.nextId.product++ : 1,
         merchant_id: merchant.id,
         merchant_user_id: req.user.id,
@@ -2506,8 +2831,8 @@ app.post('/api/products', authMiddleware, requireRole([ROLE_TYPES.ARTISAN]), (re
         brief: brief || description,
         description,
         detail_description: detail_description || description,
-        price: Number(price),
-        stock: Number(stock),
+        price: productPrice,
+        stock: productStock,
         category: category || '非遗手作',
         tags: Array.isArray(tags) ? tags : [],
         specifications: Array.isArray(specifications) ? specifications : [],
@@ -2523,22 +2848,36 @@ app.post('/api/products', authMiddleware, requireRole([ROLE_TYPES.ARTISAN]), (re
         recommend_reason: recommend_reason || '',
         featured_section: featured_section || '',
         sales_count: 0,
-        status: status || 'published',
+        status: productStatus,
         is_deleted: false,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
     };
 
     db.products.push(product);
-    saveDB(db);
-    res.json(product);
+    try {
+        await saveDBDurable(db);
+        res.json(product);
+    } catch (error) {
+        db.products = db.products.filter(item => String(item.id) !== String(product.id));
+        console.error('❌ 保存商品失败：', error.message);
+        res.status(500).json({ error: '商品保存失败，未能上架，请稍后重试' });
+    }
 });
 
-app.get('/api/products', authMiddleware, (req, res) => {
+app.get('/api/merchant/products', authMiddleware, requireRole([ROLE_TYPES.ARTISAN]), requireApprovedMerchant, (req, res) => {
+    db = loadDB();
+    const products = db.products
+        .filter(product => product.merchant_user_id === req.user.id && !product.is_deleted && product.status !== 'deleted')
+        .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+    res.json(products);
+});
+
+app.get('/api/products', optionalAuthMiddleware, (req, res) => {
     db = loadDB();
     const { q = '', category = '', tag = '', sort = 'newest', page = 1, limit = 20 } = req.query;
 
-    let products = db.products.filter(p => !p.is_deleted && p.status !== 'deleted');
+    let products = db.products.filter(product => isPublishedMerchantProduct(db, product));
 
     if (q) {
         const keyword = String(q).toLowerCase();
@@ -2596,7 +2935,7 @@ app.get('/api/products/recommend', authMiddleware, (req, res) => {
     db = loadDB();
     const limit = Math.min(10, Math.max(1, Number(req.query.limit || 4)));
     const products = db.products
-        .filter(p => !p.is_deleted && p.status !== 'deleted' && p.is_recommended)
+        .filter(p => isPublishedMerchantProduct(db, p) && p.is_recommended)
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
         .slice(0, limit);
     res.json(products);
@@ -2606,7 +2945,7 @@ app.get('/api/products/featured', authMiddleware, (req, res) => {
     db = loadDB();
     const limit = Math.min(10, Math.max(1, Number(req.query.limit || 4)));
     const products = db.products
-        .filter(p => !p.is_deleted && p.status !== 'deleted' && (p.featured_section || p.is_recommended))
+        .filter(p => isPublishedMerchantProduct(db, p) && (p.featured_section || p.is_recommended))
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
         .slice(0, limit);
     res.json(products);
@@ -2614,18 +2953,21 @@ app.get('/api/products/featured', authMiddleware, (req, res) => {
 
 app.get('/api/products/categories', authMiddleware, (req, res) => {
     db = loadDB();
-    const categories = [...new Set(db.products.filter(p => !p.is_deleted && p.status !== 'deleted').map(p => p.category).filter(Boolean))];
+    const categories = [...new Set(db.products
+        .filter(product => isPublishedMerchantProduct(db, product))
+        .map(product => product.category)
+        .filter(Boolean))];
     res.json(categories);
 });
 
-app.get('/api/products/:id', authMiddleware, (req, res) => {
+app.get('/api/products/:id', optionalAuthMiddleware, (req, res) => {
     db = loadDB();
-    const product = db.products.find(p => p.id === Number(req.params.id) && !p.is_deleted);
+    const product = db.products.find(p => p.id === Number(req.params.id) && isPublishedMerchantProduct(db, p));
     if (!product) return res.status(404).json({ error: '商品不存在' });
     res.json(product);
 });
 
-app.put('/api/products/:id', authMiddleware, requireRole([ROLE_TYPES.ARTISAN]), (req, res) => {
+app.put('/api/products/:id', authMiddleware, requireRole([ROLE_TYPES.ARTISAN]), requireApprovedMerchant, (req, res) => {
     db = loadDB();
     const product = db.products.find(p => p.id === Number(req.params.id));
     if (!product) return res.status(404).json({ error: '商品不存在' });
@@ -2676,14 +3018,19 @@ app.put('/api/products/:id', authMiddleware, requireRole([ROLE_TYPES.ARTISAN]), 
     if (is_recommended !== undefined) product.is_recommended = Boolean(is_recommended);
     if (recommend_reason !== undefined) product.recommend_reason = recommend_reason;
     if (featured_section !== undefined) product.featured_section = featured_section;
-    if (status !== undefined) product.status = status;
+    if (status !== undefined) {
+        if (!['draft', 'published'].includes(status)) {
+            return res.status(400).json({ error: '商品状态无效' });
+        }
+        product.status = status;
+    }
     product.updated_at = new Date().toISOString();
 
     saveDB(db);
     res.json(product);
 });
 
-app.put('/api/products/:id/content', authMiddleware, requireRole([ROLE_TYPES.ARTISAN]), (req, res) => {
+app.put('/api/products/:id/content', authMiddleware, requireRole([ROLE_TYPES.ARTISAN]), requireApprovedMerchant, (req, res) => {
     db = loadDB();
     const product = db.products.find(p => p.id === Number(req.params.id));
     if (!product) return res.status(404).json({ error: '商品不存在' });
@@ -2724,7 +3071,7 @@ app.put('/api/products/:id/content', authMiddleware, requireRole([ROLE_TYPES.ART
     res.json(product);
 });
 
-app.put('/api/products/:id/attributes', authMiddleware, requireRole([ROLE_TYPES.ARTISAN]), (req, res) => {
+app.put('/api/products/:id/attributes', authMiddleware, requireRole([ROLE_TYPES.ARTISAN]), requireApprovedMerchant, (req, res) => {
     db = loadDB();
     const product = db.products.find(p => p.id === Number(req.params.id));
     if (!product) return res.status(404).json({ error: '商品不存在' });
@@ -2742,7 +3089,7 @@ app.put('/api/products/:id/attributes', authMiddleware, requireRole([ROLE_TYPES.
     res.json(product);
 });
 
-app.patch('/api/products/:id/status', authMiddleware, requireRole([ROLE_TYPES.ARTISAN]), (req, res) => {
+app.patch('/api/products/:id/status', authMiddleware, requireRole([ROLE_TYPES.ARTISAN]), requireApprovedMerchant, (req, res) => {
     db = loadDB();
     const product = db.products.find(p => p.id === Number(req.params.id));
     if (!product) return res.status(404).json({ error: '商品不存在' });
@@ -2750,6 +3097,7 @@ app.patch('/api/products/:id/status', authMiddleware, requireRole([ROLE_TYPES.AR
 
     const { status } = req.body;
     if (!status) return res.status(400).json({ error: '请提供状态' });
+    if (!['draft', 'published'].includes(status)) return res.status(400).json({ error: '商品状态无效' });
     product.status = status;
     product.updated_at = new Date().toISOString();
 
@@ -2757,7 +3105,7 @@ app.patch('/api/products/:id/status', authMiddleware, requireRole([ROLE_TYPES.AR
     res.json(product);
 });
 
-app.patch('/api/products/:id/stock', authMiddleware, requireRole([ROLE_TYPES.ARTISAN]), (req, res) => {
+app.patch('/api/products/:id/stock', authMiddleware, requireRole([ROLE_TYPES.ARTISAN]), requireApprovedMerchant, (req, res) => {
     db = loadDB();
     const product = db.products.find(p => p.id === Number(req.params.id));
     if (!product) return res.status(404).json({ error: '商品不存在' });
@@ -2771,7 +3119,7 @@ app.patch('/api/products/:id/stock', authMiddleware, requireRole([ROLE_TYPES.ART
     res.json(product);
 });
 
-app.patch('/api/products/:id/price', authMiddleware, requireRole([ROLE_TYPES.ARTISAN]), (req, res) => {
+app.patch('/api/products/:id/price', authMiddleware, requireRole([ROLE_TYPES.ARTISAN]), requireApprovedMerchant, (req, res) => {
     db = loadDB();
     const product = db.products.find(p => p.id === Number(req.params.id));
     if (!product) return res.status(404).json({ error: '商品不存在' });
@@ -2785,7 +3133,7 @@ app.patch('/api/products/:id/price', authMiddleware, requireRole([ROLE_TYPES.ART
     res.json(product);
 });
 
-app.post('/api/products/:id/publish', authMiddleware, requireRole([ROLE_TYPES.ARTISAN]), (req, res) => {
+app.post('/api/products/:id/publish', authMiddleware, requireRole([ROLE_TYPES.ARTISAN]), requireApprovedMerchant, (req, res) => {
     db = loadDB();
     const product = db.products.find(p => p.id === Number(req.params.id));
     if (!product) return res.status(404).json({ error: '商品不存在' });
@@ -2797,7 +3145,7 @@ app.post('/api/products/:id/publish', authMiddleware, requireRole([ROLE_TYPES.AR
     res.json(product);
 });
 
-app.post('/api/products/:id/unpublish', authMiddleware, requireRole([ROLE_TYPES.ARTISAN]), (req, res) => {
+app.post('/api/products/:id/unpublish', authMiddleware, requireRole([ROLE_TYPES.ARTISAN]), requireApprovedMerchant, (req, res) => {
     db = loadDB();
     const product = db.products.find(p => p.id === Number(req.params.id));
     if (!product) return res.status(404).json({ error: '商品不存在' });
@@ -2809,7 +3157,7 @@ app.post('/api/products/:id/unpublish', authMiddleware, requireRole([ROLE_TYPES.
     res.json(product);
 });
 
-app.delete('/api/products/:id', authMiddleware, requireRole([ROLE_TYPES.ARTISAN]), (req, res) => {
+app.delete('/api/products/:id', authMiddleware, requireRole([ROLE_TYPES.ARTISAN]), requireApprovedMerchant, (req, res) => {
     db = loadDB();
     const product = db.products.find(p => p.id === Number(req.params.id));
     if (!product) return res.status(404).json({ error: '商品不存在' });
@@ -2845,7 +3193,7 @@ app.post('/api/cart/items', optionalAuthMiddleware, (req, res) => {
 
     if (!product_id) return res.status(400).json({ error: '请选择商品' });
 
-    const product = db.products.find(p => p.id === Number(product_id) && !p.is_deleted && p.status !== 'deleted');
+    const product = db.products.find(p => p.id === Number(product_id) && isPublishedMerchantProduct(db, p));
     if (!product) return res.status(404).json({ error: '商品不存在或已下架' });
 
     const qty = Math.max(1, Number(quantity) || 1);
@@ -2903,7 +3251,7 @@ app.put('/api/cart/items/:productId', optionalAuthMiddleware, (req, res) => {
     const cartItem = db.carts.find(item => item.product_id === productId && (authUserId ? item.user_id === authUserId : item.guest_id === guestId));
     if (!cartItem) return res.status(404).json({ error: '购物车中不存在该商品' });
 
-    const product = db.products.find(p => p.id === productId && !p.is_deleted && p.status !== 'deleted');
+    const product = db.products.find(p => p.id === productId && isPublishedMerchantProduct(db, p));
     if (!product) return res.status(404).json({ error: '商品不存在或已下架' });
 
     if (quantity !== undefined) {
@@ -3008,7 +3356,7 @@ app.post('/api/orders/direct', authMiddleware, (req, res) => {
 
     if (!product_id) return res.status(400).json({ error: '请选择商品' });
 
-    const product = db.products.find(p => p.id === Number(product_id) && !p.is_deleted && p.status !== 'deleted');
+    const product = db.products.find(p => p.id === Number(product_id) && isPublishedMerchantProduct(db, p));
     if (!product) return res.status(404).json({ error: '商品不存在或已下架' });
 
     const qty = Math.max(1, Number(quantity) || 1);
@@ -3039,13 +3387,82 @@ app.post('/api/orders/direct', authMiddleware, (req, res) => {
     }
 });
 
+app.post('/api/orders/marketplace-checkout', authMiddleware, async (req, res) => {
+    db = loadDB();
+    const { items: requestedItems, shipping_address, remarks = '' } = req.body;
+    if (!Array.isArray(requestedItems) || requestedItems.length === 0) {
+        return res.status(400).json({ error: '请选择至少一件商品进行结算' });
+    }
+    if (requestedItems.length > 50) {
+        return res.status(400).json({ error: '单次最多提交50种商品' });
+    }
+
+    const recipientName = String(shipping_address?.recipient_name || '').trim();
+    const phone = String(shipping_address?.phone || '').trim();
+    const region = String(shipping_address?.region || '').trim();
+    const detail = String(shipping_address?.detail || '').trim();
+    if (!recipientName || !phone || !region || !detail) {
+        return res.status(400).json({ error: '请填写完整的收货人、联系电话和收货地址' });
+    }
+
+    const user = db.users.find(item => String(item.id) === String(req.user.id));
+    if (!user) return res.status(404).json({ error: '用户不存在' });
+
+    const orderItems = [];
+    const seenProductIds = new Set();
+    for (const item of requestedItems) {
+        const productId = Number(item?.product_id);
+        const quantity = Number(item?.quantity);
+        if (!Number.isSafeInteger(productId) || productId <= 0 ||
+            !Number.isSafeInteger(quantity) || quantity < 1 || quantity > 99) {
+            return res.status(400).json({ error: '商品编号或购买数量无效' });
+        }
+        if (seenProductIds.has(productId)) {
+            return res.status(400).json({ error: '结算商品重复，请刷新购物车后重试' });
+        }
+        seenProductIds.add(productId);
+
+        const product = db.products.find(candidate =>
+            Number(candidate.id) === productId && isPublishedMerchantProduct(db, candidate));
+        if (!product) return res.status(404).json({ error: '商品不存在或已下架，请移除后重新结算' });
+        orderItems.push({
+            product_id: product.id,
+            title: product.title,
+            price: Number(product.price),
+            quantity,
+            cover_image: product.cover_image || '',
+            selected: true
+        });
+    }
+
+    const address = {
+        id: null,
+        recipient_name: recipientName,
+        phone,
+        province: region,
+        city: '',
+        district: '',
+        detail
+    };
+    const snapshot = JSON.parse(JSON.stringify(db));
+    try {
+        const order = createOrderFromItems(db, user, address, orderItems, { remarks });
+        await saveDBDurable(db);
+        res.status(201).json(order);
+    } catch (error) {
+        Object.assign(db, snapshot);
+        console.error('❌ 商城订单保存失败：', error.message);
+        res.status(500).json({ error: '订单提交失败，请稍后重试' });
+    }
+});
+
 app.get('/api/orders/preview', authMiddleware, (req, res) => {
     db = loadDB();
     const { product_id, quantity = 1, address_id, coupon_code } = req.query;
 
     if (!product_id) return res.status(400).json({ error: '请选择商品' });
 
-    const product = db.products.find(p => p.id === Number(product_id) && !p.is_deleted && p.status !== 'deleted');
+    const product = db.products.find(p => p.id === Number(product_id) && isPublishedMerchantProduct(db, p));
     if (!product) return res.status(404).json({ error: '商品不存在或已下架' });
 
     const qty = Math.max(1, Number(quantity) || 1);
@@ -4037,11 +4454,11 @@ app.post('/api/reviews/:id/additional', authMiddleware, (req, res) => {
     res.json(review);
 });
 
-app.get('/api/products/:id/reviews', authMiddleware, (req, res) => {
+app.get('/api/products/:id/reviews', optionalAuthMiddleware, (req, res) => {
     db = loadDB();
     db.reviews = db.reviews || [];
     const { sort = 'time', rating, has_images, page = 1, pageSize = 10 } = req.query;
-    let reviews = db.reviews.filter(item => item.product_id === Number(req.params.id) && item.status !== 'hidden');
+    let reviews = db.reviews.filter(item => isPublicProductReview(item, req.params.id));
 
     if (rating) {
         reviews = reviews.filter(item => Number(item.rating) === Number(rating));
@@ -4059,15 +4476,83 @@ app.get('/api/products/:id/reviews', authMiddleware, (req, res) => {
     const end = start + Number(pageSize);
     const paged = reviews.slice(start, end);
 
+    const visibleReviews = db.reviews.filter(item => isPublicProductReview(item, req.params.id));
+    const userId = req.user
+        ? db.users.find(item => String(item.id) === String(req.user.id))?.id
+        : null;
+    const eligibility = getProductReviewEligibility(db, userId, req.params.id);
     res.json({
-        reviews: paged,
-        stats: buildReviewStats(reviews),
+        reviews: paged.map(toPublicProductReview),
+        stats: buildReviewStats(visibleReviews),
+        eligibility: { eligible: eligibility.eligible, reason: eligibility.reason },
         pagination: {
             page: Number(page),
             pageSize: Number(pageSize),
             total: reviews.length
         }
     });
+});
+
+app.post('/api/products/:id/reviews', authMiddleware, async (req, res) => {
+    db = loadDB();
+    db.reviews = db.reviews || [];
+    const productId = Number(req.params.id);
+    const { rating, content, anonymous = false } = req.body;
+    const normalizedContent = typeof content === 'string' ? content.trim() : '';
+
+    if (!Number.isSafeInteger(productId) || productId <= 0) {
+        return res.status(400).json({ error: '商品编号无效' });
+    }
+    const numericRating = Number(rating);
+    if (!['number', 'string'].includes(typeof rating) || !Number.isInteger(numericRating) ||
+        numericRating < 1 || numericRating > 5) {
+        return res.status(400).json({ error: '请选择1至5星评分' });
+    }
+    if (!normalizedContent || normalizedContent.length > 1000) {
+        return res.status(400).json({ error: '评价内容不能为空且不能超过1000字' });
+    }
+
+    const publishedMerchantProduct = db.products.some(product =>
+        Number(product.id) === productId && isPublishedMerchantProduct(db, product));
+    if (!publishedMerchantProduct) {
+        return res.status(404).json({ error: '商品不存在或已下架，无法评价' });
+    }
+
+    const eligibility = getProductReviewEligibility(db, req.user.id, productId);
+    if (!eligibility.eligible) {
+        const messages = {
+            buyer_account_required: '只有以用户身份注册的账号可以评价商品',
+            purchase_required: '购买该商品并完成订单后才可以评价',
+            order_not_completed: '该商品订单尚未完成，确认收货后即可评价',
+            already_reviewed: '该订单中的商品已评价'
+        };
+        const status = eligibility.reason === 'already_reviewed' ? 400 : 403;
+        return res.status(status).json({
+            error: messages[eligibility.reason] || '当前账号暂时无法评价该商品',
+            reason: eligibility.reason
+        });
+    }
+
+    const review = createProductReview({
+        order: eligibility.order,
+        user: req.user,
+        productId,
+        rating: numericRating,
+        content: normalizedContent,
+        anonymous: anonymous === true
+    });
+    db.reviews.push(review);
+    try {
+        await saveDBDurable(db);
+        return res.status(201).json({
+            review: toPublicProductReview(review),
+            stats: buildReviewStats(db.reviews.filter(item => isPublicProductReview(item, productId)))
+        });
+    } catch (error) {
+        db.reviews = db.reviews.filter(item => item.id !== review.id);
+        console.error('❌ 保存商城评价失败：', error.message);
+        return res.status(500).json({ error: '评价保存失败，请稍后重试' });
+    }
 });
 
 app.post('/api/reviews/:id/reply', authMiddleware, requireRole([ROLE_TYPES.ARTISAN, ROLE_TYPES.ADMIN]), (req, res) => {
@@ -4394,7 +4879,16 @@ module.exports = {
         createAfterSalesRequest,
         buildAfterSalesDecision,
         updateAfterSalesLogistics,
-        createReview
+        createReview,
+        createProductReview,
+        getProductReviewEligibility,
+        buildReviewStats,
+        isPublicProductReview,
+        toPublicProductReview,
+        conversationsBetween,
+        siblingConversationIds,
+        isConversationParty,
+        otherPartyId
     }
 };
 
@@ -4420,11 +4914,13 @@ if (require.main === module) {
  */
 async function startServer() {
     try {
-<<<<<<< HEAD
         db = await store.init();
         const mode = store.getMode();
         if (mode === 'mysql') {
-            console.log(`✅ MySQL 已连接（${process.env.DB_NAME || 'heritage'}），` +
+            const { ping } = require('./db/pool');
+            const status = await ping();
+            if (!status.ok) throw new Error(status.error);
+            console.log(`✅ 已连接 MySQL（${process.env.DB_NAME || 'heritage'}，${status.version}），` +
                 `载入用户 ${db.users.length} · 会话 ${db.conversations.length} · 消息 ${db.messages.length} 条`);
         } else {
             console.log(`✅ JSON 文件存储模式（database.json）已就绪，` +
@@ -4432,23 +4928,13 @@ async function startServer() {
         }
     } catch (e) {
         console.error('❌ 数据层初始化失败：', e.message);
-        console.error('   请检查 database.json 是否可读，或 MySQL 是否可用。');
-=======
-        const { ping } = require('./db/pool');
-        const status = await ping();
-        if (!status.ok) throw new Error(status.error);
-
-        db = await store.init();
-        console.log(`✅ 已连接 MySQL（${process.env.DB_NAME || 'heritage'}，${status.version}），` +
-            `载入用户 ${db.users.length} · 会话 ${db.conversations.length} · 消息 ${db.messages.length} 条`);
-    } catch (e) {
-        console.error('');
-        console.error('❌ 无法连接 MySQL，服务启动中止：', e.message);
-        console.error('   请检查：');
-        console.error('     1) MySQL 服务是否已启动（Windows 服务名通常为 MySQL90）');
-        console.error('     2) .env 中的 DB_HOST / DB_PORT / DB_USER / DB_PASSWORD / DB_NAME 是否正确');
-        console.error('     3) 是否已执行 node db/init.js 建表、node db/migrate.js 导入数据');
->>>>>>> 35c2fdfad61a3dec5a26fc09907416111b73677d
+        console.error('   请检查 DB_MODE 与对应的数据存储配置；服务不会在 MySQL 与 JSON 存储间自动切换。');
+        if (e.message && (e.message.includes('MySQL') || e.message.includes('ECONNREFUSED') || e.message.includes('ETIMEDOUT'))) {
+            console.error('   MySQL 相关排查步骤：');
+            console.error('     1) MySQL 服务是否已启动（Windows 服务名通常为 MySQL90）');
+            console.error('     2) .env 中的 DB_HOST / DB_PORT / DB_USER / DB_PASSWORD / DB_NAME 是否正确');
+            console.error('     3) 是否已执行 node db/init.js 建表、node db/migrate.js 导入数据');
+        }
         process.exit(1);
     }
 
@@ -4506,8 +4992,4 @@ async function startServer() {
     };
     process.on('SIGINT', () => shutdown('SIGINT'));
     process.on('SIGTERM', () => shutdown('SIGTERM'));
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 35c2fdfad61a3dec5a26fc09907416111b73677d

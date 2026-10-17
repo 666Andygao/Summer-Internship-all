@@ -1,3 +1,56 @@
+<<<<<<< HEAD
 ﻿node_modules/
 uploads/
 feiyi-ecommerce/dist/
+=======
+# ============================================================
+#  Git 忽略规则
+#  说明：本文件原先为 UTF-16 编码，Git 无法正确解析（导致规则全部失效），
+#        现已改为 UTF-8。请勿用记事本另存为 UTF-16。
+# ============================================================
+
+# ---------- 环境变量（含密钥，严禁提交）----------
+.env
+.env.local
+.env.*.local
+
+# ---------- 依赖与构建产物 ----------
+node_modules/
+feiyi-ecommerce/node_modules/
+# 注意：feiyi-ecommerce/dist 是「故意入库」的（仅 1.7MB / 18 个文件）。
+# 原因：server.js 只有找到 dist 才会挂载 /shop/，而本项目的网络环境无法访问 npm 源，
+#       队友和服务器都无法自行 npm run build。入库后 clone 下来商城即可用，零构建步骤。
+#       商城源码改动后，请在 feiyi-ecommerce 目录执行 npm run build 并把新 dist 一并提交。
+feiyi-ecommerce/dist-ssr/
+dist/
+build/
+# 例外：上面的 dist/ 会匹配任意层级的 dist 目录，这里显式把商城构建产物放回来
+#（server.js 找不到它就不挂载 /shop/，而本机网络访问不了 npm 源，无法自行构建）
+!feiyi-ecommerce/dist/
+
+# ---------- 3D 模型文件说明 ----------
+# .glb / .obj / .mtl 由 Git LFS 管理（见 .gitattributes），需要正常提交，故不在此忽略
+
+# ---------- 日志 ----------
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ---------- 编辑器 / 系统文件 ----------
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# ---------- Claude Code 本地设置 ----------
+.claude/
+
+# ---------- 数据库备份文件 ----------
+# 注意：database.json 目前仍被仓库跟踪（含演示数据）。
+# 完成 MySQL 迁移后，可执行 git rm --cached database.json 停止跟踪。
+database.json.bak
+*.sql.bak
+>>>>>>> 35c2fdfad61a3dec5a26fc09907416111b73677d
