@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>苗族银饰锻造技艺 - 分类模型展示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-kai), var(--font-song), serif;
+            background: linear-gradient(160deg, #f7f2e7 0%, #f1e8d8 30%, #e6d6ba 70%, #d3c29c 100%);
+            min-height: 100vh;
+            color: #3a3226;
+            overflow-x: hidden;
+        }
+
+        .header-section {
+            text-align: center;
+            padding: 24px 20px 20px;
+            background: rgba(255, 253, 247, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 2px solid rgba(79, 95, 86, 0.15);
+            box-shadow: 0 4px 24px rgba(79, 95, 86, 0.08);
+            position: relative;
+            z-index: 100;
+        }
+
+        .header-section h1 {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #2f4f4f;
+            letter-spacing: 1.5px;
+            margin-bottom: 6px;
+        }
+
+        .header-section .subtitle {
+            color: #6b6255;
+            font-size: 0.95em;
+            font-weight: 500;
+        }
+
+        .back-nav {
+            position: absolute;
+            left: 32px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 24px;
+            background: linear-gradient(135deg, #4a6b63 0%, #3a5a54 100%);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 10px;
+            font-size: 0.95em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 14px rgba(58, 90, 84, 0.35);
+            letter-spacing: 0.5px;
+        }
+
+        .back-nav:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 22px rgba(58, 90, 84, 0.5);
+        }
+
+        .main-container {
+            display: flex;
+            height: calc(100vh - 88px);
+            gap: 0;
+        }
+
+        .gallery-section {
+            flex: 7;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 28px 32px;
+            background: transparent;
+        }
+
+        .gallery-section::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .gallery-section::-webkit-scrollbar-track {
+            background: rgba(58, 90, 84, 0.05);
+            border-radius: 4px;
+        }
+
+        .gallery-section::-webkit-scrollbar-thumb {
+            background: rgba(58, 90, 84, 0.3);
+            border-radius: 4px;
+        }
+
+        .gallery-section::-webkit-scrollbar-thumb:hover {
+            background: rgba(58, 90, 84, 0.5);
+        }
+
+        .section-title {
+            font-size: 1.35em;
+            font-weight: 700;
+            color: #2a3d38;
+            margin-bottom: 20px;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .models-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+            padding-bottom: 32px;
+        }
+
+        .model-card {
+            background: rgba(255, 253, 247, 0.95);
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 6px 28px rgba(58, 90, 84, 0.12), 0 2px 6px rgba(0, 0, 0, 0.03);
+            border: 2px solid rgba(58, 90, 84, 0.1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .model-card:hover {
+            transform: translateY(-6px) scale(1.02);
+            box-shadow: 0 14px 42px rgba(58, 90, 84, 0.22), 0 4px 14px rgba(0, 0, 0, 0.05);
+            border-color: rgba(58, 90, 84, 0.25);
+        }
+
+        .model-preview-container {
+            width: 100%;
+            height: 240px;
+            background: linear-gradient(135deg, rgba(74, 107, 99, 0.08) 0%, rgba(58, 90, 84, 0.04) 50%, rgba(47, 79, 79, 0.08) 100%);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .model-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .model-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: #7a8f88;
+        }
+
+        .model-placeholder-icon {
+            font-size: 52px;
+            opacity: 0.6;
+        }
+
+        .model-placeholder-text {
+            font-size: 0.92em;
+            font-weight: 600;
+            opacity: 0.7;
+        }
+
+        .model-info {
+            padding: 16px 20px;
+        }
+
+        .model-title {
+            font-size: 1.15em;
+            font-weight: 700;
+            color: #2a3d38;
+            margin-bottom: 6px;
+            letter-spacing: 0.3px;
+        }
+
+        .model-description {
+            color: #6b6255;
+            font-size: 0.88em;
+            line-height: 1.55;
+            margin-bottom: 10px;
+        }
+
+        .view-btn {
+            display: inline-block;
+            width: 100%;
+            padding: 10px 18px;
+            background: linear-gradient(135deg, #4a6b63 0%, #3a5a54 100%);
+            color: #fff;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            letter-spacing: 0.3px;
+        }
+
+        .model-card:hover .view-btn {
+            background: linear-gradient(135deg, #3a5a54 0%, #2f4f4f 100%);
+            transform: scale(1.02);
+        }
+
+        .model-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: linear-gradient(135deg, #b5853f 0%, #b5853f 100%);
+            color: #fff;
+            padding: 5px 12px;
+            border-radius: 16px;
+            font-size: 0.75em;
+            font-weight: 700;
+            box-shadow: 0 3px 10px rgba(245, 158, 11, 0.3);
+            letter-spacing: 0.3px;
+        }
+
+        .loading-overlay-card {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 253, 247, 0.95);
+            z-index: 10;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-overlay-card.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .spinner-small {
+            width: 36px;
+            height: 36px;
+            border: 4px solid rgba(58, 90, 84, 0.15);
+            border-top-color: #3a5a54;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .info-sidebar {
+            flex: 3;
+            min-width: 340px;
+            max-width: 420px;
+            background: rgba(255, 253, 247, 0.75);
+            backdrop-filter: blur(12px);
+            border-left: 2px solid rgba(79, 95, 86, 0.12);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .info-header {
+            padding: 24px 28px 18px;
+            border-bottom: 2px solid rgba(47, 79, 79, 0.1);
+            background: rgba(255, 253, 247, 0.5);
+        }
+
+        .info-header h2 {
+            font-size: 1.35em;
+            color: #2a3d38;
+            font-weight: 700;
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        .info-header .subtitle {
+            font-size: 0.88em;
+            color: #6b6255;
+            font-weight: 500;
+        }
+
+        .info-content-scrollable {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 24px 28px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(47, 79, 79, 0.3) transparent;
+        }
+
+        .info-content-scrollable::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .info-content-scrollable::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .info-content-scrollable::-webkit-scrollbar-thumb {
+            background: rgba(47, 79, 79, 0.3);
+            border-radius: 3px;
+        }
+
+        .info-content-scrollable::-webkit-scrollbar-thumb:hover {
+            background: rgba(47, 79, 79, 0.5);
+        }
+
+        .info-block {
+            margin-bottom: 20px;
+        }
+
+        .info-block-title {
+            font-size: 1em;
+            font-weight: 600;
+            color: #2a3d38;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-text {
+            line-height: 1.7;
+            color: #4a4236;
+            font-size: 0.9em;
+        }
+
+        .info-text strong {
+            color: #2a3d38;
+            font-weight: 600;
+        }
+
+        .category-list {
+            list-style: none;
+            padding: 0;
+            margin-top: 10px;
+        }
+
+        .category-list li {
+            padding: 10px 14px;
+            margin-bottom: 8px;
+            background: rgba(58, 90, 84, 0.06);
+            border-radius: 10px;
+            font-size: 0.88em;
+            color: #2a3d38;
+            border-left: 3px solid #3a5a54;
+            transition: all 0.25s ease;
+            cursor: pointer;
+        }
+
+        .category-list li:hover {
+            background: rgba(58, 90, 84, 0.12);
+            transform: translateX(4px);
+            border-left-color: #2f4f4f;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .feature-item {
+            background: rgba(124, 58, 237, 0.08);
+            padding: 10px 12px;
+            border-radius: 10px;
+            font-size: 0.85em;
+            color: #7c5a4a;
+            text-align: center;
+            font-weight: 600;
+            border: 1px solid rgba(124, 58, 237, 0.15);
+            transition: all 0.25s ease;
+        }
+
+        .feature-item:hover {
+            background: rgba(124, 58, 237, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .stats-box {
+            background: linear-gradient(135deg, rgba(74, 107, 99, 0.15) 0%, rgba(124, 58, 237, 0.12) 100%);
+            padding: 16px 20px;
+            border-radius: 14px;
+            margin-top: 16px;
+            border: 2px solid rgba(58, 90, 84, 0.15);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.6em;
+            font-weight: 700;
+            color: #2f4f4f;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            color: #6b6255;
+            font-weight: 500;
+            margin-top: 2px;
+        }
+
+        @media (max-width: 1024px) {
+            .back-nav {
+                position: static;
+                transform: none;
+                margin-bottom: 12px;
+                display: inline-flex;
+            }
+
+            .header-section {
+                padding: 20px 16px 16px;
+            }
+
+            .header-section h1 {
+                font-size: 1.4em;
+            }
+
+            .main-container {
+                flex-direction: column;
+            }
+
+            .gallery-section {
+                flex: 1;
+                min-height: 50vh;
+            }
+
+            .info-sidebar {
+                flex: 1;
+                min-width: auto;
+                max-width: none;
+                border-left: none;
+                border-top: 2px solid rgba(79, 95, 86, 0.12);
+            }
+
+            .models-gallery {
+                grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+                gap: 16px;
+            }
+        }
+    </style>
+  <link rel="stylesheet" href="theme/gufeng.css">
+</head>
+<body>
+    <div class="header-section">
+        <a href="model1.html" class="back-nav">← 返回主模型</a>
+        <h1>🎋 苗族银饰锻造技艺</h1>
+        <p class="subtitle">分类模型展示 · 精选工艺细节 · 共 5 大类别</p>
+    </div>
+
+    <div class="main-container">
+        <div class="gallery-section">
+            <div class="section-title">🏺 分类模型展示</div>
+
+            <div class="models-gallery">
+
+                <div class="model-card" data-model-id="metal_heart" onclick="openModelFullscreen('metal_heart')">
+                    <div class="model-badge">NO.1</div>
+                    <div class="model-preview-container">
+                        <canvas id="canvas_metal_heart" class="model-canvas"></canvas>
+                        <div id="loading_metal_heart" class="loading-overlay-card">
+                            <div class="spinner-small"></div>
+                        </div>
+                    </div>
+                    <div class="model-info">
+                        <h3 class="model-title">苗族银饰银衣片</h3>
+                        <p class="model-description">精美的心形银饰挂件，融合了苗族独特的纹样设计，象征着爱情与美好。</p>
+                        <a href="#" class="view-btn" onclick="event.stopPropagation(); openModelFullscreen('metal_heart')">🔍 查看详情</a>
+                    </div>
+                </div>
+
+                <div class="model-card" data-model-id="floral_crown" onclick="openModelFullscreen('floral_crown')">
+                    <div class="model-badge">NO.2</div>
+                    <div class="model-preview-container">
+                        <canvas id="canvas_floral_crown" class="model-canvas"></canvas>
+                        <div id="loading_floral_crown" class="loading-overlay-card">
+                            <div class="spinner-small"></div>
+                        </div>
+                    </div>
+                    <div class="model-info">
+                        <h3 class="model-title">苗族银饰头饰</h3>
+                        <p class="model-description">以花卉为主题的苗族银冠，工艺复杂精美，是苗族女性珍贵的头饰。</p>
+                        <a href="#" class="view-btn" onclick="event.stopPropagation(); openModelFullscreen('floral_crown')">🔍 查看详情</a>
+                    </div>
+                </div>
+
+                <div class="model-card" data-model-id="metal_bracelet" onclick="openModelFullscreen('metal_bracelet')">
+                    <div class="model-badge">NO.3</div>
+                    <div class="model-preview-container">
+                        <canvas id="canvas_metal_bracelet" class="model-canvas"></canvas>
+                        <div id="loading_metal_bracelet" class="loading-overlay-card">
+                            <div class="spinner-small"></div>
+                        </div>
+                    </div>
+                    <div class="model-info">
+                        <h3 class="model-title">苗族银饰手镯</h3>
+                        <p class="model-description">苗族传统银手镯，雕刻着寓意吉祥的传统纹样，既是装饰品也是护身符。</p>
+                        <a href="#" class="view-btn" onclick="event.stopPropagation(); openModelFullscreen('metal_bracelet')">🔍 查看详情</a>
+                    </div>
+                </div>
+
+                <div class="model-card" data-model-id="metal_pendant" onclick="openModelFullscreen('metal_pendant')">
+                    <div class="model-badge">NO.4</div>
+                    <div class="model-preview-container">
+                        <canvas id="canvas_metal_pendant" class="model-canvas"></canvas>
+                        <div id="loading_metal_pendant" class="loading-overlay-card">
+                            <div class="spinner-small"></div>
+                        </div>
+                    </div>
+                    <div class="model-info">
+                        <h3 class="model-title">苗族银饰耳饰</h3>
+                        <p class="model-description">精致的苗族银质吊坠，造型独特，工艺精湛，是重要的服饰配饰。</p>
+                        <a href="#" class="view-btn" onclick="event.stopPropagation(); openModelFullscreen('metal_pendant')">🔍 查看详情</a>
+                    </div>
+                </div>
+
+                <div class="model-card" data-model-id="silver_necklace" onclick="openModelFullscreen('silver_necklace')">
+                    <div class="model-badge">NO.5</div>
+                    <div class="model-preview-container">
+                        <canvas id="canvas_silver_necklace" class="model-canvas"></canvas>
+                        <div id="loading_silver_necklace" class="loading-overlay-card">
+                            <div class="spinner-small"></div>
+                        </div>
+                    </div>
+                    <div class="model-info">
+                        <h3 class="model-title">苗族银饰颈饰</h3>
+                        <p class="model-description">精美的苗族银质项链，工艺繁复，是苗族女性盛装时佩戴的重要饰品。</p>
+                        <a href="#" class="view-btn" onclick="event.stopPropagation(); openModelFullscreen('silver_necklace')">🔍 查看详情</a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="info-sidebar">
+            <div class="info-header">
+                <h2>💍 苗族银饰分类</h2>
+                <div class="subtitle">五大经典类型详解</div>
+            </div>
+
+            <div class="info-content-scrollable">
+                <div class="info-block">
+                    <div class="info-block-title">📖 分类概述</div>
+                    <div class="info-text">
+                        苗族银饰种类繁多，根据<strong>佩戴部位、功能用途和造型特征</strong>可分为多个类别。本页面精选展示了最具代表性的<strong>5大经典类型</strong>，每一件都承载着深厚的文化内涵。
+                    </div>
+                </div>
+
+                <div class="info-block">
+                    <div class="info-block-title">🏷️ 类别列表</div>
+                    <ul class="category-list">
+                        <li onclick="scrollToCard('metal_heart')">💝 银衣片 - 衣服挂饰</li>
+                        <li onclick="scrollToCard('floral_crown')">👑 银饰头饰 - 女性头饰</li>
+                        <li onclick="scrollToCard('metal_bracelet')">⭕ 银饰手镯 - 手腕装饰</li>
+                        <li onclick="scrollToCard('metal_pendant')">💎 银饰吊坠 - 项链配饰</li>
+                        <li onclick="scrollToCard('silver_necklace')">📿 银饰项链 - 盛装配饰</li>
+                    </ul>
+                </div>
+
+                <div class="info-block">
+                    <div class="info-block-title">✨ 工艺特色</div>
+                    <div class="info-text">
+                        苗族银饰制作工艺精湛，主要包括：<br><br>
+                        • <strong>锤揲成型：</strong>手工锻打塑造基本形态<br>
+                        • <strong>拉丝工艺：</strong>将银料拉成细丝<br>
+                        • <strong>錾花雕刻：</strong>精细图案刻制<br>
+                        • <strong>焊接组合：</strong>多部件组装<br>
+                        • <strong>表面处理：</strong>抛光与做旧<br><br>
+                        每一件作品都凝聚着匠人<strong>数日乃至数月</strong>的心血。
+                    </div>
+                </div>
+
+                <div class="stats-box">
+                    <div class="info-text" style="text-align: center; font-weight: 600; color: #2a3d38;">
+                        📊 本页展示统计
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-number">5</span>
+                            <span class="stat-label">模型数量</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">600+</span>
+                            <span class="stat-label">年历史传承</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">100%</span>
+                            <span class="stat-label">纯手工打造</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">国家级</span>
+                            <span class="stat-label">非遗等级</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="features-grid">
+                    <div class="feature-item">🎨 精美纹样</div>
+                    <div class="feature-item">🔨 传统工艺</div>
+                    <div class="feature-item">💫 文化象征</div>
+                    <div class="feature-item">🌟 艺术价值</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+        import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
+
+        const modelConfigs = {
+            metal_heart: {
+                title: '装饰性金属心形',
+                mtlPath: encodeURI('模型一模型/ornamental metal heart 3d model/ornamental+metal+heart+3d+model.mtl'),
+                objPath: encodeURI('模型一模型/ornamental metal heart 3d model/ornamental+metal+heart+3d+model.obj'),
+                description: '精美的心形银饰挂件，融合了苗族独特的纹样设计，象征着爱情与美好'
+            },
+            floral_crown: {
+                title: '华丽花卉皇冠',
+                mtlPath: encodeURI('模型一模型/ornate floral crown 3d model/ornate+floral+crown+3d+model.mtl'),
+                objPath: encodeURI('模型一模型/ornate floral crown 3d model/ornate+floral+crown+3d+model.obj'),
+                description: '以花卉为主题的苗族银冠，工艺复杂精美，镶嵌有细致的花卉图案'
+            },
+            metal_bracelet: {
+                title: '华丽金属手镯',
+                mtlPath: encodeURI('模型一模型/ornate metal bracelet 3d model/ornate+metal+bracelet+3d+model.mtl'),
+                objPath: encodeURI('模型一模型/ornate metal bracelet 3d model/ornate+metal+bracelet+3d+model.obj'),
+                description: '苗族传统银手镯，雕刻着寓意吉祥的传统纹样，既是装饰品也是护身符'
+            },
+            metal_pendant: {
+                title: '华丽金属吊坠',
+                mtlPath: encodeURI('模型一模型/ornate metal pendant 3dmodel/tripo_convert_849bd368-f9c7-4109-b019-91f94462c9e7.mtl'),
+                objPath: encodeURI('模型一模型/ornate metal pendant 3dmodel/tripo_convert_849bd368-f9c7-4109-b019-91f94462c9e7.obj'),
+                description: '精致的苗族银质吊坠，造型独特，工艺精湛，是苗族服饰文化中不可或缺的重要配饰'
+            },
+            silver_necklace: {
+                title: '华丽银项链',
+                mtlPath: encodeURI('模型一模型/ornate silver necklace 3d model/ornate+silver+necklace+3d+model.mtl'),
+                objPath: encodeURI('模型一模型/ornate silver necklace 3d model/ornate+silver+necklace+3d+model.obj'),
+                description: '精美的苗族银质项链，工艺繁复，是苗族女性盛装时佩戴的重要饰品'
+            }
+        };
+
+        const previewScenes = {};
+
+        function initPreviewScene(modelId) {
+            const canvas = document.getElementById(`canvas_${modelId}`);
+            if (!canvas) return;
+
+            const container = canvas.parentElement;
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xf0f4ff);
+
+            const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+            camera.position.set(0, 1, 3);
+
+            const renderer = new THREE.WebGLRenderer({ 
+                canvas: canvas, 
+                antialias: true,
+                alpha: true 
+            });
+            renderer.setSize(width, height);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 10, 7);
+            scene.add(directionalLight);
+
+            const controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.enableZoom = false;
+            controls.enablePan = false;
+            controls.autoRotate = true;
+            controls.autoRotateSpeed = 2;
+
+            previewScenes[modelId] = { scene, camera, renderer, controls };
+
+            function animate() {
+                requestAnimationFrame(animate);
+                controls.update();
+                renderer.render(scene, camera);
+            }
+            animate();
+        }
+
+        function loadModelToPreview(modelId) {
+            const config = modelConfigs[modelId];
+            if (!config || !config.objPath) {
+                showPlaceholder(modelId);
+                return;
+            }
+
+            const loadingEl = document.getElementById(`loading_${modelId}`);
+            const sceneData = previewScenes[modelId];
+            if (!sceneData) return;
+
+            const mtlLoader = new MTLLoader();
+            const objLoader = new OBJLoader();
+
+            if (config.mtlPath) {
+                mtlLoader.load(config.mtlPath, (materials) => {
+                    materials.preload();
+                    objLoader.setMaterials(materials);
+                    loadOBJ(modelId, objLoader, config.objPath, loadingEl, sceneData);
+                }, undefined, () => {
+                    loadOBJ(modelId, objLoader, config.objPath, loadingEl, sceneData);
+                });
+            } else {
+                loadOBJ(modelId, objLoader, config.objPath, loadingEl, sceneData);
+            }
+        }
+
+        function loadOBJ(modelId, loader, path, loadingEl, sceneData) {
+            loader.load(path,
+                (object) => {
+                    const box = new THREE.Box3().setFromObject(object);
+                    const center = box.getCenter(new THREE.Vector3());
+                    object.position.sub(center);
+
+                    const size = box.getSize(new THREE.Vector3());
+                    const maxDim = Math.max(size.x, size.y, size.z);
+                    const scale = 2 / maxDim;
+                    object.scale.setScalar(scale);
+
+                    sceneData.scene.add(object);
+
+                    if (loadingEl) {
+                        loadingEl.classList.add('hidden');
+                    }
+                },
+                (xhr) => {
+                    console.log(`Loading ${modelId}: ${(xhr.loaded / xhr.total * 100)}%`);
+                },
+                (error) => {
+                    console.error(`Error loading ${modelId}:`, error);
+                    if (loadingEl) {
+                        loadingEl.classList.add('hidden');
+                    }
+                    showPlaceholder(modelId);
+                }
+            );
+        }
+
+        function showPlaceholder(modelId) {
+            const canvas = document.getElementById(`canvas_${modelId}`);
+            if (!canvas) return;
+
+            const container = canvas.parentElement;
+            
+            let placeholder = container.querySelector('.model-placeholder');
+            if (!placeholder) {
+                placeholder = document.createElement('div');
+                placeholder.className = 'model-placeholder';
+                placeholder.innerHTML = `
+                    <div class="model-placeholder-icon">🎋</div>
+                    <div class="model-placeholder-text">等待添加模型文件</div>
+                `;
+                container.appendChild(placeholder);
+            }
+            
+            placeholder.style.display = 'flex';
+            canvas.style.display = 'none';
+
+            const loadingEl = document.getElementById(`loading_${modelId}`);
+            if (loadingEl) {
+                loadingEl.classList.add('hidden');
+            }
+        }
+
+        window.openModelFullscreen = function(modelId) {
+            const fullscreenPages = {
+                'metal_heart': 'model1_metal_heart_fullscreen.html',
+                'floral_crown': 'model1_floral_crown_fullscreen.html',
+                'metal_bracelet': 'model1_metal_bracelet_fullscreen.html',
+                'metal_pendant': 'model1_metal_pendant_fullscreen.html',
+                'silver_necklace': 'model1_silver_necklace_fullscreen.html'
+            };
+            
+            const targetPage = fullscreenPages[modelId];
+            if (targetPage) {
+                window.location.href = targetPage;
+            } else {
+                alert(`即将打开 ${modelConfigs[modelId]?.title || modelId} 的全屏展示页面\n\n提示：未找到对应的全屏展示页面`);
+            }
+        };
+
+        window.scrollToCard = function(modelId) {
+            const card = document.querySelector(`[data-model-id="${modelId}"]`);
+            if (card) {
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                card.style.boxShadow = '0 0 0 4px rgba(58, 90, 84, 0.5), 0 14px 42px rgba(58, 90, 84, 0.22)';
+                setTimeout(() => {
+                    card.style.boxShadow = '';
+                }, 2000);
+            }
+        };
+
+        Object.keys(modelConfigs).forEach(modelId => {
+            initPreviewScene(modelId);
+            setTimeout(() => loadModelToPreview(modelId), 100);
+        });
+
+        window.addEventListener('resize', () => {
+            Object.keys(previewScenes).forEach(modelId => {
+                const sceneData = previewScenes[modelId];
+                const canvas = document.getElementById(`canvas_${modelId}`);
+                if (sceneData && canvas) {
+                    const container = canvas.parentElement;
+                    const width = container.clientWidth;
+                    const height = container.clientHeight;
+
+                    sceneData.camera.aspect = width / height;
+                    sceneData.camera.updateProjectionMatrix();
+                    sceneData.renderer.setSize(width, height);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

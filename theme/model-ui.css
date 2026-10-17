@@ -1,0 +1,126 @@
+/* ==========================================================================
+   模型展示页统一增强样式（水墨 Ink Wash 风）
+   覆盖：返回导航栏 / 信息标签页 / 相关模型推荐 / 3D 画框装饰
+   ========================================================================== */
+:root {
+  --ink-scorched: #1a1a1a; --ink-thick: #2c2c2c; --ink-heavy: #5a5a5a;
+  --ink-clear: #e2d6bd; --paper: #f5ebd7; --paper-soft: #efe2c9;
+  --sand: #b7a68a; --tea: #9a8163; --moss: #6b7b6e;
+  --font-song: 'Songti SC', 'SimSun', '宋体', 'STSong', 'Noto Serif CJK SC', serif;
+  --ink-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* ---- 顶部返回导航栏 ---- */
+.model-back-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 32px;
+  border-bottom: 1px solid var(--ink-clear);
+  background: rgba(245, 235, 215, 0.82);
+  backdrop-filter: blur(8px);
+  font-family: var(--font-song), serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+}
+.model-back-bar a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-scorched);
+  text-decoration: none;
+  border: 1px solid var(--ink-clear);
+  padding: 5px 14px;
+  border-radius: 3px;
+  transition: color 0.9s var(--ink-ease), border-color 0.9s var(--ink-ease), background 0.9s var(--ink-ease);
+}
+.model-back-bar a:hover { color: var(--paper); background: var(--ink-scorched); border-color: var(--ink-scorched); }
+.model-back-bar .crumb { color: var(--sand); letter-spacing: 0.14em; }
+.model-back-bar .crumb b { color: var(--ink-heavy); font-weight: 400; }
+
+/* ---- 信息标签页 ---- */
+.model-tabs {
+  display: flex;
+  gap: 28px;
+  padding: 16px 28px 12px;
+  border-bottom: 1px solid var(--ink-clear);
+  background: rgba(245, 235, 215, 0.5);
+}
+.model-tabs .mtab {
+  font-family: var(--font-song), serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.1em;
+  color: var(--ink-heavy);
+  cursor: pointer;
+  padding: 4px 2px 8px;
+  border-bottom: 2px solid transparent;
+  transition: color 0.9s var(--ink-ease), border-color 0.9s var(--ink-ease);
+  background: none; border-top: none; border-left: none; border-right: none;
+}
+.model-tabs .mtab.active { color: var(--ink-scorched); border-bottom-color: var(--tea); }
+.model-tabs .mtab:hover { color: var(--moss); }
+
+.model-tab-panel { display: none; }
+.model-tab-panel.active { display: block; animation: mtFade 0.6s var(--ink-ease); }
+@keyframes mtFade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* 隐藏 .info-header 下的标题装饰重复，保留 header */
+.info-section .info-header { border-bottom: none; }
+
+/* ---- 相关模型推荐 ---- */
+.related-models {
+  padding: 56px 32px 64px;
+  border-top: 1px solid var(--ink-clear);
+}
+.related-models .rel-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  max-width: 1200px; margin: 0 auto 26px;
+}
+.related-models .rel-en {
+  font-size: 0.7rem; letter-spacing: 0.42em; text-transform: uppercase; color: var(--sand);
+}
+.related-models h3 {
+  font-family: var(--font-song), serif; font-weight: 300;
+  font-size: 1.5rem; letter-spacing: 0.14em; color: var(--ink-scorched); margin-top: 6px;
+}
+.related-models .rel-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px; max-width: 1200px; margin: 0 auto;
+}
+.related-card {
+  position: relative; display: block; text-decoration: none;
+  height: 150px; border: 1px solid var(--ink-clear); border-radius: 4px; overflow: hidden;
+  background-size: cover; background-position: center;
+  box-shadow: 0 2px 14px rgba(74,56,26,0.06);
+  transition: border-color 0.9s var(--ink-ease), transform 0.6s var(--ink-ease);
+}
+.related-card::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(26,26,26,0.05) 0%, rgba(26,26,26,0.5) 100%);
+}
+.related-card .rc-label {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  padding: 10px 14px; color: #fff;
+  font-family: var(--font-song), serif; letter-spacing: 0.1em; font-size: 0.9rem;
+  text-shadow: 0 1px 8px rgba(0,0,0,0.4); z-index: 1;
+}
+.related-card:hover { border-color: rgba(107,123,110,0.55); transform: translateY(-3px); }
+
+/* ---- 3D 画框装饰（画卷感） ---- */
+.model-3d-wrapper, .model-canvas-wrapper { position: relative; }
+.model-3d-wrapper::before, .model-3d-wrapper::after,
+.model-canvas-wrapper::before, .model-canvas-wrapper::after {
+  content: ''; position: absolute; width: 22px; height: 22px;
+  border: 1.5px solid rgba(154, 129, 99, 0.6);
+  pointer-events: none; z-index: 5;
+}
+.model-3d-wrapper::before, .model-canvas-wrapper::before { top: 12px; left: 12px; border-right: none; border-bottom: none; }
+.model-3d-wrapper::after, .model-canvas-wrapper::after { bottom: 12px; right: 12px; border-left: none; border-top: none; }
+
+/* 移动端 */
+@media (max-width: 860px) {
+  .model-back-bar { padding: 12px 18px; gap: 10px; }
+  .model-tabs { gap: 18px; padding: 12px 18px 10px; }
+  .related-models { padding: 40px 18px 48px; }
+  .related-models .rel-grid { grid-template-columns: repeat(2, 1fr); }
+}
