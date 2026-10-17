@@ -1,12 +1,4 @@
-<<<<<<< HEAD
 <!DOCTYPE html>
-=======
-<<<<<<< HEAD
-<!DOCTYPE html>
-=======
-﻿<!DOCTYPE html>
->>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
->>>>>>> 8f4aae9ea20839b655018b479d45434fa8db2a1b
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -197,15 +189,7 @@
         }
     </style>
   <link rel="stylesheet" href="theme/gufeng.css">
-<<<<<<< HEAD
 </head>
-=======
-<<<<<<< HEAD
-</head>
-=======
-  <link rel="stylesheet" href="theme/model-ui.css"></head>
->>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
->>>>>>> 8f4aae9ea20839b655018b479d45434fa8db2a1b
 <body>
     <div class="top-bar">
         <a href="model1_submodels.html" class="back-button">← 返回分类页</a>
@@ -237,18 +221,8 @@
     <script type="module">
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-<<<<<<< HEAD
         import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
         import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
-=======
-<<<<<<< HEAD
-        import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
-        import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
-=======
-        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-        import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
->>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
->>>>>>> 8f4aae9ea20839b655018b479d45434fa8db2a1b
 
         const canvas = document.getElementById('fullscreenCanvas');
         const loadingOverlay = document.getElementById('loadingOverlay');
@@ -332,10 +306,6 @@
         }
 
         function loadModel() {
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> 8f4aae9ea20839b655018b479d45434fa8db2a1b
             const mtlLoader = new MTLLoader();
             const objLoader = new OBJLoader();
             
@@ -403,51 +373,6 @@
                     loadingOverlay.classList.add('hidden');
                 });
             });
-<<<<<<< HEAD
-=======
-=======
-                        const gltfLoader = new GLTFLoader();
-            const dracoLoader = new DRACOLoader();
-            dracoLoader.setDecoderPath('theme/draco/');
-            gltfLoader.setDRACOLoader(dracoLoader);
-            const glbPath = encodeURI('模型一模型/ceremonial figure 3d model/ceremonial+figure+3d+model.glb');
-
-            gltfLoader.load(glbPath, (gltf) => {
-                const object = gltf.scene;
-                object.traverse((child) => {
-                    if (child.isMesh) { child.castShadow = true; child.receiveShadow = true; }
-                });
-                const box = new THREE.Box3().setFromObject(object);
-                const size = box.getSize(new THREE.Vector3());
-                const maxDim = Math.max(size.x, size.y, size.z);
-                object.scale.multiplyScalar(4.5 / maxDim);
-                box.setFromObject(object);
-                const center = box.getCenter(new THREE.Vector3());
-                object.position.sub(center);
-                scene.add(object);
-                setTimeout(() => { loadingOverlay.classList.add('hidden'); }, 600);
-            }, (xhr) => {
-                if (xhr.lengthComputable) {
-                    const percent = Math.round((xhr.loaded / xhr.total) * 100);
-                    const textEl = loadingOverlay.querySelector('.loading-text');
-                    if (textEl) {
-                        const loadedMB = (xhr.loaded / 1024 / 1024).toFixed(2);
-                        const totalMB = (xhr.total / 1024 / 1024).toFixed(2);
-                        textEl.textContent = `正在加载3D模型... ${percent}% (${loadedMB}MB / ${totalMB}MB)`;
-                    }
-                }
-            }, (error) => {
-                console.error('GLB模型加载错误:', error);
-                const textEl = loadingOverlay.querySelector('.loading-text');
-                if (textEl) {
-                    textEl.innerHTML = '⚠️ 模型加载失败<br><span style="font-size: 0.88em; color: #666; margin-top: 8px; display: block;">请检查文件路径或返回重试</span>';
-                }
-                const sp = loadingOverlay.querySelector('.spinner') || loadingOverlay.querySelector('.loading-spinner');
-                if (sp) sp.style.borderTopColor = '#a5372f';
-            });
-
->>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
->>>>>>> 8f4aae9ea20839b655018b479d45434fa8db2a1b
         }
 
         function onWindowResize() {

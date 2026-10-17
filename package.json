@@ -16,15 +16,7 @@
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
-<<<<<<< HEAD
     "mysql2": "^3.24.4",
-=======
-<<<<<<< HEAD
-    "mysql2": "^3.24.4",
-=======
-    "mysql2": "^3.24.6",
->>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
->>>>>>> 8f4aae9ea20839b655018b479d45434fa8db2a1b
     "uuid": "^9.0.0"
   },
   "engines": {

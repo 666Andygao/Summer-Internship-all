@@ -10,18 +10,8 @@
 | --- | --- | --- |
 | 主站 | `MainPage.html` | 非遗项目总览、3D 展品模型、工艺流程 |
 | 登录注册 | `login.html` | 买家 / 开发者两种角色 |
-<<<<<<< HEAD
-| 用户中心 | `user-dashboard.html` | 好友管理、消息会话、订单与售后 |
-| 开发者中心 | `developer-dashboard.html` | 好友、消息、商品与订单管理、管理用户（含在线状态） |
-=======
-<<<<<<< HEAD
 | 用户中心 | `user-dashboard.html` | 好友管理、消息会话、订单与售后、提交商家入驻申请并查看审核状态 |
 | 开发者中心 | `developer-dashboard.html` | 好友与消息、审核商家申请（一名开发者同意即可）、查看已批准商家及批准人、已通过商家的商品上架与管理、管理用户 |
-=======
-| 用户中心 | `user-dashboard.html` | 好友管理、消息会话、订单与售后 |
-| 开发者中心 | `developer-dashboard.html` | 好友、消息、商品与订单管理、管理用户（含在线状态） |
->>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
->>>>>>> 8f4aae9ea20839b655018b479d45434fa8db2a1b
 | 非遗商城 | `/shop/` | Vue 3 单页应用，与主站同源共享登录态 |
 | 内容页 | `archive*.html`、`process*.html`、`model*.html` | 项目档案、工艺详情、3D 模型展示 |
 
@@ -62,14 +52,8 @@ DB_PASSWORD=你的MySQL密码        # 模板里是空的，不填连不上数�
 JWT_SECRET=一串随机长字符串      # 不设置会用不安全的开发默认密钥
 ```
 
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
 默认 `DB_MODE=mysql`。MySQL 不可用或初始化失败时，服务会停止启动，不会自动切换到 `database.json`，避免注册到一份存储后又从另一份存储登录而误报“用户名不存在”。只有明确需要 JSON 本地存储时，才设置 `DB_MODE=json`。
 
-=======
->>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
->>>>>>> 8f4aae9ea20839b655018b479d45434fa8db2a1b
 生成随机密钥：
 
 ```bash

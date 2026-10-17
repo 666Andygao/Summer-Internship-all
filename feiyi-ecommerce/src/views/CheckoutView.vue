@@ -88,15 +88,9 @@ async function onSubmit() {
     })
     await ElMessageBox.alert(
       `<div style="line-height:1.9">
-<<<<<<< HEAD
         <p>订单号：<strong>${res.order_no}</strong></p>
         <p>应付金额：<strong style="color:#a5372f">¥${Number(res.total_amount).toFixed(2)}</strong></p>
         <p style="color:#9a9284;font-size:13px">订单已提交，现在可以在商品详情页发表评价。</p>
-=======
-        <p>订单号：<strong>${res.orderNo}</strong></p>
-        <p>应付金额：<strong style="color:#a5372f">¥${payAmount.value.toFixed(0)}</strong></p>
-        <p style="color:#9a9284;font-size:13px">（本页为前端演示，未接入真实支付渠道）</p>
->>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
       </div>`,
       '订单提交成功',
       { dangerouslyUseHTMLString: true, confirmButtonText: '返回首页', type: 'success' }
