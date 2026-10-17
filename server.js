@@ -939,6 +939,11 @@ app.use((req, res, next) => {
 // 仅托管前端静态资源（dotfiles:'deny' 额外拒绝所有点开头的文件）
 app.use(express.static(__dirname, { dotfiles: 'deny' }));
 
+// 根路径 → 跳转主页：别人只输入 IP:端口 时，不再落到 404
+app.get('/', (req, res) => {
+    res.redirect('/MainPage.html');
+});
+
 app.get('/api/business-flow', (req, res) => {
     res.json(BUSINESS_FLOW);
 });
@@ -4365,12 +4370,23 @@ const shopDist = path.join(__dirname, 'feiyi-ecommerce', 'dist');
 if (fs.existsSync(shopDist)) {
     // 静态资源：/shop/assets/xxx → dist/assets/xxx
     app.use('/shop', express.static(shopDist));
+
+    // 商品图在 feiyi-ecommerce/public/images/ 下，构建时没被复制进 dist
+    // （dist 里根本没有 images 目录）。而前端 base 是 '/shop/'，
+    // 取图走的是 /shop/images/goods/...，不单独挂载就会掉进下面的 SPA 回退，
+    // 返回 index.html —— 浏览器拿到 Content-Type: text/html，图片全显示不出来。
+    const shopPublicImages = path.join(__dirname, 'feiyi-ecommerce', 'public', 'images');
+    if (fs.existsSync(shopPublicImages)) {
+        app.use('/shop/images', express.static(shopPublicImages));
+    }
+
     // SPA history 路由回退：/shop/* 非静态文件请求一律返回 index.html
     app.get('/shop/*', (req, res) => {
         res.sendFile(path.join(shopDist, 'index.html'));
     });
 } else {
-    // 构建产物（dist）不入库，需先在 feiyi-ecommerce 目录执行 npm run build
+    // 构建产物 dist 已入库，正常 clone 就有，不会走到这里；
+    // 只有手动删掉 dist 时才需要重新执行 npm run build
     console.log('⚠️  商城未构建：找不到 feiyi-ecommerce/dist');
     console.log('    请运行 build-shop.bat（或手动执行 cd feiyi-ecommerce && npm install && npm run build）后重启服务器');
     console.log('    在此之前访问 /shop/ 会返回 404');
