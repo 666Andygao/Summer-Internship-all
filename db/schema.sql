@@ -20,7 +20,10 @@ CREATE TABLE IF NOT EXISTS `users` (
   `username`      VARCHAR(64)  NOT NULL COMMENT '登录用户名',
   `password`      VARCHAR(255) NOT NULL COMMENT 'bcrypt 哈希后的密码',
   `role`          VARCHAR(32)  NOT NULL DEFAULT 'user' COMMENT 'user/developer/buyer/artisan/admin',
+<<<<<<< HEAD
   `registration_role` VARCHAR(32) NOT NULL DEFAULT 'buyer' COMMENT '注册时选择的登录身份',
+=======
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
   `display_name`  VARCHAR(128) NOT NULL DEFAULT '' COMMENT '展示昵称',
   `phone`         VARCHAR(32)  NOT NULL DEFAULT '',
   `avatar`        VARCHAR(255) NOT NULL DEFAULT '',
@@ -43,7 +46,10 @@ CREATE TABLE IF NOT EXISTS `merchants` (
   `contact_phone`        VARCHAR(32)  NOT NULL DEFAULT '',
   `qualification_note`   TEXT         NULL,
   `status`               VARCHAR(32)  NOT NULL DEFAULT 'pending' COMMENT 'pending/approved/rejected',
+<<<<<<< HEAD
   `approved_by`          BIGINT       NULL COMMENT '批准该申请的开发者 users.id',
+=======
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
   `certification_status` VARCHAR(32)  NOT NULL DEFAULT 'none',
   `permissions`          JSON         NULL COMMENT '权限标识数组',
   `created_at`           DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -236,8 +242,11 @@ CREATE TABLE IF NOT EXISTS `conversations` (
   `id`           BIGINT   NOT NULL AUTO_INCREMENT,
   `user_id`      BIGINT   NOT NULL,
   `developer_id` BIGINT   NOT NULL,
+<<<<<<< HEAD
   `product_id`   BIGINT   NULL,
   `product_name` VARCHAR(255) NOT NULL DEFAULT '',
+=======
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
   `created_at`   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `idx_conversations_user_id` (`user_id`),

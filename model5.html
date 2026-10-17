@@ -568,9 +568,20 @@
         }
     </style>
   <link rel="stylesheet" href="theme/gufeng.css">
+<<<<<<< HEAD
 </head>
 <body>
     <nav class="top-nav">
+=======
+  <link rel="stylesheet" href="theme/model-ui.css">
+</head>
+<body>
+<div class="model-back-bar">
+  <a href="model.html">← 返回数字馆</a>
+  <span class="crumb">数字馆 / <b>火草纺织工艺</b></span>
+</div>
+<nav class="top-nav">
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
         <div class="nav-left">
             <a href="index.html" class="nav-back-btn">← 返回首页</a>
         </div>
@@ -686,8 +697,13 @@
     <script type="module">
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+<<<<<<< HEAD
         import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
         import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
+=======
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
 
         const canvas = document.getElementById('threeCanvas');
         const wrapper = document.getElementById('model3DWrapper');
@@ -708,15 +724,23 @@
             {
                 title: '🧵 1/2 火草布卷',
                 label: '🧵 火草布卷',
+<<<<<<< HEAD
                 mtlPath: encodeURI('模型五模型/fabric roll 3d model/fabric+roll+3d+model.mtl'),
                 objPath: encodeURI('模型五模型/fabric roll 3d model/fabric+roll+3d+model.obj'),
+=======
+                glbPath: encodeURI('模型五模型/fabric roll 3d model/fabric+roll+3d+model.glb'),
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
                 loadingText: '正在加载火草布卷模型...'
             },
             {
                 title: '👗 2/2 火草衣物',
                 label: '👗 火草衣物',
+<<<<<<< HEAD
                 mtlPath: encodeURI('模型五模型/traditional dress 3d model/traditional+dress+3d+model.mtl'),
                 objPath: encodeURI('模型五模型/traditional dress 3d model/traditional+dress+3d+model.obj'),
+=======
+                glbPath: encodeURI('模型五模型/traditional dress 3d model/traditional+dress+3d+model.glb'),
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
                 loadingText: '正在加载火草衣物模型...'
             }
         ];
@@ -837,6 +861,7 @@
             const textEl = loadingOverlay.querySelector('.loading-text');
             textEl.textContent = config.loadingText;
 
+<<<<<<< HEAD
             const mtlLoader = new MTLLoader();
             const objLoader = new OBJLoader();
 
@@ -1021,3 +1046,52 @@
     </script>
 </body>
 </html>
+=======
+                        const gltfLoader = new GLTFLoader();
+            const dracoLoader = new DRACOLoader();
+            dracoLoader.setDecoderPath('theme/draco/');
+            gltfLoader.setDRACOLoader(dracoLoader);
+
+            gltfLoader.load(config.glbPath, (gltf) => {
+                const object = gltf.scene;
+                console.log(config.label + ' GLB 模型加载成功');
+
+                currentModel = object;
+
+                object.traverse((child) => {
+                    if (child.isMesh) {
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                    }
+                });
+
+                const box = new THREE.Box3().setFromObject(currentModel);
+                const size = box.getSize(new THREE.Vector3());
+                const maxDim = Math.max(size.x, size.y, size.z);
+                const scale = 4 / maxDim;
+                currentModel.scale.multiplyScalar(scale);
+
+                box.setFromObject(currentModel);
+                const center = box.getCenter(new THREE.Vector3());
+                currentModel.position.sub(center);
+
+                scene.add(currentModel);
+
+                setTimeout(() => {
+                    loadingOverlay.classList.add('hidden');
+                }, 600);
+            }, (xhr) => {
+                if (xhr.lengthComputable) {
+                    const percent = Math.round((xhr.loaded / xhr.total) * 100);
+                    const loadedMB = (xhr.loaded / 1024 / 1024).toFixed(2);
+                    const totalMB = (xhr.total / 1024 / 1024).toFixed(2);
+                    textEl.textContent = `${config.loadingText} ${percent}% (${loadedMB}MB / ${totalMB}MB)`;
+                }
+            }, (error) => {
+                console.error(config.label + ' GLB 加载错误:', error);
+                textEl.innerHTML = `⚠️ ${config.label}加载失败<br><span style="font-size: 0.85em; color: #666;">请检查文件路径或刷新页面重试</span>`;
+                const sp = loadingOverlay.querySelector('.loading-spinner');
+                if (sp) sp.style.borderTopColor = '#a5372f';
+            });
+>
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f

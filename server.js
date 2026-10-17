@@ -977,6 +977,14 @@ app.use((req, res, next) => {
 
 // 仅托管前端静态资源（dotfiles:'deny' 额外拒绝所有点开头的文件）
 app.use(express.static(__dirname, { dotfiles: 'deny' }));
+<<<<<<< HEAD
+=======
+
+// 根路径 → 跳转主页：别人只输入 IP:端口 时，不再落到 404
+app.get('/', (req, res) => {
+    res.redirect('/MainPage.html');
+});
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
 
 app.get('/api/business-flow', (req, res) => {
     res.json(BUSINESS_FLOW);
@@ -1057,16 +1065,20 @@ function saveDB(data) {
     return store.saveDB(data);
 }
 
+<<<<<<< HEAD
 function saveDBDurable(data) {
     return store.saveDBDurable(data);
 }
 
+=======
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
 // 内存数据对象，由 store.init() 在服务启动时填充
 let db = null;
 
 // ============ 健康检查 ============
 // 供 PM2 / Nginx / 负载均衡探活：无需鉴权，返回服务与数据库状态
 app.get('/api/health', async (req, res) => {
+<<<<<<< HEAD
     const mode = store.getMode();
     if (mode === 'json') {
         const lastErr = store.getLastError();
@@ -1080,6 +1092,8 @@ app.get('/api/health', async (req, res) => {
         });
     }
 
+=======
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
     const ping = await dbPool.ping();
     const lastErr = store.getLastError();
     // 仅以数据库连通性判定健康；持久化错误作为诊断信息返回（避免一次性错误永久置为不健康）
@@ -1125,6 +1139,7 @@ function authMiddleware(req, res, next) {
 
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
+<<<<<<< HEAD
         const user = loadDB().users.find(item => String(item.id) === String(decoded.id));
         if (!user) return res.status(401).json({ error: '用户不存在，请重新登录' });
         req.user = {
@@ -1134,6 +1149,10 @@ function authMiddleware(req, res, next) {
             display_name: user.display_name || decoded.display_name
         };
         touchPresence(user.id);   // 任意携带有效令牌的请求都刷新在线状态
+=======
+        req.user = decoded;
+        touchPresence(decoded.id);   // 任意携带有效令牌的请求都刷新在线状态
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
         next();
     } catch (e) {
         return res.status(401).json({ error: '登录已过期，请重新登录' });
@@ -1740,12 +1759,16 @@ app.post('/api/register', async (req, res) => {
             created_at: now
         };
         db.users.push(newUser);
+<<<<<<< HEAD
         try {
             await saveDBDurable(db);
         } catch (error) {
             db.users = db.users.filter(user => String(user.id) !== String(id));
             throw error;
         }
+=======
+        saveDB(db);
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
         touchPresence(id);   // 注册即视为在线
 
         const token = jwt.sign(
@@ -1893,7 +1916,10 @@ app.get('/api/users/manage', authMiddleware, requireRole([ROLE_TYPES.ARTISAN, RO
     });
 });
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
 // 通过用户名查找用户（用于添加好友）
 // 注意：必须定义在 /api/users/:id 之前，否则 "find" 会被当作 :id 匹配，
 //       前端拿到的会是 :id 的「用户不存在」，而不是本接口的「未找到该用户」。
@@ -1997,11 +2023,16 @@ app.get('/api/contacts', authMiddleware, (req, res) => {
 // 双方都收不到对方发的消息。同样的问题在开发者面板（role=developer/artisan）之间也会出现。
 // 下面统一按「无序对」处理。
 function isConversationParty(conv, userId) {
+<<<<<<< HEAD
     return String(conv.user_id) === String(userId) || String(conv.developer_id) === String(userId);
+=======
+    return conv.user_id === userId || conv.developer_id === userId;
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
 }
 
 // 取出会话里「对方」的 id
 function otherPartyId(conv, userId) {
+<<<<<<< HEAD
     return String(conv.user_id) === String(userId) ? conv.developer_id : conv.user_id;
 }
 
@@ -2015,12 +2046,27 @@ function conversationsBetween(db, idA, idB, productId) {
         if (!samePair || productId === undefined) return samePair;
         return String(c.product_id || '') === String(productId || '');
     });
+=======
+    return conv.user_id === userId ? conv.developer_id : conv.user_id;
+}
+
+// 找出两个人之间的全部会话（历史镜像会话可能不止一个）
+function conversationsBetween(db, idA, idB) {
+    return db.conversations.filter(c =>
+        (c.user_id === idA && c.developer_id === idB) ||
+        (c.user_id === idB && c.developer_id === idA)
+    );
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
 }
 
 // 与某个会话属于「同一对用户」的全部会话 id（含它自己）。
 // 历史数据里同一对用户可能残留多个镜像会话，读取时要一并带上，否则旧消息看不见。
 function siblingConversationIds(db, conv) {
+<<<<<<< HEAD
     return conversationsBetween(db, conv.user_id, conv.developer_id, conv.product_id ?? null).map(c => c.id);
+=======
+    return conversationsBetween(db, conv.user_id, conv.developer_id).map(c => c.id);
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
 }
 
 // 获取或创建对话（需要是好友关系）
@@ -2046,7 +2092,11 @@ app.post('/api/conversations', authMiddleware, (req, res) => {
 
     // 按「无序对」复用已有会话：不论谁先发起、谁占哪个槽，同一对人只有一个会话。
     // 若按方向精确匹配（旧写法），两个同角色账号会各建一个镜像会话，消息互相看不见。
+<<<<<<< HEAD
     let conv = conversationsBetween(db, req.user.id, target.id, null)[0];
+=======
+    let conv = conversationsBetween(db, req.user.id, target.id)[0];
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
 
     if (!conv) {
         const id = db.nextId.conversation++;
@@ -2124,7 +2174,10 @@ app.post('/api/products/:id/contact', authMiddleware, async (req, res) => {
 app.get('/api/conversations', authMiddleware, (req, res) => {
     db = loadDB();
     const me = req.user.id;
+<<<<<<< HEAD
     const productOnly = req.query.product_only === 'true';
+=======
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
 
     // 按「对方」归并，而不是按「我占哪个槽」筛选。
     // 旧实现买家只看 user_id === 我、开发者只看 developer_id === 我，同角色双方
@@ -2133,6 +2186,7 @@ app.get('/api/conversations', authMiddleware, (req, res) => {
     // 未读数跨这些会话合并统计。
     const byOtherId = new Map();
 
+<<<<<<< HEAD
     db.conversations.filter(c =>
         isConversationParty(c, me) && (!productOnly || c.product_id)).forEach(c => {
         const otherId = otherPartyId(c, me);
@@ -2141,23 +2195,41 @@ app.get('/api/conversations', authMiddleware, (req, res) => {
 
         const contextKey = `${otherId}:${c.product_id || ''}`;
         const kept = byOtherId.get(contextKey);
+=======
+    db.conversations.filter(c => isConversationParty(c, me)).forEach(c => {
+        const otherId = otherPartyId(c, me);
+        const other = db.users.find(u => u.id === otherId);
+        if (!other) return;   // 对方账号已被删除，跳过
+
+        const kept = byOtherId.get(otherId);
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
         if (kept && kept.id <= c.id) return;
 
         const ids = siblingConversationIds(db, c);
         const unread = db.messages.filter(m =>
+<<<<<<< HEAD
             ids.some(id => String(id) === String(m.conversation_id)) &&
             String(m.sender_id) !== String(me) &&
             !m.is_read
         ).length;
 
         byOtherId.set(contextKey, {
+=======
+            ids.includes(m.conversation_id) && m.sender_id !== me && !m.is_read
+        ).length;
+
+        byOtherId.set(otherId, {
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
             ...c,
             target_id: otherId,
             target_name: other.display_name || '',
             target_username: other.username || '',
             target_avatar: other.avatar || '',
+<<<<<<< HEAD
             target_product_id: c.product_id || null,
             target_product_name: c.product_name || '',
+=======
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
             unread
         });
     });
@@ -4857,12 +4929,30 @@ const shopDist = path.join(__dirname, 'feiyi-ecommerce', 'dist');
 if (fs.existsSync(shopDist)) {
     // 静态资源：/shop/assets/xxx → dist/assets/xxx
     app.use('/shop', express.static(shopDist));
+<<<<<<< HEAD
+=======
+
+    // 商品图在 feiyi-ecommerce/public/images/ 下，构建时没被复制进 dist
+    // （dist 里根本没有 images 目录）。而前端 base 是 '/shop/'，
+    // 取图走的是 /shop/images/goods/...，不单独挂载就会掉进下面的 SPA 回退，
+    // 返回 index.html —— 浏览器拿到 Content-Type: text/html，图片全显示不出来。
+    const shopPublicImages = path.join(__dirname, 'feiyi-ecommerce', 'public', 'images');
+    if (fs.existsSync(shopPublicImages)) {
+        app.use('/shop/images', express.static(shopPublicImages));
+    }
+
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
     // SPA history 路由回退：/shop/* 非静态文件请求一律返回 index.html
     app.get('/shop/*', (req, res) => {
         res.sendFile(path.join(shopDist, 'index.html'));
     });
 } else {
+<<<<<<< HEAD
     // 构建产物（dist）不入库，需先在 feiyi-ecommerce 目录执行 npm run build
+=======
+    // 构建产物 dist 已入库，正常 clone 就有，不会走到这里；
+    // 只有手动删掉 dist 时才需要重新执行 npm run build
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
     console.log('⚠️  商城未构建：找不到 feiyi-ecommerce/dist');
     console.log('    请运行 build-shop.bat（或手动执行 cd feiyi-ecommerce && npm install && npm run build）后重启服务器');
     console.log('    在此之前访问 /shop/ 会返回 404');
@@ -4914,6 +5004,7 @@ if (require.main === module) {
  */
 async function startServer() {
     try {
+<<<<<<< HEAD
         db = await store.init();
         const mode = store.getMode();
         if (mode === 'mysql') {
@@ -4935,6 +5026,22 @@ async function startServer() {
             console.error('     2) .env 中的 DB_HOST / DB_PORT / DB_USER / DB_PASSWORD / DB_NAME 是否正确');
             console.error('     3) 是否已执行 node db/init.js 建表、node db/migrate.js 导入数据');
         }
+=======
+        const { ping } = require('./db/pool');
+        const status = await ping();
+        if (!status.ok) throw new Error(status.error);
+
+        db = await store.init();
+        console.log(`✅ 已连接 MySQL（${process.env.DB_NAME || 'heritage'}，${status.version}），` +
+            `载入用户 ${db.users.length} · 会话 ${db.conversations.length} · 消息 ${db.messages.length} 条`);
+    } catch (e) {
+        console.error('');
+        console.error('❌ 无法连接 MySQL，服务启动中止：', e.message);
+        console.error('   请检查：');
+        console.error('     1) MySQL 服务是否已启动（Windows 服务名通常为 MySQL90）');
+        console.error('     2) .env 中的 DB_HOST / DB_PORT / DB_USER / DB_PASSWORD / DB_NAME 是否正确');
+        console.error('     3) 是否已执行 node db/init.js 建表、node db/migrate.js 导入数据');
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
         process.exit(1);
     }
 
@@ -4992,4 +5099,8 @@ async function startServer() {
     };
     process.on('SIGINT', () => shutdown('SIGINT'));
     process.on('SIGTERM', () => shutdown('SIGTERM'));
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f

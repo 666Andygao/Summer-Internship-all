@@ -461,9 +461,20 @@
         }
     </style>
   <link rel="stylesheet" href="theme/gufeng.css">
+<<<<<<< HEAD
 </head>
 <body>
     <header>
+=======
+  <link rel="stylesheet" href="theme/model-ui.css">
+</head>
+<body>
+<div class="model-back-bar">
+  <a href="model.html">← 返回数字馆</a>
+  <span class="crumb">数字馆 / <b>云南瓦猫</b></span>
+</div>
+<header>
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
         <h1>🐱 云南瓦猫 - 传统非遗文化</h1>
         <p>3D数字模型展示 · 交互式浏览体验</p>
     </header>
@@ -548,6 +559,10 @@
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+<<<<<<< HEAD
+=======
+        import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
 
         const canvas = document.getElementById('threeCanvas');
         const wrapper = document.getElementById('model3DWrapper');
@@ -633,7 +648,14 @@
             loadingOverlay.classList.remove('hidden');
 
             const loader = new GLTFLoader();
+<<<<<<< HEAD
             const modelPath = '模型三模型/stone statue 3d model.glb';
+=======
+            const dracoLoader = new DRACOLoader();
+            dracoLoader.setDecoderPath('theme/draco/');
+            loader.setDRACOLoader(dracoLoader);
+            const modelPath = '模型三模型/stone statue 3d model_draco.glb';
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
 
             console.log('开始加载模型:', modelPath);
 
@@ -786,5 +808,57 @@
 
         initThreeJS();
     </script>
+
+<script>
+(function(){
+  var content = document.querySelector('.info-content-scrollable');
+  var infoSec = document.querySelector('.info-section');
+  if(!content || !infoSec) return;
+  var blocks = Array.prototype.slice.call(content.children);
+  var g = { archive: [], process: [], story: [] };
+  blocks.forEach(function(b){
+    if(b.classList.contains('features-grid')){ g.story.push(b); return; }
+    var ti = b.querySelector('.info-block-title');
+    var t = ti ? ti.textContent : '';
+    // 优先匹配工艺/流程/简介（含工艺流程的简介块归工艺流程），其次档案，其余归故事
+    if(/工艺|流程|制作|步骤|材料|技法|工序|简介|步骤/.test(t)) g.process.push(b);
+    else if(/地区|分布|产地|等级|民族|历史|档案|概述|名称|名录/.test(t)) g.archive.push(b);
+    else g.story.push(b);
+  });
+  var tabs = document.createElement('div');
+  tabs.className = 'model-tabs';
+  var labels = [['archive','非遗档案'],['process','工艺流程'],['story','文化故事']];
+  labels.forEach(function(L){
+    var b = document.createElement('button');
+    b.className = 'mtab' + (L[0]==='archive'?' active':'');
+    b.textContent = L[1];
+    b.setAttribute('data-tab', L[0]);
+    tabs.appendChild(b);
+  });
+  var panWrap = document.createElement('div');
+  labels.forEach(function(L){
+    var p = document.createElement('div');
+    p.className = 'model-tab-panel' + (L[0]==='archive'?' active':'');
+    p.setAttribute('data-panel', L[0]);
+    g[L[0]].forEach(function(el){ p.appendChild(el); });
+    panWrap.appendChild(p);
+  });
+  infoSec.insertBefore(tabs, content);
+  infoSec.insertBefore(panWrap, content);
+  content.style.display = 'none';
+  tabs.addEventListener('click', function(e){
+    var t = e.target.closest('.mtab'); if(!t) return;
+    tabs.querySelectorAll('.mtab').forEach(function(x){ x.classList.remove('active'); });
+    t.classList.add('active');
+    panWrap.querySelectorAll('.model-tab-panel').forEach(function(x){ x.classList.remove('active'); });
+    var panel = panWrap.querySelector('[data-panel="' + t.getAttribute('data-tab') + '"]');
+    if(panel) panel.classList.add('active');
+  });
+})();
+</script>
+<div class="related-models">
+  <div class="rel-head"><div><span class="rel-en">Related Heritage</span><h3>相关 · 非遗模型</h3></div></div>
+  <div class="rel-grid"><a class="related-card" href="model1.html" style="background-image:url('uploads/images/model-1.jpg')"><span class="rc-label">苗族银饰锻造技艺</span></a><a class="related-card" href="model2.html" style="background-image:url('uploads/images/model-2.jpg')"><span class="rc-label">建水紫陶烧制技艺</span></a><a class="related-card" href="model4.html" style="background-image:url('uploads/images/model-4.jpg')"><span class="rc-label">黄平泥哨制作技艺</span></a><a class="related-card" href="model5.html" style="background-image:url('uploads/images/model-5.jpg')"><span class="rc-label">火草纺织工艺</span></a></div>
+</div>
 </body>
 </html>

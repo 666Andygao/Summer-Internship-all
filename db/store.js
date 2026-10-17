@@ -15,6 +15,7 @@
  *   - 单进程部署：内存为唯一写入口，多实例部署会出现缓存不一致
  *   - 数据量建议在万级以内（每次启动全量载入）
  */
+<<<<<<< HEAD
 const fs = require('fs');
 const path = require('path');
 const { getPool, toDbDate, fromDbDate, toJson, fromJson } = require('./pool');
@@ -22,17 +23,29 @@ const { getPool, toDbDate, fromDbDate, toJson, fromJson } = require('./pool');
 const JSON_FILE = path.join(__dirname, '..', 'database.json');
 let mode = 'mysql';
 
+=======
+const { getPool, toDbDate, fromDbDate, toJson, fromJson } = require('./pool');
+
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
 // ---------- 表结构映射：内存字段 ↔ MySQL 列 ----------
 // json: 需要序列化为 JSON 的字段；dates: 需要做时间转换的字段
 const TABLES = {
     users: {
+<<<<<<< HEAD
         columns: ['id', 'username', 'password', 'role', 'registration_role', 'display_name', 'phone', 'avatar', 'addresses', 'created_at'],
+=======
+        columns: ['id', 'username', 'password', 'role', 'display_name', 'phone', 'avatar', 'addresses', 'created_at'],
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
         json: ['addresses'],
         dates: ['created_at']
     },
     merchants: {
         columns: ['id', 'user_id', 'shop_name', 'intro', 'heritage_category', 'contact_phone',
+<<<<<<< HEAD
             'qualification_note', 'status', 'approved_by', 'permissions', 'created_at', 'updated_at'],
+=======
+            'qualification_note', 'status', 'permissions', 'created_at', 'updated_at'],
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
         json: ['permissions'],
         dates: ['created_at', 'updated_at']
     },
@@ -93,7 +106,11 @@ const TABLES = {
         dates: ['created_at', 'updated_at']
     },
     conversations: {
+<<<<<<< HEAD
         columns: ['id', 'user_id', 'developer_id', 'product_id', 'product_name', 'created_at'],
+=======
+        columns: ['id', 'user_id', 'developer_id', 'created_at'],
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
         json: [],
         dates: ['created_at']
     },
@@ -204,6 +221,7 @@ async function loadAllFromMySQL() {
     return data;
 }
 
+<<<<<<< HEAD
 function loadAllFromJSON() {
     if (!fs.existsSync(JSON_FILE)) {
         const empty = { users: [], conversations: [], messages: [], addresses: [],
@@ -304,6 +322,18 @@ async function init() {
 /** 当前存储模式 ('mysql' | 'json') */
 function getMode() { return mode; }
 
+=======
+/**
+ * 初始化：从 MySQL 载入数据
+ * @returns {Promise<Object>} 内存数据对象
+ */
+async function init() {
+    cache = await loadAllFromMySQL();
+    snapshot = clone(cache);
+    return cache;
+}
+
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
 // ---------- 读取 ----------
 
 /**
@@ -398,6 +428,7 @@ async function syncOrderItems(orders) {
  * @param {Object} current 当前内存数据
  */
 async function persistChanges(current) {
+<<<<<<< HEAD
     if (mode === 'json') {
         fs.writeFileSync(JSON_FILE, JSON.stringify(current, null, 2), 'utf8');
         snapshot = clone(current);
@@ -407,6 +438,12 @@ async function persistChanges(current) {
         const before = JSON.stringify(snapshot[table] || []);
         const after = JSON.stringify(current[table] || []);
         if (before === after) continue;
+=======
+    for (const table of Object.keys(TABLES)) {
+        const before = JSON.stringify(snapshot[table] || []);
+        const after = JSON.stringify(current[table] || []);
+        if (before === after) continue;   // 该表无变化，跳过
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
         await syncTable(table, current[table] || []);
         if (table === 'orders') {
             await syncOrderItems(current.orders || []);
@@ -424,6 +461,7 @@ async function persistChanges(current) {
  * @param {Object} data 内存数据对象
  * @returns {Promise<void>} 本次写入完成的 Promise（不 await 也不影响流程）
  */
+<<<<<<< HEAD
 function queueSave(data) {
     // 更新内存引用（业务代码可能传入新的 db 对象）
     cache = data;
@@ -451,6 +489,20 @@ function saveDBDurable(data) {
     return queueSave(data);
 }
 
+=======
+function saveDB(data) {
+    // 更新内存引用（业务代码可能传入新的 db 对象）
+    cache = data;
+    const task = writeQueue.then(() => persistChanges(data)).catch(e => {
+        lastError = e;
+        console.error('❌ 数据持久化到 MySQL 失败：', e.message);
+        console.error('   内存数据仍然有效，但数据库可能未同步。请检查 MySQL 连接。');
+    });
+    writeQueue = task;
+    return task;
+}
+
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
 /**
  * 等待队列中所有写入完成（优雅关闭时调用，防止丢数据）
  * @returns {Promise<void>}
@@ -471,6 +523,7 @@ module.exports = {
     init,
     loadDB,
     saveDB,
+<<<<<<< HEAD
     saveDBDurable,
     flush,
     getLastError,
@@ -480,8 +533,21 @@ module.exports = {
     _internal: {
         loadAllFromMySQL,
         loadAllFromJSON,
+=======
+    flush,
+    getLastError,
+    TABLES,
+    NEXT_ID_KEYS,
+    // 供测试使用
+    _internal: {
+        loadAllFromMySQL,
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
         persistChanges,
         getSnapshot: () => snapshot,
         reset: () => { cache = null; snapshot = null; writeQueue = Promise.resolve(); lastError = null; }
     }
+<<<<<<< HEAD
 };
+=======
+};
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f

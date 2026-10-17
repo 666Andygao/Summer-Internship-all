@@ -94,6 +94,7 @@ async function main() {
         }
 
         // ---------- 1. users ----------
+<<<<<<< HEAD
         const approvedMerchantUserIds = new Set(
             (data.merchants || [])
                 .filter(merchant => merchant.status === 'approved')
@@ -110,6 +111,13 @@ async function main() {
                  VALUES (?,?,?,?,?,?,?,?,?,?)`,
                 [u.id, s(u.username), s(u.password), role,
                  registrationRole, s(u.display_name),
+=======
+        for (const u of data.users || []) {
+            await conn.execute(
+                `INSERT INTO users (id, username, password, role, display_name, phone, avatar, addresses, created_at)
+                 VALUES (?,?,?,?,?,?,?,?,?)`,
+                [u.id, s(u.username), s(u.password), s(u.role, 'user'), s(u.display_name),
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
                  s(u.phone), s(u.avatar), toJson(u.addresses || []), toDate(u.created_at)]
             );
         }
@@ -119,10 +127,17 @@ async function main() {
         for (const m of data.merchants || []) {
             await conn.execute(
                 `INSERT INTO merchants (id, user_id, shop_name, intro, heritage_category, contact_phone,
+<<<<<<< HEAD
                                         qualification_note, status, approved_by, permissions, created_at, updated_at)
                  VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
                 [m.id, m.user_id, s(m.shop_name), s(m.intro), s(m.heritage_category), s(m.contact_phone),
                  s(m.qualification_note), s(m.status, 'pending'), m.approved_by || null, toJson(m.permissions || []),
+=======
+                                        qualification_note, status, permissions, created_at, updated_at)
+                 VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+                [m.id, m.user_id, s(m.shop_name), s(m.intro), s(m.heritage_category), s(m.contact_phone),
+                 s(m.qualification_note), s(m.status, 'pending'), toJson(m.permissions || []),
+>>>>>>> b285b68e180d2d1fdf59f578b984c85db601aa5f
                  toDate(m.created_at), toDate(m.updated_at)]
             );
         }
